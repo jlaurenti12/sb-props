@@ -1,38 +1,50 @@
-.App {
-  text-align: center;
-}
-
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+.main-content {
   display: flex;
-  flex-direction: column;
-  align-items: center;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  padding-top: 2rem;
 }
 
-.App-link {
-  color: #61dafb;
+.styled-table {
+  border-collapse: separate;
+  border-spacing: 0 12px;
+  font-size: 1em;
+  min-width: 400px;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.styled-table thead tr {
+  color: #ffffff;
+  text-align: left;
+  border-spacing: 0 0px;
+}
+
+.styled-table tbody tr {
+  background-color: #222;
+}
+
+
+.styled-table th {
+    padding: 12px 15px;
+}
+
+.styled-table td {
+  padding: 12px 15px 12px 15px
+}
+
+.styled-table td:first-child,
+.styled-table th:first-child {
+  border-radius: 10px 0 0 10px;
+}
+td:last-child,
+th:last-child {
+  border-radius: 0 10px 10px 0;
+}
+
+.styled-table tbody tr.active-row {
+  font-weight: bold;
+  color: #009879;
+}
+
+caption {
+  font-size: 1.25rem;
+  font-weight: 600;
 }
