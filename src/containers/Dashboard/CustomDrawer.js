@@ -20,31 +20,32 @@ import {
     useDisclosure,
   } from "@nextui-org/react";
 
-function CustomDrawer({isOpen, isClosed, userEntries}) {
+function CustomDrawer({isOpen, isClosed, userName, userEntries}) {
+
     return ( 
 
-                            <Drawer isOpen={isOpen} onClose={isClosed}>
-                                <DrawerContent>
-                                {(onClose) => (
-                                    <>
-                                    <DrawerHeader className="flex flex-col gap-1">Drawer Title</DrawerHeader>
-                                    <DrawerBody>
-                                        <p>
-                                        {userEntries}
-                                        </p>
-                                    </DrawerBody>
-                                    {/* <DrawerFooter>
-                                        <Button color="danger" variant="light" onPress={onClose}>
-                                        Close
-                                        </Button>
-                                        <Button color="primary" onPress={onClose}>
-                                        Action
-                                        </Button>
-                                    </DrawerFooter> */}
-                                    </>
-                                )}
-                                </DrawerContent>
-                            </Drawer>
+        <Drawer isOpen={isOpen} onClose={isClosed}>
+            <DrawerContent>
+            {(onClose) => (
+                <>
+                <DrawerHeader className="flex flex-col gap-1">{userName}'s Responses</DrawerHeader>
+                <DrawerBody>
+                    {userEntries.map((responses) => 
+                      <li>{responses}</li>
+                    )}
+                </DrawerBody>
+                {/* <DrawerFooter>
+                    <Button color="danger" variant="light" onPress={onClose}>
+                    Close
+                    </Button>
+                    <Button color="primary" onPress={onClose}>
+                    Action
+                    </Button>
+                </DrawerFooter> */}
+                </>
+            )}
+            </DrawerContent>
+        </Drawer>
   )
 }
 

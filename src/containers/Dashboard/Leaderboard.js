@@ -24,6 +24,7 @@ function Leaderboard({remaining}) {
     const [quizList, setQuizList] = useState([]);
     const userCollectionRef = collection(db, "users");
     const [selectedUser, setSelectedUser] = useState(null);
+    const [selectedResponses, setSelectedResponses] = useState([]);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
     //const {isOpen, onOpen, onOpenChange} = useDisclosure();
@@ -137,14 +138,32 @@ function Leaderboard({remaining}) {
         }
     };
 
-    const openDrawer = (user) => {
-      console.log(user);
+    const openDrawer = (user, responses) => {
       setSelectedUser(user);
+      let arr = [];
+      let arr2 = [];
+
+      for (let index = 0; index < questionList.length; index++) {
+
+          if (questionList[index].correctChoice == null) {
+              arr.push(questionList[index].prompt, responses[index], "--")
+          } else if (questionList[index].correctChoice == responses[index]) {
+              arr.push(questionList[index].prompt, responses[index], "Correct")
+          } else {
+              arr.push(questionList[index].prompt, responses[index], "Incorrect")
+          }
+
+          arr2.push(arr);
+          arr = [];
+      }
+
+      setSelectedResponses(arr2);
       setIsDrawerOpen(true);
     }
 
     const closeDrawer = () => {
       setSelectedUser(null);
+      setSelectedResponses([]);
       setIsDrawerOpen(false);
     }
 
@@ -174,15 +193,14 @@ function Leaderboard({remaining}) {
                         <TableCell>{remaining + quiz.score}</TableCell>
                         <TableCell>
                             <Tooltip content="See Responses" className="dark">
-                                <Button isIconOnly size="sm" variant="light" onClick={() => openDrawer(quiz.user)} aria-label="">
+                                <Button isIconOnly size="sm" variant="light" onPress={() => openDrawer(quiz.user, quiz.responses)} aria-label="">
 
                                     {/* onClick={() => toggleMenu(quizList, quiz.id, questionList)} */}
                                     <IoArrowForwardCircleSharp font-size="24px"/>
                                     
                                 </Button>
                             </Tooltip>
-
-                            <CustomDrawer isOpen={isDrawerOpen} userEntries={selectedUser} isClosed={closeDrawer}/>
+                            <CustomDrawer isOpen={isDrawerOpen} userEntries={selectedResponses} userName={selectedUser} isClosed={closeDrawer}/>
 
                             {/* { isMenuOpen ? (
                             <div
