@@ -3,6 +3,7 @@ import { db } from "../../services/firebase";
 import { IoClose, IoArrowForwardCircleSharp } from "react-icons/io5";
 import { getDocs, collection, doc, query, updateDoc } from "firebase/firestore";
 import "../../assets/styles/Leaderboard.css";
+import CustomDrawer from "./CustomDrawer.js";
 import {
     Table,
     TableHeader,
@@ -12,11 +13,6 @@ import {
     TableCell,
     Tooltip,
     Button,
-    Drawer,
-    DrawerContent,
-    DrawerHeader,
-    DrawerBody,
-    DrawerFooter,
     useDisclosure,
   } from "@nextui-org/react";
 
@@ -27,16 +23,16 @@ function Leaderboard({remaining}) {
     const [responseView, setResponseView] = useState([]);
     const [quizList, setQuizList] = useState([]);
     const userCollectionRef = collection(db, "users");
+    const [selectedUser, setSelectedUser] = useState(null);
+    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
-    const {isOpen, onOpen, onOpenChange} = useDisclosure();
+    //const {isOpen, onOpen, onOpenChange} = useDisclosure();
 
     const closeMenu = () => {
         setIsMenuOpen(!isMenuOpen);
     }    
     
     const toggleMenu = (userQuizzes,quizID, questionList) => {
-
-        console.log("clicked");
 
         setIsMenuOpen(!isMenuOpen);
 
@@ -60,7 +56,6 @@ function Leaderboard({remaining}) {
                 arr2 = [];
             }
 
-        console.log(arr3)
         setResponseView(arr3);
 
     };
@@ -142,6 +137,17 @@ function Leaderboard({remaining}) {
         }
     };
 
+    const openDrawer = (user) => {
+      console.log(user);
+      setSelectedUser(user);
+      setIsDrawerOpen(true);
+    }
+
+    const closeDrawer = () => {
+      setSelectedUser(null);
+      setIsDrawerOpen(false);
+    }
+
     useEffect(() => {
         fetchUsers();
         getQuestionList();
@@ -168,7 +174,7 @@ function Leaderboard({remaining}) {
                         <TableCell>{remaining + quiz.score}</TableCell>
                         <TableCell>
                             <Tooltip content="See Responses" className="dark">
-                                <Button isIconOnly size="sm" variant="light" onPress={onOpen(quiz.user)}>
+                                <Button isIconOnly size="sm" variant="light" onClick={() => openDrawer(quiz.user)} aria-label="">
 
                                     {/* onClick={() => toggleMenu(quizList, quiz.id, questionList)} */}
                                     <IoArrowForwardCircleSharp font-size="24px"/>
@@ -176,29 +182,7 @@ function Leaderboard({remaining}) {
                                 </Button>
                             </Tooltip>
 
-                            <Drawer isOpen={isOpen} onOpenChange={onOpenChange}>
-                                <DrawerContent>
-                                {(onClose) => (
-                                    <>
-                                    <DrawerHeader className="flex flex-col gap-1">Drawer Title</DrawerHeader>
-                                    <DrawerBody>
-                                        <p>
-                                        {quiz.user}
-                                        </p>
-                                    </DrawerBody>
-                                    {/* <DrawerFooter>
-                                        <Button color="danger" variant="light" onPress={onClose}>
-                                        Close
-                                        </Button>
-                                        <Button color="primary" onPress={onClose}>
-                                        Action
-                                        </Button>
-                                    </DrawerFooter> */}
-                                    </>
-                                )}
-                                </DrawerContent>
-                            </Drawer>
-
+                            <CustomDrawer isOpen={isDrawerOpen} userEntries={selectedUser} isClosed={closeDrawer}/>
 
                             {/* { isMenuOpen ? (
                             <div
