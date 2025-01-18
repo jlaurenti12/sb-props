@@ -1,5 +1,5 @@
 import "./App.css";
-import {NextUIProvider} from "@nextui-org/react";
+import {HeroUIProvider} from "@heroui/react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import Login from "./containers/Authentication/Login.js";
 import Register from "./containers/Authentication/Register.js";
@@ -9,13 +9,14 @@ import EditQuestions from "./containers/Admin/EditQuestions.js";
 import Quiz from "./containers/Quiz/Quiz.js";
 import Leaderboard from "./containers/Dashboard/Leaderboard";
 import Navbar from "./components/Navigation/Navbar.js";
+import {ThemeProvider as NextThemesProvider} from "next-themes";
 
 
 function App() {
   return (
-    <NextUIProvider>
+    <HeroUIProvider>
           <Router>
-          <div className="dark text-foreground bg-background">
+          <NextThemesProvider attribute="class" defaultTheme="dark">
             <Navbar />
             <div className="app main-content">
               <Routes>
@@ -28,9 +29,9 @@ function App() {
                 <Route exact path="/admin" element={<EditQuestions />} />
               </Routes>
             </div>
-            </div>
+            </NextThemesProvider>
           </Router>
-    </NextUIProvider>
+     </HeroUIProvider>
   );
 }
 

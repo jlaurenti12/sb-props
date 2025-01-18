@@ -27,7 +27,7 @@ import {
   DropdownItem,
   Button,
   Divider
-} from "@nextui-org/react";
+} from "@heroui/react";
 
 
 function Dashboard() {
@@ -278,26 +278,6 @@ function Dashboard() {
                                 <DropdownItem onPress={() => onDeleteQuiz(quiz.id)}>Delete</DropdownItem>
                               </DropdownMenu>
                             </Dropdown>
-                                      
-                              {/* { isMenuOpen ? (
-                              <div
-                              className={"answer__menu show-menu"}
-                              id="nav-menu"
-                              >
-                                  {responseView.map((responses) => 
-                                      <li className="nav__link">{responses}</li>
-                                  )}
-                                  <div 
-                                      className="answer__close" 
-                                      id="answer-close" 
-                                      onClick={closeMenu}
-                                      >
-                                      <IoClose />
-                                  </div>
-                              </div>  
-                              ) : (
-                                  <></>
-                              )} */}
                           </div>   
                         </TableCell>
                     </TableRow>

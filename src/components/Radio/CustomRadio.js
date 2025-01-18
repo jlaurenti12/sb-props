@@ -1,4 +1,4 @@
-import {Radio, cn} from "@nextui-org/react";
+import {Radio, cn} from "@heroui/react";
 
 const CustomRadio = (props) => {
     const {children, ...otherProps} = props;

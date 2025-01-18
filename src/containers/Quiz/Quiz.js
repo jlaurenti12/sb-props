@@ -3,7 +3,7 @@ import { useAuthState } from "react-firebase-hooks/auth";
 import { useNavigate, useLocation } from "react-router-dom";
 import { auth, db } from "../../services/firebase"; 
 import { getDocs, collection, doc, updateDoc, addDoc, query, where } from "firebase/firestore";
-import {RadioGroup, Button} from "@nextui-org/react";
+import {RadioGroup, Button} from "@heroui/react";
 import CustomRadio from "../../components/Radio/CustomRadio";
 import "../../assets/styles/Quiz.css";
 
