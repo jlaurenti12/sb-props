@@ -1,8 +1,6 @@
-import React, { useEffect, useState } from "react";
-import { db } from "../../services/firebase";
-import { getDocs, collection, doc, query, updateDoc } from "firebase/firestore";
+import React from "react";
 import "../../assets/styles/Leaderboard.css";
-import { IoCheckmark, IoClose } from "react-icons/io5";
+import { IoCheckmark, IoClose, IoRemoveOutline } from "react-icons/io5";
 import {
     Table,
     TableHeader,
@@ -11,15 +9,11 @@ import {
     TableRow,
     TableCell,
     Chip,
-    Tooltip,
-    Button,
     Divider,
     Drawer,
     DrawerContent,
     DrawerHeader,
     DrawerBody,
-    DrawerFooter,
-    useDisclosure,
   } from "@heroui/react";
 
 function CustomDrawer({isOpen, isClosed, userName, userEntries, userScore, maxScore}) {
@@ -28,6 +22,30 @@ function CustomDrawer({isOpen, isClosed, userName, userEntries, userScore, maxSc
         Correct: "success",
         Incorrect: "danger",
       };
+
+    const answerAccuracy = (response) => {
+
+        if (response === "Correct") {
+            return (
+            <Chip color={statusColorMap[response]} size="sm" variant="flat">
+               <IoCheckmark font-size="20px" />
+            </Chip>
+            )
+        } else if (response === "Incorrect") {
+            return (
+            <Chip color={statusColorMap[response]} size="sm" variant="flat">
+                <IoClose font-size="20px" />
+            </Chip>
+            )
+        } else {
+            return (
+            <Chip color="default" size="sm" variant="flat">
+                <IoRemoveOutline font-size="20px" />
+            </Chip>
+            )
+
+        }
+    }
 
     return ( 
 
@@ -43,7 +61,10 @@ function CustomDrawer({isOpen, isClosed, userName, userEntries, userScore, maxSc
                         &nbsp;
                         <span className="text-default-300 text-small">Max score: {maxScore}</span>
                     </div>
-                    <Divider className="my-4" />
+                    <div className="section-divider">
+                        <Divider className="my-4" />
+                    </div>
+
                     <Table removeWrapper>
                         <TableHeader>
                             <TableColumn>QUESTION</TableColumn>
@@ -58,31 +79,13 @@ function CustomDrawer({isOpen, isClosed, userName, userEntries, userScore, maxSc
                                     <TableCell>{responses[1]}</TableCell>
                                     <TableCell>{responses[2]}</TableCell>
                                     <TableCell>
-                                        {responses[3] === "Correct" ? (
-                                            <Chip className="capitalize" color={statusColorMap[responses[3]]} size="sm" variant="flat">
-                                               <IoCheckmark font-size="20px" />
-                                            </Chip>
-                                        ) : (
-                                            <Chip className="capitalize" color={statusColorMap[responses[3]]} size="sm" variant="flat">
-                                                <IoClose font-size="20px" />
-                                            </Chip>
-                                          
-                                        )}
+                                        {answerAccuracy(responses[3])}
                                     </TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
                     </Table>
-
                 </DrawerBody>
-                {/* <DrawerFooter>
-                    <Button color="danger" variant="light" onPress={onClose}>
-                    Close
-                    </Button>
-                    <Button color="primary" onPress={onClose}>
-                    Action
-                    </Button>
-                </DrawerFooter> */}
                 </>
             )}
             </DrawerContent>

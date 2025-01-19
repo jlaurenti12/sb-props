@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { db } from "../../services/firebase";
-import { IoClose, IoArrowForwardCircleSharp } from "react-icons/io5";
+import { IoArrowForwardCircleSharp } from "react-icons/io5";
 import { getDocs, collection, doc, query, updateDoc } from "firebase/firestore";
 import "../../assets/styles/Leaderboard.css";
 import CustomDrawer from "./CustomDrawer.js";
@@ -13,13 +13,11 @@ import {
     TableCell,
     Tooltip,
     Button,
-    useDisclosure,
   } from "@heroui/react";
 
 function Leaderboard({remaining}) {
 
     const [questionList, setQuestionList] = useState([]);
-    const [responseView, setResponseView] = useState([]);
     const [quizList, setQuizList] = useState([]);
     const userCollectionRef = collection(db, "users");
     const [selectedUser, setSelectedUser] = useState(null);

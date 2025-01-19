@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { useNavigate } from "react-router-dom";
 import { auth, db } from "../../services/firebase";
+import { IoArrowForwardCircleSharp } from "react-icons/io5";
 import {
   getDocs,
   collection,
@@ -12,6 +13,7 @@ import {
   where,
 } from "firebase/firestore";
 import Leaderboard from "./Leaderboard";
+import CustomDrawer from "./CustomDrawer.js";
 import "../../assets/styles/Leaderboard.css";
 import { IoEllipsisHorizontalCircleSharp } from "react-icons/io5";
 import {
@@ -21,6 +23,7 @@ import {
   TableColumn,
   TableRow,
   TableCell,
+  Tooltip,
   DropdownTrigger,
   Dropdown,
   DropdownMenu,
@@ -32,12 +35,7 @@ import {
 
 function Dashboard() {
 
-  const colors = ["default", "primary", "secondary", "success", "warning", "danger"];
-
-
   const [user, loading] = useAuthState(auth);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [responseView, setResponseView] = useState([]);
   const [questionList, setQuestionList] = useState([]);
   const navigate = useNavigate();
   const userCollectionRef = collection(db, "users");
@@ -46,37 +44,11 @@ function Dashboard() {
   const [userID, setUserID] = useState("");
   const [name, setName] = useState("");
   const [remainingQuestions, setRemainingQuestions] = useState("");
-  const [selectedColor, setSelectedColor] = React.useState("default");
+  const [selectedScore, setSelectedScore] = useState(null);
+  const [selectedMax, setSelectedMax] = useState(null);
+  const [selectedResponses, setSelectedResponses] = useState([]);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
-
-  const closeMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
-  };
-
-  const toggleMenu = (userQuizzes, quizID, questionList) => {
-    setIsMenuOpen(!isMenuOpen);
-
-    const arr = [];
-    let arr2 = [];
-    const arr3 = [];
-
-    userQuizzes.map((quiz) => {
-      quiz.id === quizID ? (
-        quiz.responses.map((response) => {
-          arr.push(response);
-        })
-      ) : (
-        <></>
-      );
-    });
-
-    for (let index = 0; index < questionList.length; index++) {
-      arr2.push(questionList[index].prompt, arr[index]);
-      arr3.push(arr2);
-      arr2 = [];
-    }
-    setResponseView(arr3);
-  };
 
   const getRemainingQuestions = (questions) => {
     let total = 0;
@@ -190,24 +162,6 @@ function Dashboard() {
     }
   };
 
-  // const onStartQuiz = async () => {
-  //   // const id = await fetchUser();
-
-  //   // console.log(id);
-
-  //   // const newQuizAdded = await addDoc(
-  //   //   collection(userCollectionRef, id, "quizzes"),
-  //   //   {
-  //   //     responses: [],
-  //   //     score: 0,
-  //   //     isCompleted: false,
-  //   //   }
-  //   // );
-
-  //   // const a = newQuizAdded.id;
-  //   // setQuizID(a);
-  // };
-
 
   const onStartQuiz = async() => {
     return navigate("/quiz", { state: {id: userID}});
@@ -224,6 +178,39 @@ function Dashboard() {
     await deleteDoc(quizDoc);
     fetchUserStatus();
   };
+
+
+  const openDrawer = (responses, score, remaining) => {
+    setSelectedScore(score);
+    setSelectedMax(score + remaining);
+    let arr = [];
+    let arr2 = [];
+
+    for (let index = 0; index < questionList.length; index++) {
+
+        if (questionList[index].correctChoice == null) {
+            arr.push(questionList[index].prompt, responses[index], "--", "--")
+        } else if (questionList[index].correctChoice == responses[index]) {
+            arr.push(questionList[index].prompt, responses[index], questionList[index].correctChoice, "Correct")
+        } else {
+            arr.push(questionList[index].prompt, responses[index], questionList[index].correctChoice, "Incorrect")
+        }
+
+        arr2.push(arr);
+        arr = [];
+    }
+
+    setSelectedResponses(arr2);
+    setIsDrawerOpen(true);
+  }
+
+  const closeDrawer = () => {
+    setSelectedScore(null);
+    setSelectedMax(null);
+    setSelectedResponses([]);
+    setIsDrawerOpen(false);
+  }
+
 
   useEffect(() => {
     if (loading) return;
@@ -265,7 +252,7 @@ function Dashboard() {
                         <TableCell>{name}</TableCell>
                         <TableCell>{quiz.score}</TableCell>
                         <TableCell>{remainingQuestions + quiz.score}</TableCell>
-                        <TableCell>                       
+                        {/* <TableCell>                       
                             <div className="relative flex justify-end cursor-pointer items-center gap-2">
                             <Dropdown className="dark">
                               <DropdownTrigger>
@@ -274,11 +261,22 @@ function Dashboard() {
                                 </Button>
                               </DropdownTrigger>
                               <DropdownMenu className="dark">
+                                <DropdownItem onPress={() => openDrawer(quiz.responses, quiz.score, remainingQuestions)}>See Responses
+                                </DropdownItem>
                                 <DropdownItem onPress={() => onContinueQuiz(quiz.id)}>Edit</DropdownItem>
                                 <DropdownItem onPress={() => onDeleteQuiz(quiz.id)}>Delete</DropdownItem>
                               </DropdownMenu>
                             </Dropdown>
                           </div>   
+                          <CustomDrawer isOpen={isDrawerOpen} userEntries={selectedResponses} userName={name} userScore={selectedScore} maxScore={selectedMax} isClosed={closeDrawer}/>
+                        </TableCell> */}
+                        <TableCell>
+                            <Tooltip content="See Responses" className="dark">
+                                <Button isIconOnly size="sm" variant="light" onPress={() => openDrawer(quiz.responses, quiz.score, remainingQuestions)} aria-label="">
+                                    <IoArrowForwardCircleSharp font-size="24px"/>      
+                                </Button>
+                            </Tooltip>
+                            <CustomDrawer isOpen={isDrawerOpen} userEntries={selectedResponses} userName={name} userScore={selectedScore} maxScore={selectedMax} isClosed={closeDrawer}/>
                         </TableCell>
                     </TableRow>
                     ) : (
