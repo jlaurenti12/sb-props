@@ -227,7 +227,7 @@ function Dashboard() {
         <div className="flex flex-col gap-4">
           <div className="flex justify-between items-center">
               <span className="text-default-300 text-medium">Your entries</span>
-            <Button color="primary" onPress={onStartQuiz}>
+            <Button color="secondary" onPress={onStartQuiz}>
               Add Entry
             </Button>
           </div>

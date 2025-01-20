@@ -8,15 +8,20 @@
 
   .login {
     box-shadow: 0px 0px 20px 0px #4e4e4e;
-
     padding: 2rem;
-    vertical-align: middle;
   }
 
-  /* a {
-    text-decoration: underline;
-   }
-   */
+  .logo {
+    margin-bottom: 16px;
+  }
+
+
+  .buttonBreak {
+    justify-self: center;
+  }
+
+
+  
   
   /* .login__container {
     display: flex;
