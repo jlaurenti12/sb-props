@@ -3,7 +3,8 @@ import { useAuthState } from "react-firebase-hooks/auth";
 import { useNavigate, NavLink } from "react-router-dom";
 import { auth, logout, db } from "../../services/firebase.js";
 import { getDocs, collection, query, where } from "firebase/firestore";
-import {Navbar, NavbarBrand, NavbarContent, NavbarItem, Link, DropdownItem, DropdownTrigger, Dropdown, DropdownMenu, Avatar} from "@heroui/react";
+import {Navbar, NavbarBrand, NavbarContent, Image, DropdownItem, DropdownTrigger, Dropdown, DropdownMenu, Avatar} from "@heroui/react";
+import mainLogo from "../../assets/images/sb_logo.png";
 
 
 const Navigation = () => {
@@ -48,31 +49,15 @@ const Navigation = () => {
           <Navbar className="w-full">
           <NavbarBrand>
           <NavLink to="/dashboard">
-            <span>
-              {/* <AcmeLogo /> */}
-              <p className="font-bold text-inherit">SUPERBOWL PROPS</p>
-            </span>
+            <Image
+              height="40"
+              width="40"
+              alt="Event image"
+              src={mainLogo}
+              radius="none"
+            />
           </NavLink> 
           </NavbarBrand>
-
-          {/* 
-          <NavbarContent className="hidden sm:flex gap-4" justify="center">
-            <NavbarItem>
-              <Link color="foreground" href="#">
-                Features
-              </Link>
-            </NavbarItem>
-            <NavbarItem isActive>
-              <Link href="#" aria-current="page" color="secondary">
-                Customers
-              </Link>
-            </NavbarItem>
-            <NavbarItem>
-              <Link color="foreground" href="#">
-                Integrations
-              </Link>
-            </NavbarItem>
-          </NavbarContent> */}
 
           <NavbarContent as="div" justify="end">
             <Dropdown placement="bottom-end">
