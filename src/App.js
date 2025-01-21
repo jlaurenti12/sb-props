@@ -5,7 +5,7 @@ import Login from "./containers/Authentication/Login.js";
 import Register from "./containers/Authentication/Register.js";
 import Reset from "./containers/Authentication/Reset.js";
 import Dashboard from "./containers/Dashboard/Dashboard.js";
-import EditQuestions from "./containers/Admin/EditQuestions.js";
+import Admin from "./containers/Admin/Admin.js";
 import Quiz from "./containers/Quiz/Quiz.js";
 import Leaderboard from "./containers/Dashboard/Leaderboard";
 import Navbar from "./components/Navigation/Navbar.js";
@@ -26,7 +26,7 @@ function App() {
                 <Route exact path="/dashboard" element={<Dashboard />} />
                 <Route exact path="/leaderboard" element={<Leaderboard />} />
                 <Route exact path="/quiz" element={<Quiz />} />
-                <Route exact path="/admin" element={<EditQuestions />} />
+                <Route exact path="/admin" element={<Admin />} />
               </Routes>
             </div>
             </NextThemesProvider>

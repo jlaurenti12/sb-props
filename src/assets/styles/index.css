@@ -44,3 +44,9 @@
  .form a {
   text-decoration: underline;
  }
+
+
+ .questionDrawerForm {
+  margin-bottom: 12px;
+  margin-top: 12px;
+ }
