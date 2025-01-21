@@ -1,6 +1,24 @@
 import React, { useEffect, useState } from "react";
 import { db } from "../../services/firebase";
-import { getDocs, collection, addDoc, deleteDoc, updateDoc, doc, query, where } from "firebase/firestore";
+import { getDocs, collection, addDoc, deleteDoc, updateDoc, doc } from "firebase/firestore";
+import {
+  Form, 
+  Input, 
+  Button,   
+  Table,
+  TableHeader,
+  TableBody,
+  TableColumn,
+  TableRow,
+  TableCell,
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerBody,
+  DrawerFooter,
+  useDisclosure,
+} from "@heroui/react";
+import { IoTrash, IoPencil } from "react-icons/io5";
 
 
 function EditQuestions() {
@@ -8,9 +26,10 @@ function EditQuestions() {
   const [questionList, setQuestionList] = useState ([]);
 
   //   New question state
-  const [newQuestionPrompt, setNewQuestionPrompt] = useState("");
-  const [newQuestionChoices, setNewQuestionChoices] = useState([]);
   const [correctChoice, setCorrectChoice] = useState("");
+  const [selectedQuestion, setSelectedQuestion] = useState("");
+  const {isOpen, onOpen, onOpenChange} = useDisclosure();
+
 
 
   // Update prompt state
@@ -38,16 +57,12 @@ function EditQuestions() {
   }, [])
 
 
-  const onSubmitQuestion = async (event) => {
-
-    event.preventDefault();
-
-    document.getElementById("questionForm").reset();
+  const onSubmitQuestion = async (prompt, choices) => {
     
     try {
       await addDoc(questionsCollectionRef, {
-        prompt: newQuestionPrompt,
-        choices: newQuestionChoices.split(","),
+        prompt: prompt,
+        choices: choices.split(","),
         correctChoice: null
       });
       
@@ -87,28 +102,130 @@ function EditQuestions() {
 return (
     <div>
 
-      <h1>Admin</h1>  
+      <>
+      <Form
+        id="questionForm"
+        className="grid gap-4"
+        onSubmit={(e) => {
+          e.preventDefault();
+          let data = Object.fromEntries(new FormData(e.currentTarget));
+          onSubmitQuestion(data.prompt, data.choices);
+          document.getElementById('questionForm').reset();
+        }}
+      >
+        <div className="flex w-full md:flex-nowrap gap-4">
+          <Input
+            label="Prompt"
+            labelPlacement="inside"
+            name="prompt"
+            type="text"
+          />
+          <Input
+            label="Choices"
+            labelPlacement="inside"
+            name="choices"
+            type="text"
+          />
+        </div>
+        <Button fullWidth type="submit" variant="solid" color="secondary">
+          Submit Question
+        </Button>
+      </Form>
+      </>
 
-      <form id="questionForm" onSubmit={onSubmitQuestion}>
-        <h3>Add question</h3>
-        <input
-          placeholder="Prompt"
-          onChange={(e) => setNewQuestionPrompt(e.target.value)} 
-        />
-        <input 
-          placeholder="Choices" 
-          onChange={(e) => setNewQuestionChoices(e.target.value)} 
-        />
-        <input type="submit" value="Submit Question" />
-      </form>
 
-      {questionList.map((question) => (
+        <Table>
 
-        <div>
+            <TableHeader>
+                <TableColumn>PROMPT</TableColumn>
+                <TableColumn>CHOICES</TableColumn>
+                <TableColumn>CORRECT CHOICE</TableColumn>
+                <TableColumn></TableColumn>
+            </TableHeader>
 
-          {/* <form> */}
+            <TableBody>
+            {questionList.map((question) => (
+              <TableRow>
+                <TableCell>{question.prompt}</TableCell>
+                <TableCell>{question.choices}</TableCell>
+                {question.correctChoice == null ? (
+                  <TableCell>--</TableCell>
+                ) : (
+                  <TableCell>{question.correctChoice}</TableCell>
+                )}  
+                <TableCell>
+                  <Button isIconOnly size="sm" variant="light" onPress={onOpen}>
+                    <IoPencil font-size="20px" />
+                  </Button>
+                  <Drawer isOpen={isOpen} onOpenChange={onOpenChange}>
+                    <DrawerContent>
+                      {(onClose) => (
+                        <>
+                          <DrawerHeader className="flex flex-col gap-1">{selectedQuestion.prompt}</DrawerHeader>
+                          <DrawerBody>
+                          <Form
+                              className="grid gap-4"
+                              onSubmit={(e) => {
+                                e.preventDefault();
+                                let data = Object.fromEntries(new FormData(e.currentTarget));
+                                onSubmitQuestion(data.prompt, data.choices);
+                                document.getElementById('questionForm').reset();
+                              }}
+                            >
+                              <div className="flex w-full md:flex-nowrap gap-4">
+                                <Input
+                                  label="Prompt"
+                                  labelPlacement="inside"
+                                  name="prompt"
+                                  type="text"
+                                />
+                                <Input
+                                  label="Choices"
+                                  labelPlacement="inside"
+                                  name="choices"
+                                  type="text"
+                                />
+                              </div>
+                              <Button fullWidth type="submit" variant="solid" color="secondary">
+                                Update Prompt
+                              </Button>
+                          </Form>
 
-            <h3>{question.prompt}</h3>
+                            <Input
+                              label="Email"
+                              placeholder="Enter your email"
+                              variant="bordered"
+                            />
+                            <Input
+                              label="Password"
+                              placeholder="Enter your password"
+                              type="password"
+                              variant="bordered"
+                            />
+                          </DrawerBody>
+                          <DrawerFooter>
+                            <Button color="danger" variant="flat" onPress={onClose}>
+                              Close
+                            </Button>
+                            <Button color="primary" onPress={onClose}>
+                              Sign in
+                            </Button>
+                          </DrawerFooter>
+                        </>
+                      )}
+                    </DrawerContent>
+                  </Drawer>
+                  <Button isIconOnly size="sm" variant="light" onPress={() => deleteQuestion(question.id)}>
+                    <IoTrash font-size="20px" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+            </TableBody>
+
+        </Table>
+
+            {/* <h3>{question.prompt}</h3>
 
             <h4>Choices:</h4>
             {question.choices.map((choice) => (
@@ -132,21 +249,12 @@ return (
               <input type="submit" value="Set Correct Choice" id="updatePrompt" />  
             </form>     
      
-
-          {/* </form> */}
-
             <button 
                 type="delete" 
                 onClick={() => deleteQuestion(question.id)}> 
                 Delete Question
-            </button> 
+            </button>  */}
 
-
-
-        </div>
-
-
-      ))}
 
   </div>
   );
