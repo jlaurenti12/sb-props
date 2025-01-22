@@ -3,10 +3,10 @@ import { useAuthState } from "react-firebase-hooks/auth";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { auth, sendPasswordReset } from "../../services/firebase";
+import {Form, Input, Button, Divider} from "@heroui/react";
 import "../../assets/styles/Reset.css";
 
 function Reset() {
-  const [email, setEmail] = useState("");
   const [user, loading, error] = useAuthState(auth);
   const navigate = useNavigate();
 
@@ -16,24 +16,32 @@ function Reset() {
   }, [user, loading]);
 
   return (
-    <div className="reset">
-      <div className="reset__container">
-        <input
-          type="text"
-          className="reset__textBox"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="E-mail Address"
+        <Form
+        className="max-w-sm grid gap-4 rounded-md login"
+        onSubmit={(e) => {
+          e.preventDefault();
+          let data = Object.fromEntries(new FormData(e.currentTarget));
+          sendPasswordReset(data.email)
+        }}
+        >
+        <Input
+          isRequired
+          errorMessage="Please enter a valid email"
+          label="Email Address"
+          labelPlacement="inside"
+          name="email"
+          type="email"
         />
-        <button className="reset__btn" onClick={() => sendPasswordReset(email)}>
+        <Button fullWidth type="submit" variant="solid" color="secondary">
           Send password reset email
-        </button>
+        </Button>
 
-        <div>
-          Don't have an account? <Link to="/">Register</Link> now.
+        <Divider className="my-4" />
+
+        <div className="text-small form">
+              Don't have an account? <Link  to="/register"> Register</Link> now.
         </div>
-      </div>
-    </div>
+        </Form>
   );
 }
 
