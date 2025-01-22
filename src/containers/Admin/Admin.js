@@ -29,7 +29,6 @@ function Admin() {
   const [gameStarted, setGameStarted] = useState();
   
   const getGameStatus = async() => {
-    console.log("running");
     const gameCollectionRef = collection(db, "status");
     const q = query(gameCollectionRef, where("uid", "==", "1KnxfOXfSOJFb5OdezcY"));
     const doc = await getDocs(q);

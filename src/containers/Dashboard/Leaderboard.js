@@ -15,7 +15,7 @@ import {
     Button,
   } from "@heroui/react";
 
-function Leaderboard({remaining}) {
+function Leaderboard({remaining, status}) {
 
     const [questionList, setQuestionList] = useState([]);
     const [quizList, setQuizList] = useState([]);
@@ -162,12 +162,24 @@ function Leaderboard({remaining}) {
                         <TableCell>{quiz.score}</TableCell>
                         <TableCell>{remaining + quiz.score}</TableCell>
                         <TableCell>
-                            <Tooltip content="See Responses" className="dark">
+                        {status ? (
+                            <>
+                            <Tooltip content="See responses" className="dark">
                                 <Button isIconOnly size="sm" variant="light" onPress={() => openDrawer(quiz.user, quiz.responses, quiz.score, remaining)} aria-label="">
                                     <IoArrowForwardCircleSharp font-size="24px"/>      
                                 </Button>
                             </Tooltip>
                             <CustomDrawer isOpen={isDrawerOpen} userEntries={selectedResponses} userName={selectedUser} userScore={selectedScore} maxScore={selectedMax} isClosed={closeDrawer}/>
+                            </>
+                        ) : (
+                            <>
+                            <Tooltip content="Other responses hidden until game starts" className="dark">
+                                <Button isIconOnly size="sm" variant="light" color="content4" aria-label="">
+                                    <IoArrowForwardCircleSharp font-size="24px"/>      
+                                </Button>
+                            </Tooltip>
+                            </>
+                        )}
                         </TableCell>
                     </TableRow>
                 ))}

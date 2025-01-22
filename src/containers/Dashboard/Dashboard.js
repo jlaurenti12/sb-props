@@ -48,6 +48,18 @@ function Dashboard() {
   const [selectedMax, setSelectedMax] = useState(null);
   const [selectedResponses, setSelectedResponses] = useState([]);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [gameStarted, setGameStarted] = useState();
+
+
+  const getGameStatus = async() => {
+    const gameCollectionRef = collection(db, "status");
+    const q = query(gameCollectionRef, where("uid", "==", "1KnxfOXfSOJFb5OdezcY"));
+    const doc = await getDocs(q);
+    const snapshot = doc.docs[0];
+    const data = snapshot.data();
+    console.log(data);
+    setGameStarted(data.gameStatus);
+  }
 
 
   const getRemainingQuestions = (questions) => {
@@ -220,6 +232,7 @@ function Dashboard() {
     getQuestionList();
     fetchUserName();
     getScores();
+    getGameStatus();
   }, [user, loading]);
 
   return (
@@ -227,9 +240,12 @@ function Dashboard() {
         <div className="flex flex-col gap-4">
           <div className="flex justify-between items-center">
               <span className="text-default-300 text-medium">Your entries</span>
-            <Button color="secondary" onPress={onStartQuiz}>
-              Add Entry
-            </Button>
+            {gameStarted ? (
+              <></>
+            ) : (
+              <Button color="secondary" onPress={onStartQuiz}>Add Entry</Button>
+            )}
+
           </div>
             <Table>
               <TableHeader>
@@ -271,7 +287,7 @@ function Dashboard() {
                           <CustomDrawer isOpen={isDrawerOpen} userEntries={selectedResponses} userName={name} userScore={selectedScore} maxScore={selectedMax} isClosed={closeDrawer}/>
                         </TableCell> */}
                         <TableCell>
-                            <Tooltip content="See Responses" className="dark">
+                            <Tooltip content="See your responses" className="dark">
                                 <Button isIconOnly size="sm" variant="light" onPress={() => openDrawer(quiz.responses, quiz.score, remainingQuestions)} aria-label="">
                                     <IoArrowForwardCircleSharp font-size="24px"/>      
                                 </Button>
@@ -309,7 +325,7 @@ function Dashboard() {
               <Divider className="my-4" />
             </div>
  
-          <Leaderboard remaining={remainingQuestions} />
+          <Leaderboard remaining={remainingQuestions} status={gameStarted} />
         </div>
       {/* )} */}
     </div>
