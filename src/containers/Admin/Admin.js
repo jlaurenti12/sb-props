@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { db } from "../../services/firebase.js";
+import { auth, db } from "../../services/firebase.js";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { useNavigate, NavLink } from "react-router-dom";
 import { getDocs, collection, addDoc, query, where, updateDoc, doc } from "firebase/firestore";
 import {
   Form, 
@@ -18,31 +20,11 @@ import { IoPencil } from "react-icons/io5";
 
 function Admin() {
 
+  const navigate = useNavigate();
+
+  // For questions
   const [questionList, setQuestionList] = useState ([]);
   const questionsCollectionRef = collection(db, "questions");
-
-  // For drawer
-  const [selectedQuestion, setSelectedQuestion] = useState(null);
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-
-  // For game started
-  const [gameStarted, setGameStarted] = useState();
-  
-  const getGameStatus = async() => {
-    const gameCollectionRef = collection(db, "status");
-    const q = query(gameCollectionRef, where("uid", "==", "1KnxfOXfSOJFb5OdezcY"));
-    const doc = await getDocs(q);
-    const snapshot = doc.docs[0];
-    const data = snapshot.data();
-    console.log(data);
-    setGameStarted(data.gameStatus);
-  }
-
-  const changeStatus = async() => {
-    const statusDoc = doc(db, "status", "1KnxfOXfSOJFb5OdezcY");
-    gameStarted === true ? ( await updateDoc(statusDoc, {gameStatus: false}) ) : ( await updateDoc(statusDoc, {gameStatus: true}) )
-    getGameStatus();
-  }
 
   const getQuestionList = async() => {
     try {
@@ -75,6 +57,11 @@ function Admin() {
     }
   };
 
+  // For drawer
+  const [selectedQuestion, setSelectedQuestion] = useState(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+
   const openDrawer = (question) => {
     setSelectedQuestion(question);
     setIsDrawerOpen(true);
@@ -87,66 +74,105 @@ function Admin() {
     getQuestionList();
   }
 
+  // For game started
+  const [gameStarted, setGameStarted] = useState();
+  
+  const getGameStatus = async() => {
+    const gameCollectionRef = collection(db, "status");
+    const q = query(gameCollectionRef, where("uid", "==", "1KnxfOXfSOJFb5OdezcY"));
+    const doc = await getDocs(q);
+    const snapshot = doc.docs[0];
+    const data = snapshot.data();
+    console.log(data);
+    setGameStarted(data.gameStatus);
+  }
+
+  const changeStatus = async() => {
+    const statusDoc = doc(db, "status", "1KnxfOXfSOJFb5OdezcY");
+    gameStarted === true ? ( await updateDoc(statusDoc, {gameStatus: false}) ) : ( await updateDoc(statusDoc, {gameStatus: true}) )
+    getGameStatus();
+  }
+
+  // for checking admin status
+  const [user, loading] = useAuthState(auth);
+  const [isAdmin, setIsAdmin] = useState("false");
+
+
+  const fetchUserStatus = async () => {
+    try {
+      const q = query(collection(db, "users"), where("uid", "==", user.uid));
+      const doc = await getDocs(q);
+      const snapshot = doc.docs[0];
+      const data = snapshot.data();
+      setIsAdmin(data.isAdmin);
+    } catch (err) {
+      console.error(err);
+      alert("An error occured while fetching user data");
+    }
+  };
+
   useEffect(() => {
+
+    if (loading) return;
+    if (!user) return navigate("/");
+
+    fetchUserStatus();
     getQuestionList();
     getGameStatus();
     setSelectedQuestion(null);
-  }, [])
+
+  }, [user, loading])
+  
 
 return (
     <div>
 
-      <>
-      {gameStarted ? (
-        <Button onPress={()=> changeStatus()}>Unstart Game</Button>
+      {isAdmin ? (
 
-      ) : (
-        <Button onPress={()=> changeStatus()}color="primary">Start Game</Button>
-      )}
+        <>
+          {gameStarted ? (
+            <Button onPress={()=> changeStatus()}>Unstart Game</Button>
 
-      <Form
-        id="questionForm"
-        className="grid gap-4 questionDrawerForm"
-        onSubmit={(e) => {
-          e.preventDefault();
-          let data = Object.fromEntries(new FormData(e.currentTarget));
-          onSubmitQuestion(data.prompt, data.choices);
-          document.getElementById('questionForm').reset();
-        }}
-      >
+          ) : (
+            <Button onPress={()=> changeStatus()}color="primary">Start Game</Button>
+          )}
 
+          <Form
+            id="questionForm"
+            className="grid gap-4 questionDrawerForm"
+            onSubmit={(e) => {
+              e.preventDefault();
+              let data = Object.fromEntries(new FormData(e.currentTarget));
+              onSubmitQuestion(data.prompt, data.choices);
+              document.getElementById('questionForm').reset();
+            }}
+          >
+            <div className="flex w-full md:flex-nowrap gap-4">
+              <Input
+                label="Prompt"
+                labelPlacement="inside"
+                name="prompt"
+                type="text"
+              />
+              <Input
+                label="Choices"
+                labelPlacement="inside"
+                name="choices"
+                type="text"
+              />
+              <Button fullWidth type="submit" variant="solid" color="secondary" className="h-14">
+                Submit Question
+              </Button>
+            </div>
+          </Form>
 
-        <div className="flex w-full md:flex-nowrap gap-4">
-          <Input
-            label="Prompt"
-            labelPlacement="inside"
-            name="prompt"
-            type="text"
-          />
-          <Input
-            label="Choices"
-            labelPlacement="inside"
-            name="choices"
-            type="text"
-          />
-          <Button fullWidth type="submit" variant="solid" color="secondary" className="h-14">
-            Submit Question
-          </Button>
-        </div>
-
-      </Form>
-      </>
-
-
-        <Table>
-
+          <Table>
             <TableHeader>
                 <TableColumn>PROMPT</TableColumn>
                 <TableColumn>CHOICES</TableColumn>
                 <TableColumn>CORRECT CHOICE</TableColumn>
                 <TableColumn></TableColumn>
             </TableHeader>
-
             <TableBody>
             {questionList.map((question) => (
               <TableRow>
@@ -166,9 +192,15 @@ return (
               </TableRow>
             ))}
             </TableBody>
-
-        </Table>
-
+          </Table>
+        </>
+    
+        ) : (
+          <>          
+            <h1>You don't have permissions to view this page.</h1>
+            <h2>Return to <NavLink to="/dashboard" className="text-decoration: underline">Dashboard</NavLink> </h2>
+          </>
+      )}
 
   </div>
   );

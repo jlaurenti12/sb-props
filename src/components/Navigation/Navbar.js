@@ -11,6 +11,8 @@ const Navigation = () => {
 
   const [user, loading] = useAuthState(auth);
   const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
+  const [initials, setInitials] = useState("");
   const [isAdmin, setIsAdmin] = useState("false");
   const navigate = useNavigate();
 
@@ -25,9 +27,11 @@ const Navigation = () => {
     try {
       const snapshot = await fetchUser();
       const data = snapshot.data();
-      console.log(data);
       setIsAdmin(data.isAdmin);
       setEmail(data.email);
+      setName(data.name);
+      const inits = data.name.match(/(\b\S)?/g).join("").match(/(^\S|\S$)?/g).join("").toUpperCase()
+      setInitials(inits);
     } catch (err) {
       console.error(err);
       alert("An error occured while fetching user data");
@@ -67,18 +71,20 @@ const Navigation = () => {
                   as="button"
                   className="transition-transform"
                   color="secondary"
-                  name="Jason Hughes"
+                  name={initials}
                   size="sm"
-                  src="https://i.pravatar.cc/150?u=a042581f4e29026704d"
                 />
               </DropdownTrigger>
               <DropdownMenu aria-label="Profile Actions" variant="flat">
                 <DropdownItem key="profile" className="h-14 gap-2">
-                  <p className="font-semibold">Signed in as</p>
-                  <p className="font-semibold">{email}</p>
+                  <NavLink to="/dashboard">
+                    <p className="font-semibold">Signed in as</p>
+                    <p className="font-semibold">{name}</p>
+                    <p className="font-semibold">{email}</p>
+                  </NavLink>
                 </DropdownItem>
                 { isAdmin ? (
-                  <DropdownItem to="/admin" key="admin" className="h-14 gap-2">
+                  <DropdownItem key="admin" className="h-14 gap-2">
                     <NavLink to="/admin">
                     <p className="font-semibold">
                       Admin
@@ -88,7 +94,7 @@ const Navigation = () => {
                 ) : (
                   console.log("false")
                 )}
-                <DropdownItem key="logout" color="danger" onClick={logout}>
+                <DropdownItem key="logout" color="danger" onPress={logout}>
                   Log Out
                 </DropdownItem>
               </DropdownMenu>
