@@ -70,7 +70,7 @@ const Navigation = () => {
                   isBordered
                   as="button"
                   className="transition-transform"
-                  color="secondary"
+                  color="default"
                   name={initials}
                   size="sm"
                 />
