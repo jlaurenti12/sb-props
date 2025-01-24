@@ -11,6 +11,7 @@ import {
   deleteDoc,
   query,
   where,
+  onSnapshot,
 } from "firebase/firestore";
 import Leaderboard from "./Leaderboard";
 import CustomDrawer from "./CustomDrawer.js";
@@ -29,7 +30,7 @@ import {
   DropdownMenu,
   DropdownItem,
   Button,
-  Divider
+  Divider,
 } from "@heroui/react";
 
 
@@ -61,7 +62,6 @@ function Dashboard() {
     setGameStarted(data.gameStatus);
   }
 
-
   const getRemainingQuestions = (questions) => {
     let total = 0;
     questions.map((question) => {
@@ -72,13 +72,15 @@ function Dashboard() {
 
   const getQuestionList = async () => {
     try {
-      const data = await getDocs(collection(db, "questions"));
-      const filteredData = data.docs.map((doc) => ({
-        ...doc.data(),
-        id: doc.id,
-      }));
-      setQuestionList(filteredData);
-      getRemainingQuestions(filteredData);
+      onSnapshot(collection(db, "questions"), (snapshot) => {
+        const filteredData = snapshot.docs.map((doc) => ({
+          ...doc.data(),
+          id: doc.id,
+        }));
+        setQuestionList(filteredData);
+        getRemainingQuestions(filteredData);
+        getScores(filteredData);
+      });
     } catch (err) {
       console.error(err);
     }
@@ -95,8 +97,7 @@ function Dashboard() {
       ...quiz.data(), 
       id: quiz.id,
     }));
-    
-    console.log(data);
+  
 
     const answerData = await getDocs(collection(db, "questions"));
       
@@ -157,6 +158,8 @@ function Dashboard() {
   };
 
   const fetchUserStatus = async () => {
+    console.log("++++++++++++++++++++++");
+    console.log(user);
     try {
       const id = await fetchUser();
       const q = query(collection(userCollectionRef, id, "quizzes"));
@@ -174,7 +177,6 @@ function Dashboard() {
     }
   };
 
-
   const onStartQuiz = async() => {
     return navigate("/quiz", { state: {id: userID}});
   };
@@ -190,7 +192,6 @@ function Dashboard() {
     await deleteDoc(quizDoc);
     fetchUserStatus();
   };
-
 
   const openDrawer = (responses, score, remaining) => {
     setSelectedScore(score);
@@ -224,9 +225,11 @@ function Dashboard() {
   }
 
 
+
   useEffect(() => {
     if (loading) return;
     if (!user) return navigate("/");
+
 
     fetchUserStatus();
     getQuestionList();
@@ -236,7 +239,10 @@ function Dashboard() {
   }, [user, loading]);
 
   return (
+
+
     <div>
+
         <div className="flex flex-col gap-4">
           <div className="flex justify-between items-center">
               <span className="text-default-300 text-medium">Your entries</span>

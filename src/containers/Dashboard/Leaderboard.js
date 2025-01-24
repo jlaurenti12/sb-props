@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { db } from "../../services/firebase";
 import { IoArrowForwardCircleSharp } from "react-icons/io5";
-import { getDocs, collection, doc, query, updateDoc } from "firebase/firestore";
+import { getDocs, collection, doc, query, updateDoc, onSnapshot } from "firebase/firestore";
 import "../../assets/styles/Leaderboard.css";
 import CustomDrawer from "./CustomDrawer.js";
 import {
@@ -14,6 +14,7 @@ import {
     Tooltip,
     Button,
   } from "@heroui/react";
+import { filter } from "framer-motion/client";
 
 function Leaderboard({remaining, status}) {
 
@@ -25,35 +26,69 @@ function Leaderboard({remaining, status}) {
     const [selectedMax, setSelectedMax] = useState(null);
     const [selectedResponses, setSelectedResponses] = useState([]);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+    // const fetchUsers = async () => {
+    //     const userData = await getDocs(collection(db, "users"));
+    //     const filteredUserData = userData.docs.map((doc) => ({
+    //         ...doc.data(), 
+    //         id: doc.id,
+    //         quizzes: [],
+    //     }));
+
+    //     await Promise.all (filteredUserData.map(async(user) => {
+    //         const q = query(collection(userCollectionRef, user.id, "quizzes"));
+    //         const a = await getDocs(q);
+    //         const b = [];
+
+    //         const snapshot = a.docs.map((quiz) => ({
+    //             ...quiz.data(), 
+    //             id: quiz.id,
+    //         }));
+
+    //         snapshot.map((quiz) => {
+    //             user.quizzes.push(quiz);
+    //           })  
+    //         }) 
+    //     )
+    //     getScores(filteredUserData);
+    // };
     
 
-    const fetchUsers = async () => {
-        const userData = await getDocs(collection(db, "users"));
-        const filteredUserData = userData.docs.map((doc) => ({
-            ...doc.data(), 
-            id: doc.id,
-            quizzes: [],
-        }));
+    const fetchUsers = async() => {
 
-        await Promise.all (filteredUserData.map(async(user) => {
-            const q = query(collection(userCollectionRef, user.id, "quizzes"));
-            const a = await getDocs(q);
-            const b = [];
-
-            const snapshot = a.docs.map((quiz) => ({
-                ...quiz.data(), 
-                id: quiz.id,
+        onSnapshot(collection(db, "users"), (snapshot) => {
+            
+            const filteredUserData = snapshot.docs.map((doc) => ({
+              ...doc.data(),
+              id: doc.id,
+              quizzes: [],
+            
             }));
 
-            snapshot.map((quiz) => {
-                user.quizzes.push(quiz);
-              })  
-            }) 
-        )
-        getScores(filteredUserData);
-    };
+            filteredUserData.map((user) => {
+                onSnapshot(collection(userCollectionRef, user.id, "quizzes"), (snapshot) => {
+                    
+                    const c = snapshot.docs.map((quiz) => ({
+                        ...quiz.data(), 
+                        id: quiz.id,
+                    }));
+    
+                    c.map((quiz) => {
+                        user.quizzes.push(quiz);
+                    }); 
+                }); 
+        
+            });
+        
+            
+            getScores(filteredUserData);
+        });
 
+    };
+  
     const getScores = async(users) => {
+
+        console.log(users);
 
         const answerData = await getDocs(collection(db, "questions"));
         const filteredAnswerData = answerData.docs.map((doc) => ({
@@ -68,7 +103,9 @@ function Leaderboard({remaining, status}) {
 
 
        users.map((user) => {
-            user.quizzes.map((quiz) => {
+            console.log(user.quizzes);
+            user.quizzes?.map((quiz) => {
+                console.log("running");
                 let score = 0;
                 quiz.responses?.map((response => {
                     for (let index = 0; index < quiz.responses.length; index++) {
@@ -81,6 +118,7 @@ function Leaderboard({remaining, status}) {
                 quiz.user = user.name;
                 quiz.userId = user.id;
                 const quizDoc = doc(userCollectionRef, user.id, "quizzes", quiz.id);
+                console.log(quizDoc);
                 updateDoc(quizDoc, {score: score}) 
                 quiz.isCompleted ? quizzes.push(quiz) :  <></>
             })
