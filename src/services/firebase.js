@@ -11,7 +11,8 @@ import {
 import {
   getFirestore,
   query,
-  getDocs,
+  setDoc,
+  getDoc,
   collection,
   where,
   addDoc,
@@ -40,21 +41,25 @@ const signInWithGoogle = async () => {
   try {
     const res = await signInWithPopup(auth, googleProvider);
     const user = res.user;
-    const q = query(collection(db, "users"), where("uid", "==", user.uid));
-    const docs = await getDocs(q);
-    if (docs.docs.length === 0) {
-      await addDoc(collection(db, "users"), {
+    const q = doc(db, "users", user.uid);
+    const docs = await getDoc(q);
+    if (!docs.exists()) {
+      const userData = {
         uid: user.uid,
         name: user.displayName,
         authProvider: "google",
         email: user.email,
         takenQuiz: false,
         isAdmin: false,
-      });
+      };
+      await setDoc(q, userData);
     }
+    return true;
   } catch (err) {
     console.error(err);
-    alert(err.message);
+    //alert(err.message);
+    alert('Something happened with google login');
+    return false;
   }
 };
 

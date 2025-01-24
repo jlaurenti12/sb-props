@@ -153,13 +153,11 @@ function Dashboard() {
       setName(data.name);
     } catch (err) {
       console.error(err);
-      alert("An error occured while fetching user data");
+      //alert("An error occured while fetching user data");
     }
   };
 
   const fetchUserStatus = async () => {
-    console.log("++++++++++++++++++++++");
-    console.log(user);
     try {
       const id = await fetchUser();
       const q = query(collection(userCollectionRef, id, "quizzes"));
@@ -173,7 +171,7 @@ function Dashboard() {
       setQuizList(filteredData);
     } catch (err) {
       console.error(err);
-      alert("An error occured while fetching user data");
+      //alert("An error occured while fetching user data");
     }
   };
 
@@ -231,18 +229,19 @@ function Dashboard() {
     if (!user) return navigate("/");
 
 
-    fetchUserStatus();
-    getQuestionList();
-    fetchUserName();
-    getScores();
-    getGameStatus();
+    if (loading === false && user) {
+      fetchUserStatus();
+      getQuestionList();
+      fetchUserName();
+      getScores();
+      getGameStatus();
+    }
   }, [user, loading]);
 
   return (
 
 
     <div>
-
         <div className="flex flex-col gap-4">
           <div className="flex justify-between items-center">
               <span className="text-default-300 text-medium">Your entries</span>
