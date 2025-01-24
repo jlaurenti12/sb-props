@@ -91,7 +91,7 @@ const Navigation = () => {
                     </NavLink> 
                   </DropdownItem>
                 ) : (
-                  console.log("false")
+                  <></>
                 )}
                 <DropdownItem key="logout" color="danger" onPress={logout}>
                   Log Out

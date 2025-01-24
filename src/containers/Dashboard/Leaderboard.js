@@ -88,7 +88,6 @@ function Leaderboard({remaining, status}) {
   
     const getScores = async(users) => {
 
-        console.log(users);
 
         const answerData = await getDocs(collection(db, "questions"));
         const filteredAnswerData = answerData.docs.map((doc) => ({
@@ -103,9 +102,7 @@ function Leaderboard({remaining, status}) {
 
 
        users.map((user) => {
-            console.log(user.quizzes);
             user.quizzes?.map((quiz) => {
-                console.log("running");
                 let score = 0;
                 quiz.responses?.map((response => {
                     for (let index = 0; index < quiz.responses.length; index++) {
@@ -118,7 +115,6 @@ function Leaderboard({remaining, status}) {
                 quiz.user = user.name;
                 quiz.userId = user.id;
                 const quizDoc = doc(userCollectionRef, user.id, "quizzes", quiz.id);
-                console.log(quizDoc);
                 updateDoc(quizDoc, {score: score}) 
                 quiz.isCompleted ? quizzes.push(quiz) :  <></>
             })

@@ -58,7 +58,6 @@ function Dashboard() {
     const doc = await getDocs(q);
     const snapshot = doc.docs[0];
     const data = snapshot.data();
-    console.log(data);
     setGameStarted(data.gameStatus);
   }
 
@@ -111,8 +110,6 @@ function Dashboard() {
           answers.push(question.correctChoice);
       });
 
-      console.log(filteredAnswerData);
-
 
         data.map((quiz) => {
             let score = 0;
@@ -136,24 +133,27 @@ function Dashboard() {
       setQuizList(quizzes);
   };
 
-  const fetchUser = async () => {
-    const q = query(userCollectionRef, where("uid", "==", user?.uid));
-    const doc = await getDocs(q);
-    const snapshot = doc.docs[0].id;
-    setUserID(snapshot);
-    return snapshot;
-  };
+  // const fetchUser = async () => {
+  //   const q = query(userCollectionRef, where("uid", "==", user?.uid));
+  //   const doc = await getDocs(q);
+  //   const snapshot = doc.docs[0].id;
+  //   setUserID(snapshot);
+  //   return snapshot;
+  // };
 
-  const fetchUserName = async () => {
+  const fetchUser = async () => {
     try {
+      console.log(user.uid);
       const q = query(userCollectionRef, where("uid", "==", user?.uid));
       const doc = await getDocs(q);
-      const snapshot = doc.docs[0];
-      const data = snapshot.data();
+      const snapshot = doc.docs[0].id;
+      setUserID(snapshot);
+      const data = doc.docs[0].data();
       setName(data.name);
+      return snapshot;
     } catch (err) {
       console.error(err);
-      //alert("An error occured while fetching user data");
+      // alert("An error occured while fetching user data");
     }
   };
 
@@ -171,7 +171,7 @@ function Dashboard() {
       setQuizList(filteredData);
     } catch (err) {
       console.error(err);
-      //alert("An error occured while fetching user data");
+      // alert("An error occured while fetching user data");
     }
   };
 
@@ -223,25 +223,27 @@ function Dashboard() {
   }
 
 
-
   useEffect(() => {
     if (loading) return;
     if (!user) return navigate("/");
 
 
     if (loading === false && user) {
+      console.log(user);
+      fetchUser();
       fetchUserStatus();
       getQuestionList();
-      fetchUserName();
       getScores();
       getGameStatus();
     }
   }, [user, loading]);
 
+
   return (
 
 
     <div>
+
         <div className="flex flex-col gap-4">
           <div className="flex justify-between items-center">
               <span className="text-default-300 text-medium">Your entries</span>
