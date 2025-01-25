@@ -52,6 +52,27 @@ function Dashboard() {
   const [gameStarted, setGameStarted] = useState();
 
 
+  
+  const fetchUser = () => {
+    try {
+      const q = query(userCollectionRef, where("uid", "==", user?.uid));
+
+      onSnapshot(q, (querySnapshot) => {
+        var test = querySnapshot.docs;
+        if (test.length > 0) {
+          const data = querySnapshot?.docs[0].data();
+          setUserID(data.id);
+          setName(data.name);
+          fetchUserStatus();
+          getQuestionList();
+        }
+      })
+    } catch (err) {
+      console.error(err);
+      // alert("An error occured while fetching user data");
+    }
+  };
+  
   const getGameStatus = async() => {
     const gameCollectionRef = collection(db, "status");
     const q = query(gameCollectionRef, where("uid", "==", "1KnxfOXfSOJFb5OdezcY"));
@@ -78,7 +99,7 @@ function Dashboard() {
         }));
         setQuestionList(filteredData);
         getRemainingQuestions(filteredData);
-        getScores(filteredData);
+        getScores();
       });
     } catch (err) {
       console.error(err);
@@ -89,7 +110,6 @@ function Dashboard() {
     const q = query(userCollectionRef, where("uid", "==", user?.uid));
     const person = await getDocs(q);
     const snapshot = person.docs[0].id;
-
     const a = await getDocs(collection(userCollectionRef, snapshot, "quizzes"));
 
     const data = a.docs.map((quiz) => ({
@@ -133,33 +153,11 @@ function Dashboard() {
       setQuizList(quizzes);
   };
 
-  // const fetchUser = async () => {
-  //   const q = query(userCollectionRef, where("uid", "==", user?.uid));
-  //   const doc = await getDocs(q);
-  //   const snapshot = doc.docs[0].id;
-  //   setUserID(snapshot);
-  //   return snapshot;
-  // };
-
-  const fetchUser = async () => {
-    try {
-      console.log(user.uid);
-      const q = query(userCollectionRef, where("uid", "==", user?.uid));
-      const doc = await getDocs(q);
-      const snapshot = doc.docs[0].id;
-      setUserID(snapshot);
-      const data = doc.docs[0].data();
-      setName(data.name);
-      return snapshot;
-    } catch (err) {
-      console.error(err);
-      // alert("An error occured while fetching user data");
-    }
-  };
-
   const fetchUserStatus = async () => {
     try {
-      const id = await fetchUser();
+      const a = query(userCollectionRef, where("uid", "==", user?.uid));
+      const person = await getDocs(a);
+      const id = person.docs[0].id;
       const q = query(collection(userCollectionRef, id, "quizzes"));
       const doc = await getDocs(q);
 
@@ -176,7 +174,12 @@ function Dashboard() {
   };
 
   const onStartQuiz = async() => {
-    return navigate("/quiz", { state: {id: userID}});
+    const a = query(userCollectionRef, where("uid", "==", user?.uid));
+    const person = await getDocs(a);
+
+    const test = person.docs[0].id;
+    console.log(test);
+    return navigate("/quiz", { state: {id: test}});
   };
   
   const onContinueQuiz = async (id) => {
@@ -228,14 +231,12 @@ function Dashboard() {
     if (!user) return navigate("/");
 
 
-    if (loading === false && user) {
-      console.log(user);
+    // if (loading === false && user) {
+    //   console.log(user);
       fetchUser();
-      fetchUserStatus();
-      getQuestionList();
-      getScores();
+      // fetchUserStatus();
+      // getQuestionList();
       getGameStatus();
-    }
   }, [user, loading]);
 
 

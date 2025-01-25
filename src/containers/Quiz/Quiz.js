@@ -65,6 +65,8 @@ function Quiz() {
            
             const arr = mapResponses(data);
 
+            console.log(userID);
+
             await addDoc(collection(userCollectionRef, userID, "quizzes"),{
                 responses: arr,
                 score: 0,
@@ -77,6 +79,7 @@ function Quiz() {
             await updateDoc(b, {
              takenQuiz: true,
             });
+
 
             return navigate("/");
 

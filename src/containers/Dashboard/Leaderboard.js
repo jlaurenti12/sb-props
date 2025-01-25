@@ -27,64 +27,64 @@ function Leaderboard({remaining, status}) {
     const [selectedResponses, setSelectedResponses] = useState([]);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
-    // const fetchUsers = async () => {
-    //     const userData = await getDocs(collection(db, "users"));
-    //     const filteredUserData = userData.docs.map((doc) => ({
-    //         ...doc.data(), 
-    //         id: doc.id,
-    //         quizzes: [],
-    //     }));
+    const fetchUsers = async () => {
+        const userData = await getDocs(collection(db, "users"));
+        const filteredUserData = userData.docs.map((doc) => ({
+            ...doc.data(), 
+            id: doc.id,
+            quizzes: [],
+        }));
 
-    //     await Promise.all (filteredUserData.map(async(user) => {
-    //         const q = query(collection(userCollectionRef, user.id, "quizzes"));
-    //         const a = await getDocs(q);
-    //         const b = [];
+        await Promise.all (filteredUserData.map(async(user) => {
+            const q = query(collection(userCollectionRef, user.id, "quizzes"));
+            const a = await getDocs(q);
+            const b = [];
 
-    //         const snapshot = a.docs.map((quiz) => ({
-    //             ...quiz.data(), 
-    //             id: quiz.id,
-    //         }));
-
-    //         snapshot.map((quiz) => {
-    //             user.quizzes.push(quiz);
-    //           })  
-    //         }) 
-    //     )
-    //     getScores(filteredUserData);
-    // };
-    
-
-    const fetchUsers = async() => {
-
-        onSnapshot(collection(db, "users"), (snapshot) => {
-            
-            const filteredUserData = snapshot.docs.map((doc) => ({
-              ...doc.data(),
-              id: doc.id,
-              quizzes: [],
-            
+            const snapshot = a.docs.map((quiz) => ({
+                ...quiz.data(), 
+                id: quiz.id,
             }));
 
-            filteredUserData.map((user) => {
-                onSnapshot(collection(userCollectionRef, user.id, "quizzes"), (snapshot) => {
-                    
-                    const c = snapshot.docs.map((quiz) => ({
-                        ...quiz.data(), 
-                        id: quiz.id,
-                    }));
+            snapshot.map((quiz) => {
+                user.quizzes.push(quiz);
+              })  
+            }) 
+        )
+        getScores(filteredUserData);
+    };
     
-                    c.map((quiz) => {
-                        user.quizzes.push(quiz);
-                    }); 
-                }); 
+
+    // const fetchUsers = async() => {
+
+    //     onSnapshot(collection(db, "users"), (snapshot) => {
+            
+    //         const filteredUserData = snapshot.docs.map((doc) => ({
+    //           ...doc.data(),
+    //           id: doc.id,
+    //           quizzes: [],
+            
+    //         }));
+
+    //         filteredUserData.map((user) => {
+    //             onSnapshot(collection(userCollectionRef, user.id, "quizzes"), (snapshot) => {
+                    
+    //                 const c = snapshot.docs.map((quiz) => ({
+    //                     ...quiz.data(), 
+    //                     id: quiz.id,
+    //                 }));
+    
+    //                 c.map((quiz) => {
+    //                     user.quizzes.push(quiz);
+    //                 }); 
+    //             }); 
         
-            });
+    //         });
         
             
-            getScores(filteredUserData);
-        });
+    //         getScores(filteredUserData);
+    //     });
 
-    };
+    // };
   
     const getScores = async(users) => {
 

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { useNavigate, NavLink } from "react-router-dom";
 import { auth, logout, db } from "../../services/firebase.js";
-import { getDocs, collection, query, where } from "firebase/firestore";
+import { getDocs, collection, query, where, onSnapshot } from "firebase/firestore";
 import {Navbar, NavbarBrand, NavbarContent, Image, DropdownItem, DropdownTrigger, Dropdown, DropdownMenu, Avatar} from "@heroui/react";
 import mainLogo from "../../assets/images/sb_logo.png";
 
@@ -14,19 +14,29 @@ const Navigation = () => {
   const [name, setName] = useState("");
   const [initials, setInitials] = useState("");
   const [isAdmin, setIsAdmin] = useState("false");
+  const userCollectionRef = collection(db, "users");
   const navigate = useNavigate();
 
-  const fetchUser = async () => {
-    const q = query(collection(db, "users"), where("uid", "==", user?.uid));
-    const doc = await getDocs(q);
-    const snapshot = doc.docs[0];
-    return snapshot
-  }
+  const fetchUser = () => {
+    try {
+      const q = query(userCollectionRef, where("uid", "==", user?.uid));
 
+      onSnapshot(q, (querySnapshot) => {
+        var test = querySnapshot.docs;
+        if (test.length > 0) {
+          fetchUserInfo();
+        }
+      })
+    } catch (err) {
+      console.error(err);
+      // alert("An error occured while fetching user data");
+    }
+  };
   const fetchUserInfo = async () => {
     try {
-      const snapshot = await fetchUser();
-      const data = snapshot.data();
+      const a = query(userCollectionRef, where("uid", "==", user?.uid));
+      const person = await getDocs(a);
+      const data = person.docs[0].data();
       setIsAdmin(data.isAdmin);
       setEmail(data.email);
       setName(data.name);
@@ -41,7 +51,7 @@ const Navigation = () => {
     if (loading) return;
     if (!user) return navigate("/");
 
-    fetchUserInfo();
+    fetchUser();
   }, [user, loading]);
 
 
