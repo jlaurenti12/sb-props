@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { auth, db } from "../../services/firebase.js";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { useNavigate, NavLink } from "react-router-dom";
-import { getDocs, collection, addDoc, query, where, updateDoc, doc } from "firebase/firestore";
+import { getDocs, collection, addDoc, query, where, updateDoc, doc, orderBy } from "firebase/firestore";
 import {
   Form, 
   Input, 
@@ -28,13 +28,11 @@ function Admin() {
 
   const getQuestionList = async() => {
     try {
-    const data = await getDocs(questionsCollectionRef);
-    console.log(data);
+    const data = await getDocs(query(questionsCollectionRef, orderBy("order")));
     const filteredData = data.docs.map((doc) => ({
       ...doc.data(), 
       id: doc.id,
     }))
-    console.log(filteredData);
     setQuestionList(filteredData);
     } catch (err) {
       console.error(err);
@@ -47,7 +45,8 @@ function Admin() {
       await addDoc(questionsCollectionRef, {
         prompt: prompt,
         choices: choices.split(","),
-        correctChoice: null
+        correctChoice: null,
+        order: questionList.length + 1
       });
       
       getQuestionList();
@@ -83,7 +82,6 @@ function Admin() {
     const doc = await getDocs(q);
     const snapshot = doc.docs[0];
     const data = snapshot.data();
-    console.log(data);
     setGameStarted(data.gameStatus);
   }
 

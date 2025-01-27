@@ -12,6 +12,7 @@ import {
   query,
   where,
   onSnapshot,
+  orderBy
 } from "firebase/firestore";
 import Leaderboard from "./Leaderboard";
 import CustomDrawer from "./CustomDrawer.js";
@@ -98,7 +99,7 @@ function Dashboard() {
 
   const getQuestionList = async () => {
     try {
-      onSnapshot(collection(db, "questions"), (snapshot) => {
+      onSnapshot(query(collection(db, "questions") , orderBy("order")), (snapshot) => {
         const filteredData = snapshot.docs.map((doc) => ({
           ...doc.data(),
           id: doc.id,
@@ -123,8 +124,7 @@ function Dashboard() {
       id: quiz.id,
     }));
   
-
-    const answerData = await getDocs(collection(db, "questions"));
+    const answerData = await getDocs(query(collection(db, "questions"), orderBy("order")));
       
     const filteredAnswerData = answerData.docs.map((doc) => ({
           ...doc.data(), 
@@ -136,23 +136,20 @@ function Dashboard() {
           answers.push(question.correctChoice);
       });
 
-      console.log(answers);
-
-
-        data.map((quiz) => {
-            let score = 0;
-            for (let index = 0; index < quiz.responses.length; index++) {
-                if (quiz.responses[index] === answers[index]) {
-                    score ++;
-                }
-            } 
-            quiz.score = score;
-            quiz.user = user.name;
-            quiz.userId = user.id;
-            const quizDoc = doc(userCollectionRef, snapshot, "quizzes", quiz.id);
-            updateDoc(quizDoc, {score: score}) 
-            quiz.isCompleted ? quizzes.push(quiz) :  <></>
-        })
+      data.map((quiz) => {
+          let score = 0;
+          for (let index = 0; index < quiz.responses.length; index++) {
+              if (quiz.responses[index] === answers[index]) {
+                  score ++;
+              }
+          } 
+          quiz.score = score;
+          quiz.user = user.name;
+          quiz.userId = user.id;
+          const quizDoc = doc(userCollectionRef, snapshot, "quizzes", quiz.id);
+          updateDoc(quizDoc, {score: score}) 
+          quiz.isCompleted ? quizzes.push(quiz) :  <></>
+      })
 
         quizzes.sort((a, b) => parseFloat(b.score) - parseFloat(a.score));
         

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { db } from "../../services/firebase"; 
-import { getDocs, collection, doc, updateDoc, addDoc } from "firebase/firestore";
+import { getDocs, collection, doc, updateDoc, addDoc, orderBy, query } from "firebase/firestore";
 import { 
     RadioGroup, 
     Button,
@@ -23,7 +23,8 @@ function Quiz() {
     
     const getQuestionList = async() => {
         try {
-            const data = await getDocs(collection(db, "questions"));
+            const questionsCollectionRef = collection(db, "questions");
+            const data = await getDocs(query(questionsCollectionRef, orderBy("order")));
             const filteredData = data.docs.map((doc) => ({
             ...doc.data(), 
             id: doc.id,
@@ -56,8 +57,6 @@ function Quiz() {
             }
            
             const arr = mapResponses(data);
-
-            console.log(userID);
 
             await addDoc(collection(userCollectionRef, userID, "quizzes"),{
                 responses: arr,

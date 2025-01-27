@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { db } from "../../services/firebase";
 import { IoArrowForwardCircleSharp } from "react-icons/io5";
-import { getDocs, collection, doc, query, updateDoc, onSnapshot } from "firebase/firestore";
+import { getDocs, collection, doc, query, updateDoc, onSnapshot, orderBy } from "firebase/firestore";
 import "../../assets/styles/Leaderboard.css";
 import CustomDrawer from "./CustomDrawer.js";
 import {
@@ -57,8 +57,8 @@ function Leaderboard({remaining, status}) {
               })  
             }) 
         )
-
-        const answerData = await getDocs(collection(db, "questions"));
+        
+        const answerData = await getDocs(query(collection(db, "questions"), orderBy("order")));
         const filteredAnswerData = answerData.docs.map((doc) => ({
             ...doc.data(), 
         }));
@@ -94,7 +94,7 @@ function Leaderboard({remaining, status}) {
 
     const getQuestionList = async() => {
         try {
-            const data = await getDocs(collection(db, "questions"));
+            const data = await getDocs(query(collection(db, "questions"), orderBy("order")));
             const filteredData = data.docs.map((doc) => ({
             ...doc.data(), 
             id: doc.id,
