@@ -17,18 +17,10 @@ function Quiz() {
     const location = useLocation();
     const navigate = useNavigate();
     const [questionList, setQuestionList] = useState ([]);
-    // const [selectedChoices, setSelectedChoices] = useState ({});
     const userCollectionRef = collection(db, "users");
     const userID = location.state.id;
     
-
-    // const handleSelect = (questionPrompt, choice) => {
-    //     setSelectedChoices(prev => ({
-    //         ...prev,
-    //         [questionPrompt]: choice
-    //     }));
-    // };
-
+    
     const getQuestionList = async() => {
         try {
             const data = await getDocs(collection(db, "questions"));

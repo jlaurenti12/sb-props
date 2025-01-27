@@ -14,7 +14,6 @@ import {
     Tooltip,
     Button,
   } from "@heroui/react";
-import { filter } from "framer-motion/client";
 
 function Leaderboard({remaining, status}) {
 
@@ -27,7 +26,15 @@ function Leaderboard({remaining, status}) {
     const [selectedResponses, setSelectedResponses] = useState([]);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
-    const fetchUsers = async () => {
+    const fetchAnswers = async() => {
+        onSnapshot(collection(db, "questions"), (snapshot) => {
+            getScores();
+            getQuestionList();
+        });
+    };
+
+    const getScores = async() => {
+
         const userData = await getDocs(collection(db, "users"));
         const filteredUserData = userData.docs.map((doc) => ({
             ...doc.data(), 
@@ -50,44 +57,6 @@ function Leaderboard({remaining, status}) {
               })  
             }) 
         )
-        getScores(filteredUserData);
-    };
-    
-
-    // const fetchUsers = async() => {
-
-    //     onSnapshot(collection(db, "users"), (snapshot) => {
-            
-    //         const filteredUserData = snapshot.docs.map((doc) => ({
-    //           ...doc.data(),
-    //           id: doc.id,
-    //           quizzes: [],
-            
-    //         }));
-
-    //         filteredUserData.map((user) => {
-    //             onSnapshot(collection(userCollectionRef, user.id, "quizzes"), (snapshot) => {
-                    
-    //                 const c = snapshot.docs.map((quiz) => ({
-    //                     ...quiz.data(), 
-    //                     id: quiz.id,
-    //                 }));
-    
-    //                 c.map((quiz) => {
-    //                     user.quizzes.push(quiz);
-    //                 }); 
-    //             }); 
-        
-    //         });
-        
-            
-    //         getScores(filteredUserData);
-    //     });
-
-    // };
-  
-    const getScores = async(users) => {
-
 
         const answerData = await getDocs(collection(db, "questions"));
         const filteredAnswerData = answerData.docs.map((doc) => ({
@@ -101,7 +70,7 @@ function Leaderboard({remaining, status}) {
         });
 
 
-       users.map((user) => {
+       filteredUserData.map((user) => {
             user.quizzes?.map((quiz) => {
                 let score = 0;
                 quiz.responses?.map((response => {
@@ -172,7 +141,7 @@ function Leaderboard({remaining, status}) {
     }
 
     useEffect(() => {
-        fetchUsers();
+        fetchAnswers();
         getQuestionList();
       }, []);
 

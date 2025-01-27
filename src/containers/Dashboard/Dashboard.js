@@ -65,8 +65,14 @@ function Dashboard() {
           setName(data.name);
           fetchUserStatus();
           getQuestionList();
+          getGameStatus();
         }
       })
+
+        onSnapshot(collection(db, "status"), (snapshot) => {
+            getGameStatus();
+        });
+
     } catch (err) {
       console.error(err);
       // alert("An error occured while fetching user data");
@@ -178,7 +184,6 @@ function Dashboard() {
     const person = await getDocs(a);
 
     const test = person.docs[0].id;
-    console.log(test);
     return navigate("/quiz", { state: {id: test}});
   };
   
@@ -230,13 +235,9 @@ function Dashboard() {
     if (loading) return;
     if (!user) return navigate("/");
 
-
-    // if (loading === false && user) {
-    //   console.log(user);
       fetchUser();
-      // fetchUserStatus();
-      // getQuestionList();
       getGameStatus();
+      
   }, [user, loading]);
 
 
