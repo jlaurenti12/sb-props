@@ -136,16 +136,16 @@ function Dashboard() {
           answers.push(question.correctChoice);
       });
 
+      console.log(answers);
+
 
         data.map((quiz) => {
             let score = 0;
-            quiz.responses?.map((response => {
-                for (let index = 0; index < quiz.responses.length; index++) {
-                    if (response === answers[index]) {
-                        score ++;
-                    }
-                } 
-            }))
+            for (let index = 0; index < quiz.responses.length; index++) {
+                if (quiz.responses[index] === answers[index]) {
+                    score ++;
+                }
+            } 
             quiz.score = score;
             quiz.user = user.name;
             quiz.userId = user.id;
