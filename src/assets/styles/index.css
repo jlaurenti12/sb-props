@@ -54,3 +54,10 @@
  .quiz {
   width: 330px;
  }
+
+ .radio {
+  background-color: #27272A;
+ }
+ .radio:hover {
+  background-color: #3f3f46;
+ }

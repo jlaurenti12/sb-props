@@ -99,7 +99,7 @@ return (
                 onSubmitQuiz(data);
             }}>
             {questionList.map((question) => (
-                <div className="group-choices border-solid border-2 rounded-md p-4">
+                <div className="group-choices rounded-md p-4">
                     <RadioGroup 
                         label={question.prompt}
                         name={question.prompt}
@@ -108,6 +108,7 @@ return (
                             <CustomRadio
                                 id={question.id} 
                                 value={`${choice}`}
+                                className="radio"
                                 // checked={selectedChoices[question.prompt] === `${choice}`}
                                 // onChange={() => handleSelect(question.prompt, choice)} 
                                 >
