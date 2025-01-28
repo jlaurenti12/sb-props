@@ -166,6 +166,7 @@ return (
 
           <Table>
             <TableHeader>
+                <TableColumn>NO.</TableColumn>
                 <TableColumn>PROMPT</TableColumn>
                 <TableColumn>CHOICES</TableColumn>
                 <TableColumn>CORRECT CHOICE</TableColumn>
@@ -174,6 +175,7 @@ return (
             <TableBody>
             {questionList.map((question) => (
               <TableRow>
+                <TableCell>{question.order}</TableCell>
                 <TableCell>{question.prompt}</TableCell>
                 <TableCell>{question.choices}</TableCell>
                 {question.correctChoice == null ? (

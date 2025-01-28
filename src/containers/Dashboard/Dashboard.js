@@ -63,7 +63,9 @@ function Dashboard() {
         if (test.length > 0) {
           const data = querySnapshot?.docs[0].data();
           setUserID(data.id);
-          setName(data.name);
+          const bothNames = data.name.trim().split(' ');
+          const initial = bothNames[1].substring(0,1);
+          setName(bothNames[0]+" "+initial);
           fetchUserStatus();
           getQuestionList();
           getGameStatus();
@@ -94,7 +96,7 @@ function Dashboard() {
     questions.map((question) => {
       question.correctChoice ? total++ : <></>;
     });
-    setRemainingQuestions(20 - total);
+    setRemainingQuestions(25 - total);
   };
 
   const getQuestionList = async () => {
@@ -241,7 +243,10 @@ function Dashboard() {
   return (
 
 
-    <div>
+    <div className="table">
+{/* 
+        {console.log(name)}
+        {console.log(name.trim().split(' '))} */}
 
         <div className="flex flex-col gap-4">
           <div className="flex justify-between items-center">

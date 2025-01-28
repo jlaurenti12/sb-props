@@ -79,7 +79,9 @@ function Leaderboard({remaining, status}) {
                     }
                 } 
                 quiz.score = score;
-                quiz.user = user.name;
+                const bothNames = user.name.trim().split(' ');
+                const initial = bothNames[1].substring(0,1);
+                quiz.user = bothNames[0]+" "+initial;
                 quiz.userId = user.id;
                 const quizDoc = doc(userCollectionRef, user.id, "quizzes", quiz.id);
                 updateDoc(quizDoc, {score: score}) 

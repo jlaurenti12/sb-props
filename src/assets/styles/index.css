@@ -51,8 +51,14 @@
   margin-top: 12px;
  }
 
+ .table {
+  /* min-width: 335px;
+  max-width: 335px; */
+  width: 335px;
+ }
+
  .quiz {
-  width: 330px;
+  max-width: 335px;
  }
 
  .radio {
