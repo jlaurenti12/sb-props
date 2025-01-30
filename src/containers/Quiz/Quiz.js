@@ -6,6 +6,7 @@ import {
     RadioGroup, 
     Button,
     Form, 
+    Skeleton
 } from "@heroui/react";
 import CustomRadio from "../../components/Radio/CustomRadio";
 import "../../assets/styles/Quiz.css";
@@ -19,6 +20,7 @@ function Quiz() {
     const [questionList, setQuestionList] = useState ([]);
     const userCollectionRef = collection(db, "users");
     const userID = location.state.id;
+    const [isLoaded, setIsLoaded] = useState(false);
     
     
     const getQuestionList = async() => {
@@ -30,6 +32,7 @@ function Quiz() {
             id: doc.id,
         }))
         setQuestionList(filteredData);
+        setIsLoaded(true);
         } catch (err) {
             console.error(err);
         }
@@ -90,40 +93,46 @@ function Quiz() {
 
 return (
     <div className="quiz">
-        <Form
-            className="grid"
-            onSubmit={(e) => {
-                e.preventDefault();
-                let data = Object.fromEntries(new FormData(e.currentTarget));
+        
+        <Skeleton className="rounded-lg" isLoaded={isLoaded}>
+            <Form
+                className="grid"
+                onSubmit={(e) => {
+                    e.preventDefault();
+                    let data = Object.fromEntries(new FormData(e.currentTarget));
+                    onSubmitQuiz(data);
+                }}>
+                {questionList.map((question) => (
 
-                onSubmitQuiz(data);
-            }}>
-            {questionList.map((question) => (
-                <div className="group-choices rounded-md p-4">
-                    <RadioGroup 
-                        label={question.prompt}
-                        name={question.prompt}
-                        >
-                        {question.choices.map((choice) => (
-                            <CustomRadio
-                                id={question.id} 
-                                value={`${choice}`}
-                                className="radio"
-                                // checked={selectedChoices[question.prompt] === `${choice}`}
-                                // onChange={() => handleSelect(question.prompt, choice)} 
-                                >
-                            {choice}
-                            </CustomRadio>
-                        ))}
-                    </RadioGroup>
+                    <div className="group-choices rounded-md p-4">
+                    
+                        <RadioGroup 
+                            label={question.prompt}
+                            name={question.prompt}
+                            >
+                            {question.choices.map((choice) => (
+                                <CustomRadio
+                                    id={question.id} 
+                                    value={`${choice}`}
+                                    className="radio"
+                                    // checked={selectedChoices[question.prompt] === `${choice}`}
+                                    // onChange={() => handleSelect(question.prompt, choice)} 
+                                    >
+                                {choice}
+                                </CustomRadio>
+                            ))}
+                        </RadioGroup>
+                        
+                    </div>
+
+                ))}
+
+                <div className="flex gap-4">
+                    <Button fullWidth onPress={onDeleteQuiz}>Cancel</Button>
+                    <Button fullWidth type="submit" color="primary">Submit</Button>         
                 </div>
-            ))}
-
-            <div className="flex gap-4">
-                <Button fullWidth onPress={onDeleteQuiz}>Cancel</Button>
-                <Button fullWidth type="submit" color="primary">Submit</Button>         
-            </div>
-        </Form>
+            </Form>
+        </Skeleton>
     </div>
   );
 

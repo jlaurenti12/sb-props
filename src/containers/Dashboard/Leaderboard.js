@@ -13,6 +13,7 @@ import {
     TableCell,
     Tooltip,
     Button,
+    Skeleton,
   } from "@heroui/react";
 
 function Leaderboard({remaining, status}) {
@@ -25,6 +26,8 @@ function Leaderboard({remaining, status}) {
     const [selectedMax, setSelectedMax] = useState(null);
     const [selectedResponses, setSelectedResponses] = useState([]);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+    const [isLoaded, setIsLoaded] = useState(false);
+    
 
     const fetchAnswers = async() => {
         onSnapshot(collection(db, "questions"), (snapshot) => {
@@ -92,6 +95,7 @@ function Leaderboard({remaining, status}) {
           quizzes.sort((a, b) => parseFloat(b.score) - parseFloat(a.score));
           
         setQuizList(quizzes);
+        setIsLoaded(true);
     };
 
     const getQuestionList = async() => {
@@ -151,6 +155,7 @@ function Leaderboard({remaining, status}) {
           <div className="flex justify-between items-center">
               <span className="text-default-300 text-medium">Leaderboard</span>
           </div>
+        <Skeleton className="rounded-lg" isLoaded={isLoaded}>
         <Table>
             <TableHeader>
                 <TableColumn>NAME</TableColumn>
@@ -188,6 +193,7 @@ function Leaderboard({remaining, status}) {
                 ))}
             </TableBody>
         </Table>
+        </Skeleton>
 
         </div>
     );

@@ -32,6 +32,8 @@ import {
   DropdownItem,
   Button,
   Divider,
+  Skeleton,
+  Spinner
 } from "@heroui/react";
 
 
@@ -51,7 +53,7 @@ function Dashboard() {
   const [selectedResponses, setSelectedResponses] = useState([]);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [gameStarted, setGameStarted] = useState();
-
+  const [isLoaded, setIsLoaded] = useState(false);
 
   
   const fetchUser = () => {
@@ -156,6 +158,7 @@ function Dashboard() {
         quizzes.sort((a, b) => parseFloat(b.score) - parseFloat(a.score));
         
       setQuizList(quizzes);
+      setIsLoaded(true);
   };
 
   const fetchUserStatus = async () => {
@@ -231,7 +234,9 @@ function Dashboard() {
 
 
   useEffect(() => {
-    if (loading) return;
+    if (loading) {
+      return;
+    }
     if (!user) return navigate("/");
 
       fetchUser();
@@ -242,11 +247,7 @@ function Dashboard() {
 
   return (
 
-
     <div className="table">
-{/* 
-        {console.log(name)}
-        {console.log(name.trim().split(' '))} */}
 
         <div className="flex flex-col gap-4">
           <div className="flex justify-between items-center">
@@ -258,6 +259,7 @@ function Dashboard() {
             )}
 
           </div>
+          <Skeleton className="rounded-lg" isLoaded={isLoaded}>
             <Table>
               <TableHeader>
                   <TableColumn>NAME</TableColumn>
@@ -268,7 +270,12 @@ function Dashboard() {
 
             {quizList.length === 0 ? (
 
-              <TableBody emptyContent={"You haven't submitted an entry yet."}>{[]}</TableBody>
+
+            <TableBody 
+              emptyContent={"You haven't submitted an entry yet."}>
+              {[]}
+            </TableBody>
+
 
             ) : (
 
@@ -331,6 +338,7 @@ function Dashboard() {
               </TableBody>
             )}
             </Table>
+            </Skeleton>
 
             <div className="section-divider">
               <Divider className="my-4" />

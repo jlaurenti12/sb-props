@@ -3,7 +3,7 @@ import { useAuthState } from "react-firebase-hooks/auth";
 import { useNavigate, NavLink } from "react-router-dom";
 import { auth, logout, db } from "../../services/firebase.js";
 import { getDocs, collection, query, where, onSnapshot } from "firebase/firestore";
-import {Navbar, NavbarBrand, NavbarContent, Image, DropdownItem, DropdownTrigger, Dropdown, DropdownMenu, Avatar} from "@heroui/react";
+import {Navbar, NavbarBrand, NavbarContent, Image, DropdownItem, DropdownTrigger, Dropdown, DropdownMenu, Avatar, Skeleton} from "@heroui/react";
 import mainLogo from "../../assets/images/sb_logo.png";
 
 
@@ -16,6 +16,7 @@ const Navigation = () => {
   const [isAdmin, setIsAdmin] = useState("false");
   const userCollectionRef = collection(db, "users");
   const navigate = useNavigate();
+  const [isLoaded, setIsLoaded] = useState(false);
 
   const fetchUser = () => {
     try {
@@ -29,7 +30,7 @@ const Navigation = () => {
       })
     } catch (err) {
       console.error(err);
-      // alert("An error occured while fetching user data");
+      alert("An error occured while fetching user data");
     }
   };
   const fetchUserInfo = async () => {
@@ -42,6 +43,8 @@ const Navigation = () => {
       setName(data.name);
       const inits = data.name.match(/(\b\S)?/g).join("").match(/(^\S|\S$)?/g).join("").toUpperCase()
       setInitials(inits);
+      setIsLoaded(true);
+
     } catch (err) {
       console.error(err);
     }
@@ -57,11 +60,11 @@ const Navigation = () => {
 
     return (
       <div>
-      { user ? (
 
           <Navbar className="w-full">
           <NavbarBrand>
           <NavLink to="/dashboard">
+          <Skeleton className="rounded-lg" isLoaded={isLoaded}>
             <Image
               height="40"
               width="40"
@@ -69,12 +72,14 @@ const Navigation = () => {
               src={mainLogo}
               radius="none"
             />
+          </Skeleton>
           </NavLink> 
           </NavbarBrand>
 
           <NavbarContent as="div" justify="end">
             <Dropdown placement="bottom-end">
               <DropdownTrigger>
+                <Skeleton className="rounded-full" isLoaded={isLoaded}>
                 <Avatar
                   isBordered
                   as="button"
@@ -83,6 +88,7 @@ const Navigation = () => {
                   name={initials}
                   size="sm"
                 />
+                </Skeleton>
               </DropdownTrigger>
               <DropdownMenu aria-label="Profile Actions" variant="flat">
                 <DropdownItem key="profile" className="h-14 gap-2">
@@ -111,9 +117,6 @@ const Navigation = () => {
           </NavbarContent>
         </Navbar>
 
-      ) : (
-        <></>
-      )}
     </div>
     );
   }
