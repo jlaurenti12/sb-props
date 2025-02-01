@@ -51,14 +51,24 @@
   margin-top: 12px;
  }
 
- .table {
-  /* min-width: 335px;
-  max-width: 335px; */
+ /* .table {
+  min-width: 335px;
+  max-width: 375px;
   width: 335px;
+ } */
+
+ .tableContent {
+  width: 100%;
+ }
+
+ .table {
+  min-width: 335px;
+  max-width: 375px;
+  width: 375px;
  }
 
  .quiz {
-  max-width: 335px;
+  max-width: 375px;
  }
 
  .radio {
@@ -66,4 +76,9 @@
  }
  .radio:hover {
   background-color: #3f3f46;
+ }
+
+ .table-header {
+  height: 40px;
+  line-height: 40px;
  }

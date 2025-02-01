@@ -18,6 +18,8 @@ import {
 
 function Leaderboard({remaining, status}) {
 
+    console.log(status);
+
     const [questionList, setQuestionList] = useState([]);
     const [quizList, setQuizList] = useState([]);
     const userCollectionRef = collection(db, "users");
@@ -152,15 +154,22 @@ function Leaderboard({remaining, status}) {
 
     return (
         <div className="flex flex-col gap-4">
-          <div className="flex justify-between items-center">
-              <span className="text-default-300 text-medium">Leaderboard</span>
+          <div className="justify-between items-center table-header">
+              <div className="text-default-300 text-medium ">Leaderboard</div>
+              {status === false ? (
+              <Skeleton className="rounded-lg" isLoaded={isLoaded}>
+                 <div className="sub text-small">Other responses hidden until game time</div>
+              </Skeleton>
+              ): (
+                <></>
+              )}
           </div>
         <Skeleton className="rounded-lg" isLoaded={isLoaded}>
         <Table>
             <TableHeader>
                 <TableColumn>NAME</TableColumn>
                 <TableColumn>SCORE</TableColumn>
-                <TableColumn>MAX SCORE</TableColumn>
+                <TableColumn>MAX</TableColumn>
                 <TableColumn></TableColumn>
             </TableHeader>
             <TableBody>
@@ -172,7 +181,7 @@ function Leaderboard({remaining, status}) {
                         <TableCell>
                         {status ? (
                             <>
-                            <Tooltip content="See responses" className="dark">
+                            <Tooltip delay={0} closeDelay={0} content="See responses" className="dark">
                                 <Button isIconOnly size="sm" variant="light" onPress={() => openDrawer(quiz.user, quiz.responses, quiz.score, remaining)} aria-label="">
                                     <IoArrowForwardCircleSharp font-size="24px"/>      
                                 </Button>
@@ -181,7 +190,7 @@ function Leaderboard({remaining, status}) {
                             </>
                         ) : (
                             <>
-                            <Tooltip content="Other responses hidden until game starts" className="dark">
+                            <Tooltip content="Other responses hidden until game time" className="dark">
                                 <Button isIconOnly size="sm" variant="light" color="content4" aria-label="">
                                     <IoArrowForwardCircleSharp font-size="24px"/>      
                                 </Button>

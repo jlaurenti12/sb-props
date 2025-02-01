@@ -249,22 +249,29 @@ function Dashboard() {
 
     <div className="table">
 
-        <div className="flex flex-col gap-4">
+        <div className="tableContent flex flex-col gap-4">
           <div className="flex justify-between items-center">
-              <span className="text-default-300 text-medium">Your entries</span>
+              <span className="text-default-300 text-medium table-header">Your entries</span>
             {gameStarted ? (
-              <></>
+              <Tooltip 
+                delay={0} closeDelay={0} content="The game started. No more entries!">
+                <Skeleton className="rounded-lg" isLoaded={isLoaded}>
+                  <Button radius="full" isDisabled size="md" color="secondary" onPress={onStartQuiz}>Add Entry</Button>
+                </Skeleton>
+              </Tooltip>
             ) : (
-              <Button color="secondary" onPress={onStartQuiz}>Add Entry</Button>
+              <Skeleton className="rounded-lg" isLoaded={isLoaded}>
+                <Button adius="full" size="md" color="secondary" onPress={onStartQuiz}>Add Entry</Button>
+              </Skeleton>
             )}
 
           </div>
           <Skeleton className="rounded-lg" isLoaded={isLoaded}>
-            <Table>
+            <Table color="secondary">
               <TableHeader>
                   <TableColumn>NAME</TableColumn>
                   <TableColumn>SCORE</TableColumn>
-                  <TableColumn>MAX SCORE</TableColumn>
+                  <TableColumn>MAX</TableColumn>
                   <TableColumn></TableColumn>
               </TableHeader>
 
@@ -305,7 +312,7 @@ function Dashboard() {
                           <CustomDrawer isOpen={isDrawerOpen} userEntries={selectedResponses} userName={name} userScore={selectedScore} maxScore={selectedMax} isClosed={closeDrawer}/>
                         </TableCell> */}
                         <TableCell>
-                            <Tooltip content="See your responses" className="dark">
+                            <Tooltip delay={0} closeDelay={0} content="See your responses" className="dark">
                                 <Button isIconOnly size="sm" variant="light" onPress={() => openDrawer(quiz.responses, quiz.score, remainingQuestions)} aria-label="">
                                     <IoArrowForwardCircleSharp font-size="24px"/>      
                                 </Button>
