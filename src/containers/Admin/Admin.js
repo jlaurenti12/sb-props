@@ -117,6 +117,13 @@ function Admin() {
     }
   };
 
+  const addFinalScore = async (final) => {
+    console.log(final);
+    const statusDoc = doc(db, "status", "1KnxfOXfSOJFb5OdezcY");
+    await updateDoc(statusDoc, {finalScore: final});
+    getGameStatus();
+  }
+
   useEffect(() => {
 
     if (loading) return;
@@ -151,6 +158,28 @@ return (
               <Button onPress={()=> changeEnd()}color="warning">End Game</Button>
             )}
           </div>
+
+
+          <Form
+            id="finalScoreForm"
+            className="inline-grid gap-4"
+            onSubmit={(e) => {
+              e.preventDefault();
+              let data = Object.fromEntries(new FormData(e.currentTarget));
+              console.log(data);
+              addFinalScore(data.final);
+              document.getElementById('finalScoreForm').reset();
+            }}
+            >
+            <Input
+                label="Final Score"
+                labelPlacement="inside"
+                name="final"
+                type="number"
+              />
+            <Button type="submit">Add Final Score</Button>
+          
+          </Form>
 
 
           <Form
