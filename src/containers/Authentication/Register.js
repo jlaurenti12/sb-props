@@ -29,6 +29,8 @@ function Register() {
     if (loading) return;
     if (user) {
         navigate("/dashboard");
+    } else {
+      navigate("/register")
     }
   }, [user, loading]);
 

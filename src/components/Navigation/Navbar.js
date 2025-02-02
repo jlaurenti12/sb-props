@@ -21,7 +21,7 @@ const Navigation = () => {
   const fetchUser = () => {
     try {
       const q = query(userCollectionRef, where("uid", "==", user?.uid));
-
+     
       onSnapshot(q, (querySnapshot) => {
         var test = querySnapshot.docs;
         if (test.length > 0) {
@@ -59,7 +59,11 @@ const Navigation = () => {
 
 
     return (
-      <div>
+
+      <>
+      { user ? (
+
+          <div>
 
           <Navbar className="w-full">
           <NavbarBrand>
@@ -117,7 +121,16 @@ const Navigation = () => {
           </NavbarContent>
         </Navbar>
 
-    </div>
+        </div>
+
+      ) : (
+
+      <></>
+      
+    )};
+
+    </>
+
     );
   }
 
