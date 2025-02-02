@@ -99,7 +99,7 @@ function Dashboard() {
     questions.map((question) => {
       question.correctChoice ? total++ : <></>;
     });
-    setRemainingQuestions(25 - total);
+    setRemainingQuestions(26 - total);
   };
 
   const getQuestionList = async () => {
