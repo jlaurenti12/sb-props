@@ -140,3 +140,13 @@
 .sub {
   color: #888;
 }
+
+.overview {
+  opacity: 1;
+}
+
+.aVerticalSeparator {
+  border-left: 1px solid #66aaf9; /* Border on the left */
+  width: 1px; /* Width instead of height */
+  height: 12px;
+}

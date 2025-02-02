@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { db } from "../../services/firebase";
 import { IoArrowForwardCircleSharp } from "react-icons/io5";
-import { getDocs, collection, doc, query, updateDoc, onSnapshot, orderBy } from "firebase/firestore";
+import { getDocs, collection, doc, query, updateDoc, onSnapshot, orderBy, where } from "firebase/firestore";
 import "../../assets/styles/Leaderboard.css";
 import CustomDrawer from "./CustomDrawer.js";
 import {
@@ -13,12 +13,14 @@ import {
     TableCell,
     Tooltip,
     Button,
+    ButtonGroup,
     Skeleton,
+    Chip,
   } from "@heroui/react";
 
-function Leaderboard({remaining, status}) {
+function Leaderboard({remaining, status, end}) {
 
-    console.log(status);
+    console.log(end);
 
     const [questionList, setQuestionList] = useState([]);
     const [quizList, setQuizList] = useState([]);
@@ -27,14 +29,22 @@ function Leaderboard({remaining, status}) {
     const [selectedScore, setSelectedScore] = useState(null);
     const [selectedMax, setSelectedMax] = useState(null);
     const [selectedResponses, setSelectedResponses] = useState([]);
+    const [tiebreaker, setTiebreaker] = useState(null);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [isLoaded, setIsLoaded] = useState(false);
+    const [winner, setWinner] = useState();
     
 
     const fetchAnswers = async() => {
         onSnapshot(collection(db, "questions"), (snapshot) => {
             getScores();
             getQuestionList();
+        });
+    };
+
+    const fetchStatus = async() => {
+        onSnapshot(collection(db, "status"), (snapshot) => {
+            getScores();
         });
     };
 
@@ -46,6 +56,12 @@ function Leaderboard({remaining, status}) {
             id: doc.id,
             quizzes: [],
         }));
+
+        const h = await getDocs(query(collection(db, "status"), where("uid", "==", "1KnxfOXfSOJFb5OdezcY")));
+        const snapshot = h.docs[0];
+        const data = snapshot.data();
+        const end = data.gameOver;
+        const final = data.finalScore;
 
         await Promise.all (filteredUserData.map(async(user) => {
             const q = query(collection(userCollectionRef, user.id, "quizzes"));
@@ -98,7 +114,59 @@ function Leaderboard({remaining, status}) {
           
         setQuizList(quizzes);
         setIsLoaded(true);
+
+        console.log(end);
+
+        end ? getFinal(quizzes, final) : <></>;
     };
+
+    const getFinal = (quizzes, finalScore) => {
+        console.log(quizzes);
+        const max = Math.max(...quizzes.map(o => o.score))
+        const highScores = [];
+        quizzes.map((quiz) => {
+            if (quiz.score === max) {
+                highScores.push(quiz);
+            }
+        })
+        console.log(highScores);
+
+        if (highScores.length === 1) {
+            setWinner(highScores.user)
+        } else {
+            tiebreakerCheck(highScores, finalScore)
+        }
+    };
+
+    const tiebreakerCheck = (highScores, finalScore) => {
+        let closest = null;
+
+        highScores.map((quiz) => {
+            if (quiz.tiebreaker === finalScore) {
+                closest = quiz;
+                console.log(quiz.user);
+                console.log("match!");
+            } else if (quiz.tiebreaker < finalScore ) {
+                console.log(closest);
+                if (closest === null) {
+                    closest = quiz;
+                } else  {
+                    console.log(closest);
+                    console.log(quiz.user);
+                    console.log(quiz.tiebreaker);
+                    console.log(closest.tiebreaker);
+                    quiz.tiebreaker > closest.tiebreaker ? closest = quiz : <></>;
+                }
+            } else {
+                <></>
+            }
+        })
+
+        console.log(closest);
+        setWinner(closest.user)
+    }
+
+
 
     const getQuestionList = async() => {
         try {
@@ -113,22 +181,25 @@ function Leaderboard({remaining, status}) {
         }
     };
 
-    const openDrawer = (user, responses, score, remaining) => {
+    const openDrawer = (user, responses, score, remaining, tiebreaker) => {
       setSelectedScore(score);
       setSelectedMax(score + remaining);
       setSelectedUser(user);
+      setTiebreaker(tiebreaker);
       let arr = [];
       let arr2 = [];
 
       for (let index = 0; index < questionList.length; index++) {
 
-          if (questionList[index].correctChoice == null) {
-              arr.push(questionList[index].prompt, responses[index], "--", "--")
-          } else if (questionList[index].correctChoice == responses[index]) {
-              arr.push(questionList[index].prompt, responses[index], questionList[index].correctChoice, "Correct")
-          } else {
-              arr.push(questionList[index].prompt, responses[index], questionList[index].correctChoice, "Incorrect")
-          }
+        if (questionList[index].correctChoice == null ) {
+            arr.push(questionList[index].prompt, responses[index], "--", "--")
+        } else if (questionList[index].correctChoice === "N/A" || questionList[index].correctChoice === "Push") {
+            arr.push(questionList[index].prompt, responses[index], questionList[index].correctChoice, "--")
+        } else if (questionList[index].correctChoice == responses[index]) {
+            arr.push(questionList[index].prompt, responses[index], questionList[index].correctChoice, "Correct")
+        } else {
+            arr.push(questionList[index].prompt, responses[index], questionList[index].correctChoice, "Incorrect")
+        }
 
           arr2.push(arr);
           arr = [];
@@ -144,26 +215,45 @@ function Leaderboard({remaining, status}) {
       setSelectedMax(null);
       setSelectedResponses([]);
       setIsDrawerOpen(false);
+      setTiebreaker(null);
     }
 
     useEffect(() => {
         fetchAnswers();
+        fetchStatus();
         getQuestionList();
       }, []);
 
 
     return (
         <div className="flex flex-col gap-4">
+        <Skeleton className="rounded-lg" isLoaded={isLoaded}>
           <div className="justify-between items-center table-header">
+
               <div className="text-default-300 text-medium ">Leaderboard</div>
               {status === false ? (
-              <Skeleton className="rounded-lg" isLoaded={isLoaded}>
+
                  <div className="sub text-small">Other responses hidden until game time</div>
-              </Skeleton>
+
               ): (
                 <></>
               )}
           </div>
+        </Skeleton>
+        
+
+            <Skeleton className="rounded-lg" isLoaded={isLoaded}>
+                <ButtonGroup fullWidth isDisabled color="primary" variant="flat">
+                    <Button className="overview">Entries: {quizList.length} <div className="aVerticalSeparator"></div> Prize: ${quizList.length*10}</Button>
+                    {/* <Button className="overview"></Button> */}
+                    { end ? (
+                        <Button className="overview">Winner: {winner}</Button>
+                    ) : (
+                        <Button className="overview">Winner: TBD</Button>
+                    )}
+                </ButtonGroup>
+            </Skeleton>
+
         <Skeleton className="rounded-lg" isLoaded={isLoaded}>
         <Table>
             <TableHeader>
@@ -182,11 +272,11 @@ function Leaderboard({remaining, status}) {
                         {status ? (
                             <>
                             <Tooltip delay={0} closeDelay={0} content="See responses" className="dark">
-                                <Button isIconOnly size="sm" variant="light" onPress={() => openDrawer(quiz.user, quiz.responses, quiz.score, remaining)} aria-label="">
+                                <Button isIconOnly size="sm" variant="light" onPress={() => openDrawer(quiz.user, quiz.responses, quiz.score, remaining, quiz.tiebreaker)} aria-label="">
                                     <IoArrowForwardCircleSharp font-size="24px"/>      
                                 </Button>
                             </Tooltip>
-                            <CustomDrawer isOpen={isDrawerOpen} userEntries={selectedResponses} userName={selectedUser} userScore={selectedScore} maxScore={selectedMax} isClosed={closeDrawer}/>
+                            <CustomDrawer isOpen={isDrawerOpen} userEntries={selectedResponses} userName={selectedUser} userScore={selectedScore} maxScore={selectedMax} tiebreaker={tiebreaker} isClosed={closeDrawer}/>
                             </>
                         ) : (
                             <>

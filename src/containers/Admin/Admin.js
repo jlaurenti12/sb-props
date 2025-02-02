@@ -73,8 +73,9 @@ function Admin() {
     getQuestionList();
   }
 
-  // For game started
+  // For game status
   const [gameStarted, setGameStarted] = useState();
+  const [gameOver, setGameOver] = useState();
   
   const getGameStatus = async() => {
     const gameCollectionRef = collection(db, "status");
@@ -83,11 +84,18 @@ function Admin() {
     const snapshot = doc.docs[0];
     const data = snapshot.data();
     setGameStarted(data.gameStatus);
+    setGameOver(data.gameOver)
   }
 
   const changeStatus = async() => {
     const statusDoc = doc(db, "status", "1KnxfOXfSOJFb5OdezcY");
     gameStarted === true ? ( await updateDoc(statusDoc, {gameStatus: false}) ) : ( await updateDoc(statusDoc, {gameStatus: true}) )
+    getGameStatus();
+  }
+
+  const changeEnd = async() => {
+    const statusDoc = doc(db, "status", "1KnxfOXfSOJFb5OdezcY");
+    gameOver === true ? ( await updateDoc(statusDoc, {gameOver: false}) ) : ( await updateDoc(statusDoc, {gameOver: true}) )
     getGameStatus();
   }
 
@@ -128,12 +136,22 @@ return (
       {isAdmin ? (
 
         <>
-          {gameStarted ? (
-            <Button onPress={()=> changeStatus()}>Unstart Game</Button>
+          <div className="flex flex-wrap gap-4 items-center">
+            {gameStarted ? (
+              <Button onPress={()=> changeStatus()}>Unstart Game</Button>
 
-          ) : (
-            <Button onPress={()=> changeStatus()}color="primary">Start Game</Button>
-          )}
+            ) : (
+              <Button onPress={()=> changeStatus()}color="primary">Start Game</Button>
+            )}
+
+            {gameOver ? (
+              <Button onPress={()=> changeEnd()}>Unfinish Game</Button>
+
+            ) : (
+              <Button onPress={()=> changeEnd()}color="warning">End Game</Button>
+            )}
+          </div>
+
 
           <Form
             id="questionForm"

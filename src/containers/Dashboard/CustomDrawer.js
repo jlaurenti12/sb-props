@@ -16,7 +16,9 @@ import {
     DrawerBody,
   } from "@heroui/react";
 
-function CustomDrawer({isOpen, isClosed, userName, userEntries, userScore, maxScore}) {
+function CustomDrawer({isOpen, isClosed, userName, userEntries, userScore, tiebreaker, maxScore}) {
+
+    console.log(userEntries);
 
     const statusColorMap = {
         Correct: "success",
@@ -60,6 +62,9 @@ function CustomDrawer({isOpen, isClosed, userName, userEntries, userScore, maxSc
                         &nbsp;
                         &nbsp;
                         <span className="text-default-300 text-small">Max score: {maxScore}</span>
+                        &nbsp;
+                        &nbsp;
+                        <span className="text-default-300 text-small">Tiebreaker: {tiebreaker}</span>
                     </div>
                     <div className="section-divider">
                         <Divider className="my-4" />

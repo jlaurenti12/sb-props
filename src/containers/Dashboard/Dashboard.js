@@ -53,7 +53,9 @@ function Dashboard() {
   const [selectedResponses, setSelectedResponses] = useState([]);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [gameStarted, setGameStarted] = useState();
+  const [gameOver, setGameOver] = useState();
   const [isLoaded, setIsLoaded] = useState(false);
+  const [tiebreaker, setTiebreaker] = useState(null);
 
   
   const fetchUser = () => {
@@ -85,12 +87,11 @@ function Dashboard() {
   };
   
   const getGameStatus = async() => {
-    const gameCollectionRef = collection(db, "status");
-    const q = query(gameCollectionRef, where("uid", "==", "1KnxfOXfSOJFb5OdezcY"));
-    const doc = await getDocs(q);
-    const snapshot = doc.docs[0];
+    const h = await getDocs(query(collection(db, "status"), where("uid", "==", "1KnxfOXfSOJFb5OdezcY")));
+    const snapshot = h.docs[0];
     const data = snapshot.data();
     setGameStarted(data.gameStatus);
+    setGameOver(data.gameOver);
   }
 
   const getRemainingQuestions = (questions) => {
@@ -201,16 +202,19 @@ function Dashboard() {
     fetchUserStatus();
   };
 
-  const openDrawer = (responses, score, remaining) => {
+  const openDrawer = (responses, score, remaining, tiebreaker) => {
     setSelectedScore(score);
     setSelectedMax(score + remaining);
+    setTiebreaker(tiebreaker)
     let arr = [];
     let arr2 = [];
 
     for (let index = 0; index < questionList.length; index++) {
 
-        if (questionList[index].correctChoice == null) {
+        if (questionList[index].correctChoice == null ) {
             arr.push(questionList[index].prompt, responses[index], "--", "--")
+        } else if (questionList[index].correctChoice === "N/A" || questionList[index].correctChoice === "Push") {
+          arr.push(questionList[index].prompt, responses[index], questionList[index].correctChoice, "--")
         } else if (questionList[index].correctChoice == responses[index]) {
             arr.push(questionList[index].prompt, responses[index], questionList[index].correctChoice, "Correct")
         } else {
@@ -230,6 +234,7 @@ function Dashboard() {
     setSelectedMax(null);
     setSelectedResponses([]);
     setIsDrawerOpen(false);
+    setTiebreaker(null);
   }
 
 
@@ -313,11 +318,11 @@ function Dashboard() {
                         </TableCell> */}
                         <TableCell>
                             <Tooltip delay={0} closeDelay={0} content="See your responses" className="dark">
-                                <Button isIconOnly size="sm" variant="light" onPress={() => openDrawer(quiz.responses, quiz.score, remainingQuestions)} aria-label="">
+                                <Button isIconOnly size="sm" variant="light" onPress={() => openDrawer(quiz.responses, quiz.score, remainingQuestions, quiz.tiebreaker)} aria-label="">
                                     <IoArrowForwardCircleSharp font-size="24px"/>      
                                 </Button>
                             </Tooltip>
-                            <CustomDrawer isOpen={isDrawerOpen} userEntries={selectedResponses} userName={name} userScore={selectedScore} maxScore={selectedMax} isClosed={closeDrawer}/>
+                            <CustomDrawer isOpen={isDrawerOpen} userEntries={selectedResponses} userName={name} userScore={selectedScore} maxScore={selectedMax} tiebreaker={tiebreaker} isClosed={closeDrawer}/>
                         </TableCell>
                     </TableRow>
                     ) : (
@@ -351,7 +356,7 @@ function Dashboard() {
               <Divider className="my-4" />
             </div>
  
-          <Leaderboard remaining={remainingQuestions} status={gameStarted} />
+          <Leaderboard remaining={remainingQuestions} status={gameStarted} end={gameOver} />
         </div>
       {/* )} */}
     </div>

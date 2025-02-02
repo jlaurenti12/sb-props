@@ -6,7 +6,8 @@ import {
     RadioGroup, 
     Button,
     Form, 
-    Skeleton
+    Skeleton,
+    Input
 } from "@heroui/react";
 import CustomRadio from "../../components/Radio/CustomRadio";
 import "../../assets/styles/Quiz.css";
@@ -52,9 +53,13 @@ function Quiz() {
 
         try {
 
-            const size = Object.keys(data).length;
+            console.log(questionList.length);
 
-            if (size < questionList.length) {
+            const size = Object.keys(data).length;
+            
+            console.log(data);
+
+            if (size < questionList.length + 1 || data.tiebreaker === "") {
                 alert("Answer all questions to submit entry.");
                 return
             }
@@ -65,6 +70,7 @@ function Quiz() {
                 responses: arr,
                 score: 0,
                 isCompleted: true,
+                tiebreaker: Number(data.tiebreaker),
               });
 
 
@@ -102,6 +108,7 @@ return (
                     let data = Object.fromEntries(new FormData(e.currentTarget));
                     onSubmitQuiz(data);
                 }}>
+                <>
                 {questionList.map((question) => (
 
                     <div className="group-choices rounded-md p-4">
@@ -127,7 +134,19 @@ return (
 
                 ))}
 
-                <div className="flex gap-4">
+                    <Input 
+                    type="number"
+                    isRequired
+                    errorMessage="Please enter a total score"
+                    label="Tiebreaker"
+                    labelPlacement="outside"
+                    placeholder="Total score - Price is right rules"
+                    name="tiebreaker"
+                    >
+                    </Input>
+                </>
+
+                <div className="quizSubmit flex gap-4">
                     <Button fullWidth onPress={onDeleteQuiz}>Cancel</Button>
                     <Button fullWidth type="submit" color="primary">Submit</Button>         
                 </div>
