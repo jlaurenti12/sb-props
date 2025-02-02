@@ -1,302 +1,365 @@
 import React, { useEffect, useState } from "react";
 import { db } from "../../services/firebase";
 import { IoArrowForwardCircleSharp } from "react-icons/io5";
-import { getDocs, collection, doc, query, updateDoc, onSnapshot, orderBy, where } from "firebase/firestore";
+import {
+  getDocs,
+  collection,
+  doc,
+  query,
+  updateDoc,
+  onSnapshot,
+  orderBy,
+  where,
+} from "firebase/firestore";
 import "../../assets/styles/Leaderboard.css";
 import CustomDrawer from "./CustomDrawer.js";
 import {
-    Table,
-    TableHeader,
-    TableBody,
-    TableColumn,
-    TableRow,
-    TableCell,
-    Tooltip,
-    Button,
-    ButtonGroup,
-    Skeleton,
-    Chip,
-  } from "@heroui/react";
+  Table,
+  TableHeader,
+  TableBody,
+  TableColumn,
+  TableRow,
+  TableCell,
+  Tooltip,
+  Button,
+  ButtonGroup,
+  Skeleton,
+} from "@heroui/react";
 
-function Leaderboard({remaining, status, end}) {
+function Leaderboard({ remaining, status, end }) {
+  console.log(end);
+
+  const [questionList, setQuestionList] = useState([]);
+  const [quizList, setQuizList] = useState([]);
+  const userCollectionRef = collection(db, "users");
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [selectedScore, setSelectedScore] = useState(null);
+  const [selectedMax, setSelectedMax] = useState(null);
+  const [selectedResponses, setSelectedResponses] = useState([]);
+  const [tiebreaker, setTiebreaker] = useState(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [winner, setWinner] = useState();
+
+  const fetchAnswers = async () => {
+    onSnapshot(collection(db, "questions"), (snapshot) => {
+      getScores();
+      getQuestionList();
+    });
+  };
+
+  const fetchStatus = async () => {
+    onSnapshot(collection(db, "status"), (snapshot) => {
+      getScores();
+    });
+  };
+
+  const getScores = async () => {
+    const userData = await getDocs(collection(db, "users"));
+    const filteredUserData = userData.docs.map((doc) => ({
+      ...doc.data(),
+      id: doc.id,
+      quizzes: [],
+    }));
+
+    const h = await getDocs(
+      query(
+        collection(db, "status"),
+        where("uid", "==", "1KnxfOXfSOJFb5OdezcY")
+      )
+    );
+    const snapshot = h.docs[0];
+    const data = snapshot.data();
+    const end = data.gameOver;
+    const final = data.finalScore;
+
+    await Promise.all(
+      filteredUserData.map(async (user) => {
+        const q = query(collection(userCollectionRef, user.id, "quizzes"));
+        const a = await getDocs(q);
+        const b = [];
+
+        const snapshot = a.docs.map((quiz) => ({
+          ...quiz.data(),
+          id: quiz.id,
+        }));
+
+        snapshot.map((quiz) => {
+          user.quizzes.push(quiz);
+        });
+      })
+    );
+
+    const answerData = await getDocs(
+      query(collection(db, "questions"), orderBy("order"))
+    );
+    const filteredAnswerData = answerData.docs.map((doc) => ({
+      ...doc.data(),
+    }));
+    const answers = [];
+    const quizzes = [];
+
+    filteredAnswerData.map((question) => {
+      answers.push(question.correctChoice);
+    });
+
+    filteredUserData.map((user) => {
+      user.quizzes?.map((quiz) => {
+        let score = 0;
+        for (let index = 0; index < quiz.responses.length; index++) {
+          if (quiz.responses[index] === answers[index]) {
+            score++;
+          }
+        }
+        quiz.score = score;
+        const bothNames = user.name.trim().split(" ");
+        const initial = bothNames[1].substring(0, 1);
+        quiz.user = bothNames[0] + " " + initial;
+        quiz.userId = user.id;
+        const quizDoc = doc(userCollectionRef, user.id, "quizzes", quiz.id);
+        updateDoc(quizDoc, { score: score });
+        quiz.isCompleted ? quizzes.push(quiz) : <></>;
+      });
+    });
+
+    quizzes.sort((a, b) => parseFloat(b.score) - parseFloat(a.score));
+
+    setQuizList(quizzes);
+    setIsLoaded(true);
 
     console.log(end);
 
-    const [questionList, setQuestionList] = useState([]);
-    const [quizList, setQuizList] = useState([]);
-    const userCollectionRef = collection(db, "users");
-    const [selectedUser, setSelectedUser] = useState(null);
-    const [selectedScore, setSelectedScore] = useState(null);
-    const [selectedMax, setSelectedMax] = useState(null);
-    const [selectedResponses, setSelectedResponses] = useState([]);
-    const [tiebreaker, setTiebreaker] = useState(null);
-    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-    const [isLoaded, setIsLoaded] = useState(false);
-    const [winner, setWinner] = useState();
-    
+    end ? getFinal(quizzes, final) : <></>;
+  };
 
-    const fetchAnswers = async() => {
-        onSnapshot(collection(db, "questions"), (snapshot) => {
-            getScores();
-            getQuestionList();
-        });
-    };
+  const getFinal = (quizzes, finalScore) => {
+    console.log(quizzes);
+    const max = Math.max(...quizzes.map((o) => o.score));
+    const highScores = [];
+    quizzes.map((quiz) => {
+      if (quiz.score === max) {
+        highScores.push(quiz);
+      }
+    });
+    console.log(highScores);
 
-    const fetchStatus = async() => {
-        onSnapshot(collection(db, "status"), (snapshot) => {
-            getScores();
-        });
-    };
-
-    const getScores = async() => {
-
-        const userData = await getDocs(collection(db, "users"));
-        const filteredUserData = userData.docs.map((doc) => ({
-            ...doc.data(), 
-            id: doc.id,
-            quizzes: [],
-        }));
-
-        const h = await getDocs(query(collection(db, "status"), where("uid", "==", "1KnxfOXfSOJFb5OdezcY")));
-        const snapshot = h.docs[0];
-        const data = snapshot.data();
-        const end = data.gameOver;
-        const final = data.finalScore;
-
-        await Promise.all (filteredUserData.map(async(user) => {
-            const q = query(collection(userCollectionRef, user.id, "quizzes"));
-            const a = await getDocs(q);
-            const b = [];
-
-            const snapshot = a.docs.map((quiz) => ({
-                ...quiz.data(), 
-                id: quiz.id,
-            }));
-
-            snapshot.map((quiz) => {
-                user.quizzes.push(quiz);
-              })  
-            }) 
-        )
-        
-        const answerData = await getDocs(query(collection(db, "questions"), orderBy("order")));
-        const filteredAnswerData = answerData.docs.map((doc) => ({
-            ...doc.data(), 
-        }));
-        const answers = [];
-        const quizzes = [];
-
-        filteredAnswerData.map((question) => {
-            answers.push(question.correctChoice);
-        });
-
-
-       filteredUserData.map((user) => {
-            user.quizzes?.map((quiz) => {
-                let score = 0;
-                for (let index = 0; index < quiz.responses.length; index++) {
-                    if (quiz.responses[index] === answers[index]) {
-                        score ++;
-                    }
-                } 
-                quiz.score = score;
-                const bothNames = user.name.trim().split(' ');
-                const initial = bothNames[1].substring(0,1);
-                quiz.user = bothNames[0]+" "+initial;
-                quiz.userId = user.id;
-                const quizDoc = doc(userCollectionRef, user.id, "quizzes", quiz.id);
-                updateDoc(quizDoc, {score: score}) 
-                quiz.isCompleted ? quizzes.push(quiz) :  <></>
-            })
-          })
-
-          quizzes.sort((a, b) => parseFloat(b.score) - parseFloat(a.score));
-          
-        setQuizList(quizzes);
-        setIsLoaded(true);
-
-        console.log(end);
-
-        end ? getFinal(quizzes, final) : <></>;
-    };
-
-    const getFinal = (quizzes, finalScore) => {
-        console.log(quizzes);
-        const max = Math.max(...quizzes.map(o => o.score))
-        const highScores = [];
-        quizzes.map((quiz) => {
-            if (quiz.score === max) {
-                highScores.push(quiz);
-            }
-        })
-        console.log(highScores);
-
-        if (highScores.length === 1) {
-            setWinner(highScores.user)
-        } else {
-            tiebreakerCheck(highScores, finalScore)
-        }
-    };
-
-    const tiebreakerCheck = (highScores, finalScore) => {
-        let closest = null;
-
-        highScores.map((quiz) => {
-            if (quiz.tiebreaker === finalScore) {
-                closest = quiz;
-                console.log(quiz.user);
-                console.log("match!");
-            } else if (quiz.tiebreaker < finalScore ) {
-                console.log(closest);
-                if (closest === null) {
-                    closest = quiz;
-                } else  {
-                    console.log(closest);
-                    console.log(quiz.user);
-                    console.log(quiz.tiebreaker);
-                    console.log(closest.tiebreaker);
-                    quiz.tiebreaker > closest.tiebreaker ? closest = quiz : <></>;
-                }
-            } else {
-                <></>
-            }
-        })
-
-        console.log(closest);
-        setWinner(closest.user)
+    if (highScores.length === 1) {
+      setWinner(highScores.user);
+    } else {
+      tiebreakerCheck(highScores, finalScore);
     }
+  };
 
+  const tiebreakerCheck = (highScores, finalScore) => {
+    let closest = null;
 
-
-    const getQuestionList = async() => {
-        try {
-            const data = await getDocs(query(collection(db, "questions"), orderBy("order")));
-            const filteredData = data.docs.map((doc) => ({
-            ...doc.data(), 
-            id: doc.id,
-        }))
-        setQuestionList(filteredData);
-        } catch (err) {
-            console.error(err);
-        }
-    };
-
-    const openDrawer = (user, responses, score, remaining, tiebreaker) => {
-      setSelectedScore(score);
-      setSelectedMax(score + remaining);
-      setSelectedUser(user);
-      setTiebreaker(tiebreaker);
-      let arr = [];
-      let arr2 = [];
-
-      for (let index = 0; index < questionList.length; index++) {
-
-        if (questionList[index].correctChoice == null ) {
-            arr.push(questionList[index].prompt, responses[index], "--", "--")
-        } else if (questionList[index].correctChoice === "N/A" || questionList[index].correctChoice === "Push") {
-            arr.push(questionList[index].prompt, responses[index], questionList[index].correctChoice, "--")
-        } else if (questionList[index].correctChoice == responses[index]) {
-            arr.push(questionList[index].prompt, responses[index], questionList[index].correctChoice, "Correct")
+    highScores.map((quiz) => {
+      if (quiz.tiebreaker === finalScore) {
+        closest = quiz;
+        console.log(quiz.user);
+        console.log("match!");
+      } else if (quiz.tiebreaker < finalScore) {
+        console.log(closest);
+        if (closest === null) {
+          closest = quiz;
         } else {
-            arr.push(questionList[index].prompt, responses[index], questionList[index].correctChoice, "Incorrect")
+          console.log(closest);
+          console.log(quiz.user);
+          console.log(quiz.tiebreaker);
+          console.log(closest.tiebreaker);
+          quiz.tiebreaker > closest.tiebreaker ? (closest = quiz) : <></>;
         }
+      } else {
+        <></>;
+      }
+    });
 
-          arr2.push(arr);
-          arr = [];
+    console.log(closest);
+    setWinner(closest.user);
+  };
+
+  const getQuestionList = async () => {
+    try {
+      const data = await getDocs(
+        query(collection(db, "questions"), orderBy("order"))
+      );
+      const filteredData = data.docs.map((doc) => ({
+        ...doc.data(),
+        id: doc.id,
+      }));
+      setQuestionList(filteredData);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const openDrawer = (user, responses, score, remaining, tiebreaker) => {
+    setSelectedScore(score);
+    setSelectedMax(score + remaining);
+    setSelectedUser(user);
+    setTiebreaker(tiebreaker);
+    let arr = [];
+    let arr2 = [];
+
+    for (let index = 0; index < questionList.length; index++) {
+      if (questionList[index].correctChoice == null) {
+        arr.push(questionList[index].prompt, responses[index], "--", "--");
+      } else if (
+        questionList[index].correctChoice === "N/A" ||
+        questionList[index].correctChoice === "Push"
+      ) {
+        arr.push(
+          questionList[index].prompt,
+          responses[index],
+          questionList[index].correctChoice,
+          "--"
+        );
+      } else if (questionList[index].correctChoice == responses[index]) {
+        arr.push(
+          questionList[index].prompt,
+          responses[index],
+          questionList[index].correctChoice,
+          "Correct"
+        );
+      } else {
+        arr.push(
+          questionList[index].prompt,
+          responses[index],
+          questionList[index].correctChoice,
+          "Incorrect"
+        );
       }
 
-      setSelectedResponses(arr2);
-      setIsDrawerOpen(true);
+      arr2.push(arr);
+      arr = [];
     }
 
-    const closeDrawer = () => {
-      setSelectedUser(null);
-      setSelectedScore(null);
-      setSelectedMax(null);
-      setSelectedResponses([]);
-      setIsDrawerOpen(false);
-      setTiebreaker(null);
-    }
+    setSelectedResponses(arr2);
+    setIsDrawerOpen(true);
+  };
 
-    useEffect(() => {
-        fetchAnswers();
-        fetchStatus();
-        getQuestionList();
-      }, []);
+  const closeDrawer = () => {
+    setSelectedUser(null);
+    setSelectedScore(null);
+    setSelectedMax(null);
+    setSelectedResponses([]);
+    setIsDrawerOpen(false);
+    setTiebreaker(null);
+  };
 
+  useEffect(() => {
+    fetchAnswers();
+    fetchStatus();
+    getQuestionList();
+  }, []);
 
-    return (
-        <div className="flex flex-col gap-4">
-        <Skeleton className="rounded-lg" isLoaded={isLoaded}>
-          <div className="justify-between items-center table-header">
-
-              <div className="text-default-300 text-medium ">Leaderboard</div>
-              {status === false ? (
-
-                 <div className="sub text-small">Other responses hidden until game time</div>
-
-              ): (
-                <></>
-              )}
-          </div>
-        </Skeleton>
-        
-
-            <Skeleton className="rounded-lg" isLoaded={isLoaded}>
-                <ButtonGroup fullWidth isDisabled color="primary" variant="flat">
-                    <Button className="overview">Entries: {quizList.length} <div className="aVerticalSeparator"></div> Prize: ${quizList.length*10}</Button>
-                    {/* <Button className="overview"></Button> */}
-                    { end ? (
-                        <Button className="overview">Winner: {winner}</Button>
-                    ) : (
-                        <Button className="overview">Winner: TBD</Button>
-                    )}
-                </ButtonGroup>
-            </Skeleton>
-
-        <Skeleton className="rounded-lg" isLoaded={isLoaded}>
-        <Table>
-            <TableHeader>
-                <TableColumn>NAME</TableColumn>
-                <TableColumn>SCORE</TableColumn>
-                <TableColumn>MAX</TableColumn>
-                <TableColumn></TableColumn>
-            </TableHeader>
-            <TableBody>
-                {quizList.map((quiz) => (
-                    <TableRow>
-                        <TableCell>{quiz.user}</TableCell>
-                        <TableCell>{quiz.score}</TableCell>
-                        <TableCell>{remaining + quiz.score}</TableCell>
-                        <TableCell>
-                        {status ? (
-                            <>
-                            <Tooltip delay={0} closeDelay={0} content="See responses" className="dark">
-                                <Button isIconOnly size="sm" variant="light" onPress={() => openDrawer(quiz.user, quiz.responses, quiz.score, remaining, quiz.tiebreaker)} aria-label="">
-                                    <IoArrowForwardCircleSharp font-size="24px"/>      
-                                </Button>
-                            </Tooltip>
-                            <CustomDrawer isOpen={isDrawerOpen} userEntries={selectedResponses} userName={selectedUser} userScore={selectedScore} maxScore={selectedMax} tiebreaker={tiebreaker} isClosed={closeDrawer}/>
-                            </>
-                        ) : (
-                            <>
-                            <Tooltip content="Other responses hidden until game time" className="dark">
-                                <Button isIconOnly size="sm" variant="light" color="content4" aria-label="">
-                                    <IoArrowForwardCircleSharp font-size="24px"/>      
-                                </Button>
-                            </Tooltip>
-                            </>
-                        )}
-                        </TableCell>
-                    </TableRow>
-                ))}
-            </TableBody>
-        </Table>
-        </Skeleton>
-
+  return (
+    <div className="flex flex-col gap-4">
+      <Skeleton className="rounded-lg" isLoaded={isLoaded}>
+        <div className="justify-between items-center table-header">
+          <div className="text-default-300 text-medium ">Leaderboard</div>
+          {status === false ? (
+            <div className="sub text-small">
+              Other responses hidden until game time
+            </div>
+          ) : (
+            <></>
+          )}
         </div>
-    );
+      </Skeleton>
+
+      <Skeleton className="rounded-lg" isLoaded={isLoaded}>
+        <ButtonGroup fullWidth isDisabled color="primary" variant="flat">
+          <Button className="overview">
+            Entries: {quizList.length}{" "}
+            <div className="aVerticalSeparator"></div> Prize: $
+            {quizList.length * 10}
+          </Button>
+          {end ? (
+            <Button className="overview">Winner: {winner}</Button>
+          ) : (
+            <Button className="overview">Winner: TBD</Button>
+          )}
+        </ButtonGroup>
+      </Skeleton>
+
+      <Skeleton className="rounded-lg" isLoaded={isLoaded}>
+        <Table>
+          <TableHeader>
+            <TableColumn>NAME</TableColumn>
+            <TableColumn>SCORE</TableColumn>
+            <TableColumn>MAX</TableColumn>
+            <TableColumn></TableColumn>
+          </TableHeader>
+          <TableBody>
+            {quizList.map((quiz) => (
+              <TableRow>
+                <TableCell>{quiz.user}</TableCell>
+                <TableCell>{quiz.score}</TableCell>
+                <TableCell>{remaining + quiz.score}</TableCell>
+                <TableCell>
+                  {status ? (
+                    <>
+                      <Tooltip
+                        delay={0}
+                        closeDelay={0}
+                        content="See responses"
+                        className="dark"
+                      >
+                        <Button
+                          isIconOnly
+                          size="sm"
+                          variant="light"
+                          onPress={() =>
+                            openDrawer(
+                              quiz.user,
+                              quiz.responses,
+                              quiz.score,
+                              remaining,
+                              quiz.tiebreaker
+                            )
+                          }
+                          aria-label=""
+                        >
+                          <IoArrowForwardCircleSharp font-size="24px" />
+                        </Button>
+                      </Tooltip>
+                      <CustomDrawer
+                        isOpen={isDrawerOpen}
+                        userEntries={selectedResponses}
+                        userName={selectedUser}
+                        userScore={selectedScore}
+                        maxScore={selectedMax}
+                        tiebreaker={tiebreaker}
+                        isClosed={closeDrawer}
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <Tooltip
+                        content="Other responses hidden until game time"
+                        className="dark"
+                      >
+                        <Button
+                          isIconOnly
+                          size="sm"
+                          variant="light"
+                          color="content4"
+                          aria-label=""
+                        >
+                          <IoArrowForwardCircleSharp font-size="24px" />
+                        </Button>
+                      </Tooltip>
+                    </>
+                  )}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </Skeleton>
+    </div>
+  );
 }
 
 export default Leaderboard;
-

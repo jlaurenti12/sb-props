@@ -12,11 +12,10 @@ import {
   query,
   where,
   onSnapshot,
-  orderBy
+  orderBy,
 } from "firebase/firestore";
 import Leaderboard from "./Leaderboard";
 import CustomDrawer from "./CustomDrawer.js";
-import "../../assets/styles/Leaderboard.css";
 import { IoEllipsisHorizontalCircleSharp } from "react-icons/io5";
 import {
   Table,
@@ -33,12 +32,9 @@ import {
   Button,
   Divider,
   Skeleton,
-  Spinner
 } from "@heroui/react";
 
-
 function Dashboard() {
-
   const [user, loading] = useAuthState(auth);
   const [questionList, setQuestionList] = useState([]);
   const navigate = useNavigate();
@@ -57,7 +53,6 @@ function Dashboard() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [tiebreaker, setTiebreaker] = useState(null);
 
-  
   const fetchUser = () => {
     try {
       const q = query(userCollectionRef, where("uid", "==", user?.uid));
@@ -67,32 +62,36 @@ function Dashboard() {
         if (test.length > 0) {
           const data = querySnapshot?.docs[0].data();
           setUserID(data.id);
-          const bothNames = data.name.trim().split(' ');
-          const initial = bothNames[1].substring(0,1);
-          setName(bothNames[0]+" "+initial);
+          const bothNames = data.name.trim().split(" ");
+          const initial = bothNames[1].substring(0, 1);
+          setName(bothNames[0] + " " + initial);
           fetchUserStatus();
           getQuestionList();
           getGameStatus();
         }
-      })
+      });
 
-        onSnapshot(collection(db, "status"), (snapshot) => {
-            getGameStatus();
-        });
-
+      onSnapshot(collection(db, "status"), (snapshot) => {
+        getGameStatus();
+      });
     } catch (err) {
       console.error(err);
-      // alert("An error occured while fetching user data");
+      alert("An error occured while fetching user data");
     }
   };
-  
-  const getGameStatus = async() => {
-    const h = await getDocs(query(collection(db, "status"), where("uid", "==", "1KnxfOXfSOJFb5OdezcY")));
+
+  const getGameStatus = async () => {
+    const h = await getDocs(
+      query(
+        collection(db, "status"),
+        where("uid", "==", "1KnxfOXfSOJFb5OdezcY")
+      )
+    );
     const snapshot = h.docs[0];
     const data = snapshot.data();
     setGameStarted(data.gameStatus);
     setGameOver(data.gameOver);
-  }
+  };
 
   const getRemainingQuestions = (questions) => {
     let total = 0;
@@ -104,62 +103,67 @@ function Dashboard() {
 
   const getQuestionList = async () => {
     try {
-      onSnapshot(query(collection(db, "questions") , orderBy("order")), (snapshot) => {
-        const filteredData = snapshot.docs.map((doc) => ({
-          ...doc.data(),
-          id: doc.id,
-        }));
-        setQuestionList(filteredData);
-        getRemainingQuestions(filteredData);
-        getScores();
-      });
+      onSnapshot(
+        query(collection(db, "questions"), orderBy("order")),
+        (snapshot) => {
+          const filteredData = snapshot.docs.map((doc) => ({
+            ...doc.data(),
+            id: doc.id,
+          }));
+          setQuestionList(filteredData);
+          getRemainingQuestions(filteredData);
+          getScores();
+        }
+      );
     } catch (err) {
       console.error(err);
     }
   };
 
-  const getScores = async() => {
+  const getScores = async () => {
     const q = query(userCollectionRef, where("uid", "==", user?.uid));
     const person = await getDocs(q);
     const snapshot = person.docs[0].id;
     const a = await getDocs(collection(userCollectionRef, snapshot, "quizzes"));
 
     const data = a.docs.map((quiz) => ({
-      ...quiz.data(), 
+      ...quiz.data(),
       id: quiz.id,
     }));
-  
-    const answerData = await getDocs(query(collection(db, "questions"), orderBy("order")));
-      
+
+    const answerData = await getDocs(
+      query(collection(db, "questions"), orderBy("order"))
+    );
+
     const filteredAnswerData = answerData.docs.map((doc) => ({
-          ...doc.data(), 
-      }));
-      const answers = [];
-      const quizzes = [];
+      ...doc.data(),
+    }));
+    const answers = [];
+    const quizzes = [];
 
-      filteredAnswerData.map((question) => {
-          answers.push(question.correctChoice);
-      });
+    filteredAnswerData.map((question) => {
+      answers.push(question.correctChoice);
+    });
 
-      data.map((quiz) => {
-          let score = 0;
-          for (let index = 0; index < quiz.responses.length; index++) {
-              if (quiz.responses[index] === answers[index]) {
-                  score ++;
-              }
-          } 
-          quiz.score = score;
-          quiz.user = user.name;
-          quiz.userId = user.id;
-          const quizDoc = doc(userCollectionRef, snapshot, "quizzes", quiz.id);
-          updateDoc(quizDoc, {score: score}) 
-          quiz.isCompleted ? quizzes.push(quiz) :  <></>
-      })
+    data.map((quiz) => {
+      let score = 0;
+      for (let index = 0; index < quiz.responses.length; index++) {
+        if (quiz.responses[index] === answers[index]) {
+          score++;
+        }
+      }
+      quiz.score = score;
+      quiz.user = user.name;
+      quiz.userId = user.id;
+      const quizDoc = doc(userCollectionRef, snapshot, "quizzes", quiz.id);
+      updateDoc(quizDoc, { score: score });
+      quiz.isCompleted ? quizzes.push(quiz) : <></>;
+    });
 
-        quizzes.sort((a, b) => parseFloat(b.score) - parseFloat(a.score));
-        
-      setQuizList(quizzes);
-      setIsLoaded(true);
+    quizzes.sort((a, b) => parseFloat(b.score) - parseFloat(a.score));
+
+    setQuizList(quizzes);
+    setIsLoaded(true);
   };
 
   const fetchUserStatus = async () => {
@@ -178,20 +182,20 @@ function Dashboard() {
       setQuizList(filteredData);
     } catch (err) {
       console.error(err);
-      // alert("An error occured while fetching user data");
+      alert("An error occured while fetching user data");
     }
   };
 
-  const onStartQuiz = async() => {
+  const onStartQuiz = async () => {
     const a = query(userCollectionRef, where("uid", "==", user?.uid));
     const person = await getDocs(a);
 
     const test = person.docs[0].id;
-    return navigate("/quiz", { state: {id: test}});
+    return navigate("/quiz", { state: { id: test } });
   };
-  
+
   const onContinueQuiz = async (id) => {
-    setQuizID(id)
+    setQuizID(id);
     return navigate(`quiz/${id}`);
   };
 
@@ -205,29 +209,46 @@ function Dashboard() {
   const openDrawer = (responses, score, remaining, tiebreaker) => {
     setSelectedScore(score);
     setSelectedMax(score + remaining);
-    setTiebreaker(tiebreaker)
+    setTiebreaker(tiebreaker);
     let arr = [];
     let arr2 = [];
 
     for (let index = 0; index < questionList.length; index++) {
+      if (questionList[index].correctChoice == null) {
+        arr.push(questionList[index].prompt, responses[index], "--", "--");
+      } else if (
+        questionList[index].correctChoice === "N/A" ||
+        questionList[index].correctChoice === "Push"
+      ) {
+        arr.push(
+          questionList[index].prompt,
+          responses[index],
+          questionList[index].correctChoice,
+          "--"
+        );
+      } else if (questionList[index].correctChoice == responses[index]) {
+        arr.push(
+          questionList[index].prompt,
+          responses[index],
+          questionList[index].correctChoice,
+          "Correct"
+        );
+      } else {
+        arr.push(
+          questionList[index].prompt,
+          responses[index],
+          questionList[index].correctChoice,
+          "Incorrect"
+        );
+      }
 
-        if (questionList[index].correctChoice == null ) {
-            arr.push(questionList[index].prompt, responses[index], "--", "--")
-        } else if (questionList[index].correctChoice === "N/A" || questionList[index].correctChoice === "Push") {
-          arr.push(questionList[index].prompt, responses[index], questionList[index].correctChoice, "--")
-        } else if (questionList[index].correctChoice == responses[index]) {
-            arr.push(questionList[index].prompt, responses[index], questionList[index].correctChoice, "Correct")
-        } else {
-            arr.push(questionList[index].prompt, responses[index], questionList[index].correctChoice, "Incorrect")
-        }
-
-        arr2.push(arr);
-        arr = [];
+      arr2.push(arr);
+      arr = [];
     }
 
     setSelectedResponses(arr2);
     setIsDrawerOpen(true);
-  }
+  };
 
   const closeDrawer = () => {
     setSelectedScore(null);
@@ -235,8 +256,7 @@ function Dashboard() {
     setSelectedResponses([]);
     setIsDrawerOpen(false);
     setTiebreaker(null);
-  }
-
+  };
 
   useEffect(() => {
     if (loading) {
@@ -244,120 +264,150 @@ function Dashboard() {
     }
     if (!user) return navigate("/");
 
-      fetchUser();
-      getGameStatus();
-      
+    fetchUser();
+    getGameStatus();
   }, [user, loading]);
 
-
   return (
-
     <div className="table">
-
-        <div className="tableContent flex flex-col gap-4">
-          <div className="flex justify-between items-center">
-              <span className="text-default-300 text-medium table-header">Your entries</span>
-            {gameStarted ? (
-              <Tooltip 
-                delay={0} closeDelay={0} content="The game started. No more entries!">
-                <Skeleton className="rounded-lg" isLoaded={isLoaded}>
-                  <Button radius="full" isDisabled size="md" color="secondary" onPress={onStartQuiz}>Add Entry</Button>
-                </Skeleton>
-              </Tooltip>
-            ) : (
+      <div className="tableContent flex flex-col gap-4">
+        <div className="flex justify-between items-center">
+          <span className="text-default-300 text-medium table-header">
+            Your entries
+          </span>
+          {gameStarted ? (
+            <Tooltip
+              delay={0}
+              closeDelay={0}
+              content="The game started. No more entries!"
+            >
               <Skeleton className="rounded-lg" isLoaded={isLoaded}>
-                <Button adius="full" size="md" color="secondary" onPress={onStartQuiz}>Add Entry</Button>
+                <Button
+                  radius="full"
+                  isDisabled
+                  size="md"
+                  color="secondary"
+                  onPress={onStartQuiz}
+                >
+                  Add Entry
+                </Button>
               </Skeleton>
-            )}
-
-          </div>
-          <Skeleton className="rounded-lg" isLoaded={isLoaded}>
-            <Table color="secondary">
-              <TableHeader>
-                  <TableColumn>NAME</TableColumn>
-                  <TableColumn>SCORE</TableColumn>
-                  <TableColumn>MAX</TableColumn>
-                  <TableColumn></TableColumn>
-              </TableHeader>
+            </Tooltip>
+          ) : (
+            <Skeleton className="rounded-lg" isLoaded={isLoaded}>
+              <Button
+                adius="full"
+                size="md"
+                color="secondary"
+                onPress={onStartQuiz}
+              >
+                Add Entry
+              </Button>
+            </Skeleton>
+          )}
+        </div>
+        <Skeleton className="rounded-lg" isLoaded={isLoaded}>
+          <Table color="secondary">
+            <TableHeader>
+              <TableColumn>NAME</TableColumn>
+              <TableColumn>SCORE</TableColumn>
+              <TableColumn>MAX</TableColumn>
+              <TableColumn></TableColumn>
+            </TableHeader>
 
             {quizList.length === 0 ? (
-
-
-            <TableBody 
-              emptyContent={"You haven't submitted an entry yet."}>
-              {[]}
-            </TableBody>
-
-
+              <TableBody emptyContent={"You haven't submitted an entry yet."}>
+                {[]}
+              </TableBody>
             ) : (
-
-            <TableBody>
+              <TableBody>
                 {quizList.map((quiz) =>
-                    quiz.isCompleted ? (
+                  quiz.isCompleted ? (
                     <TableRow>
-                        <TableCell>{name}</TableCell>
-                        <TableCell>{quiz.score}</TableCell>
-                        <TableCell>{remainingQuestions + quiz.score}</TableCell>
-                        {/* <TableCell>                       
-                            <div className="relative flex justify-end cursor-pointer items-center gap-2">
-                            <Dropdown className="dark">
-                              <DropdownTrigger>
-                                <Button isIconOnly size="sm" variant="light">
-                                  <IoEllipsisHorizontalCircleSharp font-size="24px"/>
-                                </Button>
-                              </DropdownTrigger>
-                              <DropdownMenu className="dark">
-                                <DropdownItem onPress={() => openDrawer(quiz.responses, quiz.score, remainingQuestions)}>See Responses
-                                </DropdownItem>
-                                <DropdownItem onPress={() => onContinueQuiz(quiz.id)}>Edit</DropdownItem>
-                                <DropdownItem onPress={() => onDeleteQuiz(quiz.id)}>Delete</DropdownItem>
-                              </DropdownMenu>
-                            </Dropdown>
-                          </div>   
-                          <CustomDrawer isOpen={isDrawerOpen} userEntries={selectedResponses} userName={name} userScore={selectedScore} maxScore={selectedMax} isClosed={closeDrawer}/>
-                        </TableCell> */}
-                        <TableCell>
-                            <Tooltip delay={0} closeDelay={0} content="See your responses" className="dark">
-                                <Button isIconOnly size="sm" variant="light" onPress={() => openDrawer(quiz.responses, quiz.score, remainingQuestions, quiz.tiebreaker)} aria-label="">
-                                    <IoArrowForwardCircleSharp font-size="24px"/>      
-                                </Button>
-                            </Tooltip>
-                            <CustomDrawer isOpen={isDrawerOpen} userEntries={selectedResponses} userName={name} userScore={selectedScore} maxScore={selectedMax} tiebreaker={tiebreaker} isClosed={closeDrawer}/>
-                        </TableCell>
+                      <TableCell>{name}</TableCell>
+                      <TableCell>{quiz.score}</TableCell>
+                      <TableCell>{remainingQuestions + quiz.score}</TableCell>
+                      <TableCell>
+                        <Tooltip
+                          delay={0}
+                          closeDelay={0}
+                          content="See your responses"
+                          className="dark"
+                        >
+                          <Button
+                            isIconOnly
+                            size="sm"
+                            variant="light"
+                            onPress={() =>
+                              openDrawer(
+                                quiz.responses,
+                                quiz.score,
+                                remainingQuestions,
+                                quiz.tiebreaker
+                              )
+                            }
+                            aria-label=""
+                          >
+                            <IoArrowForwardCircleSharp font-size="24px" />
+                          </Button>
+                        </Tooltip>
+                        <CustomDrawer
+                          isOpen={isDrawerOpen}
+                          userEntries={selectedResponses}
+                          userName={name}
+                          userScore={selectedScore}
+                          maxScore={selectedMax}
+                          tiebreaker={tiebreaker}
+                          isClosed={closeDrawer}
+                        />
+                      </TableCell>
                     </TableRow>
-                    ) : (
-                      <TableRow>
-                        <TableCell>{name}</TableCell>
-                        <TableCell>--</TableCell>
-                        <TableCell>--</TableCell>
-                        <TableCell>
-                            <div className="relative flex justify-end cursor-pointer items-center gap-2">
-                              <Dropdown className="dark">
-                                <DropdownTrigger>
-                                  <Button isIconOnly size="sm" variant="light">
-                                    <IoEllipsisHorizontalCircleSharp font-size="24px" />
-                                  </Button>
-                                </DropdownTrigger>
-                                <DropdownMenu>
-                                  <DropdownItem onPress={() => onContinueQuiz(quiz.id)}>Continue</DropdownItem>
-                                  <DropdownItem onPress={() => onDeleteQuiz(quiz.id)}>Delete</DropdownItem>
-                                </DropdownMenu>
-                              </Dropdown>
-                            </div>
-                        </TableCell>
-                      </TableRow>
-                ))}
+                  ) : (
+                    <TableRow>
+                      <TableCell>{name}</TableCell>
+                      <TableCell>--</TableCell>
+                      <TableCell>--</TableCell>
+                      <TableCell>
+                        <div className="relative flex justify-end cursor-pointer items-center gap-2">
+                          <Dropdown className="dark">
+                            <DropdownTrigger>
+                              <Button isIconOnly size="sm" variant="light">
+                                <IoEllipsisHorizontalCircleSharp font-size="24px" />
+                              </Button>
+                            </DropdownTrigger>
+                            <DropdownMenu>
+                              <DropdownItem
+                                onPress={() => onContinueQuiz(quiz.id)}
+                              >
+                                Continue
+                              </DropdownItem>
+                              <DropdownItem
+                                onPress={() => onDeleteQuiz(quiz.id)}
+                              >
+                                Delete
+                              </DropdownItem>
+                            </DropdownMenu>
+                          </Dropdown>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )
+                )}
               </TableBody>
             )}
-            </Table>
-            </Skeleton>
+          </Table>
+        </Skeleton>
 
-            <div className="section-divider">
-              <Divider className="my-4" />
-            </div>
- 
-          <Leaderboard remaining={remainingQuestions} status={gameStarted} end={gameOver} />
+        <div className="section-divider">
+          <Divider className="my-4" />
         </div>
+
+        <Leaderboard
+          remaining={remainingQuestions}
+          status={gameStarted}
+          end={gameOver}
+        />
+      </div>
       {/* )} */}
     </div>
   );

@@ -6,36 +6,24 @@ import {
   registerWithEmailAndPassword,
   signInWithGoogle,
 } from "../../services/firebase";
-import "../../assets/styles/Register.css";
-import {Form, Input, Button, Image, Divider} from "@heroui/react";
+import { Form, Input, Button, Image, Divider } from "@heroui/react";
 import { IoLogoGoogle } from "react-icons/io5";
-import "../../assets/styles/Login.css";
 import mainLogo from "../../assets/images/sb_logo.png";
 
-
 function Register() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
-  const [user, loading, error] = useAuthState(auth);
+  const [user, loading] = useAuthState(auth);
   const navigate = useNavigate();
-
-  const register = () => {
-    if (!name) alert("Please enter name");
-    registerWithEmailAndPassword(name, email, password);
-  };
 
   useEffect(() => {
     if (loading) return;
     if (user) {
-        navigate("/dashboard");
+      navigate("/dashboard");
     } else {
-      navigate("/register")
+      navigate("/register");
     }
   }, [user, loading]);
 
   return (
-
     <>
       <Form
         className="max-w-sm grid gap-4 rounded-md login"
@@ -43,14 +31,10 @@ function Register() {
           e.preventDefault();
           let data = Object.fromEntries(new FormData(e.currentTarget));
           console.log(data);
-          registerWithEmailAndPassword(data.name, data.email, data.password)
+          registerWithEmailAndPassword(data.name, data.email, data.password);
         }}
       >
-        <Image
-          alt="Event image"
-          src={mainLogo}
-          className="logo"
-        />
+        <Image alt="Event image" src={mainLogo} className="logo" />
         <Input
           isRequired
           errorMessage="Please enter a name"
@@ -79,59 +63,23 @@ function Register() {
           Register
         </Button>
         <div className="text-small buttonBreak">Or</div>
-        <Button fullWidth variant="solid" color="primary" startContent={<IoLogoGoogle />}  onPress={signInWithGoogle}>
+        <Button
+          fullWidth
+          variant="solid"
+          color="primary"
+          startContent={<IoLogoGoogle />}
+          onPress={signInWithGoogle}
+        >
           Sign Up Using Google
         </Button>
 
-          <Divider className="my-4" />
+        <Divider className="my-4" />
 
-          <div className="text-small form">
-                Already have an account? <Link  to="/"> Login</Link> now.
-          </div>
+        <div className="text-small form">
+          Already have an account? <Link to="/"> Login</Link> now.
+        </div>
       </Form>
     </>
-
-
-
-
-    // <div className="register">
-    //   <div className="register__container">
-    //     <input
-    //       type="text"
-    //       className="register__textBox"
-    //       value={name}
-    //       onChange={(e) => setName(e.target.value)}
-    //       placeholder="Full Name"
-    //     />
-    //     <input
-    //       type="text"
-    //       className="register__textBox"
-    //       value={email}
-    //       onChange={(e) => setEmail(e.target.value)}
-    //       placeholder="E-mail Address"
-    //     />
-    //     <input
-    //       type="password"
-    //       className="register__textBox"
-    //       value={password}
-    //       onChange={(e) => setPassword(e.target.value)}
-    //       placeholder="Password"
-    //     />
-    //     <button className="register__btn" onClick={register}>
-    //       Register
-    //     </button>
-    //     <button
-    //       className="register__btn register__google"
-    //       onClick={signInWithGoogle}
-    //     >
-    //       Register with Google
-    //     </button>
-
-    //     <div>
-    //       Already have an account? <Link to="/">Login</Link> now.
-    //     </div>
-    //   </div>
-    // </div>
   );
 }
 

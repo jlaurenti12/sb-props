@@ -1,20 +1,21 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { auth, logInWithEmailAndPassword, signInWithGoogle } from "../../services/firebase";
+import {
+  auth,
+  logInWithEmailAndPassword,
+  signInWithGoogle,
+} from "../../services/firebase";
 import { useAuthState } from "react-firebase-hooks/auth";
-import {Form, Input, Button, Image, Divider} from "@heroui/react";
+import { Form, Input, Button, Image, Divider } from "@heroui/react";
 import { IoLogoGoogle } from "react-icons/io5";
-import "../../assets/styles/Login.css";
 import mainLogo from "../../assets/images/sb_logo.png";
 
 function Login() {
-  const [user, loading, error] = useAuthState(auth);
+  const [user, loading] = useAuthState(auth);
   const navigate = useNavigate();
-
 
   useEffect(() => {
     if (loading) {
-      // maybe trigger a loading screen
       return;
     }
     if (user) navigate("/dashboard");
@@ -28,14 +29,10 @@ function Login() {
           e.preventDefault();
           let data = Object.fromEntries(new FormData(e.currentTarget));
           console.log(data);
-          logInWithEmailAndPassword(data.email, data.password)
+          logInWithEmailAndPassword(data.email, data.password);
         }}
       >
-        <Image
-          alt="Event image"
-          src={mainLogo}
-          className="logo"
-        />
+        <Image alt="Event image" src={mainLogo} className="logo" />
         <Input
           isRequired
           errorMessage="Please enter a valid email"
@@ -52,22 +49,28 @@ function Login() {
           name="password"
           type="password"
         />
-          <div className="text-small form">
-              <Link  to="/reset"> Forgot Password?</Link>
-          </div>
+        <div className="text-small form">
+          <Link to="/reset"> Forgot Password?</Link>
+        </div>
         <Button fullWidth type="submit" variant="solid" color="secondary">
           Login
         </Button>
         <div className="text-small buttonBreak">Or</div>
-        <Button fullWidth variant="solid" color="primary" startContent={<IoLogoGoogle />}  onPress={signInWithGoogle}>
+        <Button
+          fullWidth
+          variant="solid"
+          color="primary"
+          startContent={<IoLogoGoogle />}
+          onPress={signInWithGoogle}
+        >
           Sign-in Using Google
         </Button>
 
-          <Divider className="my-4" />
+        <Divider className="my-4" />
 
-          <div className="text-small form">
-                Don't have an account? <Link  to="/register"> Register</Link> now.
-          </div>
+        <div className="text-small form">
+          Don't have an account? <Link to="/register"> Register</Link> now.
+        </div>
       </Form>
     </>
   );
