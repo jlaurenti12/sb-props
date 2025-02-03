@@ -9,6 +9,7 @@ import {
   addDoc,
   orderBy,
   query,
+  where,
 } from "firebase/firestore";
 import { RadioGroup, Button, Form, Skeleton, Input } from "@heroui/react";
 import CustomRadio from "../../components/Radio/CustomRadio";
@@ -71,6 +72,19 @@ function Quiz() {
       await updateDoc(b, {
         takenQuiz: true,
       });
+
+      const statusDoc = await getDocs(
+        query(
+          collection(db, "status"),
+          where("uid", "==", "1KnxfOXfSOJFb5OdezcY")
+        )
+      );
+      const snapshot = statusDoc.docs[0];
+      const r = snapshot.data();
+      let count = r.entries;
+
+      const gameEntries = doc(db, "status", "1KnxfOXfSOJFb5OdezcY");
+      await updateDoc(gameEntries, { entries: count + 1 });
 
       return navigate("/");
     } catch (err) {

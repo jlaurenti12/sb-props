@@ -27,8 +27,6 @@ import {
 } from "@heroui/react";
 
 function Leaderboard({ remaining, status, end }) {
-  console.log(end);
-
   const [questionList, setQuestionList] = useState([]);
   const [quizList, setQuizList] = useState([]);
   const userCollectionRef = collection(db, "users");
@@ -256,16 +254,7 @@ function Leaderboard({ remaining, status, end }) {
   return (
     <div className="flex flex-col gap-4">
       <Skeleton className="rounded-lg" isLoaded={isLoaded}>
-        <div className="justify-between items-center table-header">
-          <div className="text-default-300 text-medium ">Leaderboard</div>
-          {status === false ? (
-            <div className="sub text-small">
-              Other responses hidden until game time
-            </div>
-          ) : (
-            <></>
-          )}
-        </div>
+        <div className="text-default-300 text-medium">Leaderboard</div>
       </Skeleton>
 
       <Skeleton className="rounded-lg" isLoaded={isLoaded}>
@@ -346,6 +335,9 @@ function Leaderboard({ remaining, status, end }) {
                           variant="light"
                           color="content4"
                           aria-label=""
+                          onPress={() => {
+                            alert("Others' responses hidden until game time.");
+                          }}
                         >
                           <IoArrowForwardCircleSharp font-size="24px" />
                         </Button>
