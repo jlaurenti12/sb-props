@@ -142,7 +142,7 @@ function Leaderboard({ remaining, status, end }) {
     console.log(highScores);
 
     if (highScores.length === 1) {
-      setWinner(highScores.user);
+      setWinner(highScores[0].user);
     } else {
       tiebreakerCheck(highScores, finalScore);
     }
