@@ -125,13 +125,10 @@ function Leaderboard({ remaining, status, end }) {
     setQuizList(quizzes);
     setIsLoaded(true);
 
-    console.log(end);
-
     end ? getFinal(quizzes, final) : <></>;
   };
 
   const getFinal = (quizzes, finalScore) => {
-    console.log(quizzes);
     const max = Math.max(...quizzes.map((o) => o.score));
     const highScores = [];
     quizzes.map((quiz) => {
@@ -139,7 +136,6 @@ function Leaderboard({ remaining, status, end }) {
         highScores.push(quiz);
       }
     });
-    console.log(highScores);
 
     if (highScores.length === 1) {
       setWinner(highScores[0].user);
@@ -154,17 +150,10 @@ function Leaderboard({ remaining, status, end }) {
     highScores.map((quiz) => {
       if (quiz.tiebreaker === finalScore) {
         closest = quiz;
-        console.log(quiz.user);
-        console.log("match!");
       } else if (quiz.tiebreaker < finalScore) {
-        console.log(closest);
         if (closest === null) {
           closest = quiz;
         } else {
-          console.log(closest);
-          console.log(quiz.user);
-          console.log(quiz.tiebreaker);
-          console.log(closest.tiebreaker);
           quiz.tiebreaker > closest.tiebreaker ? (closest = quiz) : <></>;
         }
       } else {
@@ -172,7 +161,6 @@ function Leaderboard({ remaining, status, end }) {
       }
     });
 
-    console.log(closest);
     setWinner(closest.user);
   };
 
