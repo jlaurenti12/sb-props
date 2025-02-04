@@ -156,7 +156,7 @@ function Dashboard() {
       quiz.user = user.name;
       quiz.userId = user.id;
       const quizDoc = doc(userCollectionRef, snapshot, "quizzes", quiz.id);
-      updateDoc(quizDoc, { score: score });
+      //updateDoc(quizDoc, { score: score });
       quiz.isCompleted ? quizzes.push(quiz) : <></>;
     });
 
@@ -321,9 +321,9 @@ function Dashboard() {
               </TableBody>
             ) : (
               <TableBody>
-                {quizList.map((quiz) =>
+                {quizList.map((quiz, index) =>
                   quiz.isCompleted ? (
-                    <TableRow>
+                    <TableRow key={index}>
                       <TableCell>{name}</TableCell>
                       <TableCell>{quiz.score}</TableCell>
                       <TableCell>{remainingQuestions + quiz.score}</TableCell>
@@ -348,7 +348,7 @@ function Dashboard() {
                             }
                             aria-label=""
                           >
-                            <IoArrowForwardCircleSharp font-size="24px" />
+                            <IoArrowForwardCircleSharp fontSize="24px" />
                           </Button>
                         </Tooltip>
                         <CustomDrawer
@@ -363,7 +363,7 @@ function Dashboard() {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    <TableRow>
+                    <TableRow key={index}>
                       <TableCell>{name}</TableCell>
                       <TableCell>--</TableCell>
                       <TableCell>--</TableCell>
@@ -372,7 +372,7 @@ function Dashboard() {
                           <Dropdown className="dark">
                             <DropdownTrigger>
                               <Button isIconOnly size="sm" variant="light">
-                                <IoEllipsisHorizontalCircleSharp font-size="24px" />
+                                <IoEllipsisHorizontalCircleSharp fontSize="24px" />
                               </Button>
                             </DropdownTrigger>
                             <DropdownMenu>

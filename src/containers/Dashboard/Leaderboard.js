@@ -115,7 +115,7 @@ function Leaderboard({ remaining, status, end }) {
         quiz.user = bothNames[0] + " " + initial;
         quiz.userId = user.id;
         const quizDoc = doc(userCollectionRef, user.id, "quizzes", quiz.id);
-        updateDoc(quizDoc, { score: score });
+        //updateDoc(quizDoc, { score: score });
         quiz.isCompleted ? quizzes.push(quiz) : <></>;
       });
     });
@@ -281,8 +281,8 @@ function Leaderboard({ remaining, status, end }) {
             <TableColumn></TableColumn>
           </TableHeader>
           <TableBody>
-            {quizList.map((quiz) => (
-              <TableRow>
+            {quizList.map((quiz, index) => (
+              <TableRow key={index}>
                 <TableCell>{quiz.user}</TableCell>
                 <TableCell>{quiz.score}</TableCell>
                 <TableCell>{remaining + quiz.score}</TableCell>
@@ -310,7 +310,7 @@ function Leaderboard({ remaining, status, end }) {
                           }
                           aria-label=""
                         >
-                          <IoArrowForwardCircleSharp font-size="24px" />
+                          <IoArrowForwardCircleSharp fontSize="24px" />
                         </Button>
                       </Tooltip>
                       <CustomDrawer
@@ -339,7 +339,7 @@ function Leaderboard({ remaining, status, end }) {
                             alert("Others' responses hidden until game time.");
                           }}
                         >
-                          <IoArrowForwardCircleSharp font-size="24px" />
+                          <IoArrowForwardCircleSharp fontSize="24px" />
                         </Button>
                       </Tooltip>
                     </>

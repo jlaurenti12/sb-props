@@ -232,8 +232,8 @@ function Admin() {
               <TableColumn></TableColumn>
             </TableHeader>
             <TableBody>
-              {questionList.map((question) => (
-                <TableRow>
+              {questionList.map((question, index) => (
+                <TableRow key={index}>
                   <TableCell>{question.order}</TableCell>
                   <TableCell>{question.prompt}</TableCell>
                   <TableCell>{question.choices}</TableCell>
@@ -249,7 +249,7 @@ function Admin() {
                       variant="light"
                       onPress={() => openDrawer(question)}
                     >
-                      <IoPencil font-size="20px" />
+                      <IoPencil fontSize="20px" />
                     </Button>
                     <QuestionDrawer
                       isOpen={isDrawerOpen}
