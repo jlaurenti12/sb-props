@@ -34,19 +34,19 @@ function CustomDrawer({
     if (response === "Correct") {
       return (
         <Chip color={statusColorMap[response]} size="sm" variant="flat">
-          <IoCheckmark font-size="20px" />
+          <IoCheckmark fontSize="20px" />
         </Chip>
       );
     } else if (response === "Incorrect") {
       return (
         <Chip color={statusColorMap[response]} size="sm" variant="flat">
-          <IoClose font-size="20px" />
+          <IoClose fontSize="20px" />
         </Chip>
       );
     } else {
       return (
         <Chip color="default" size="sm" variant="flat">
-          <IoRemoveOutline font-size="20px" />
+          <IoRemoveOutline fontSize="20px" />
         </Chip>
       );
     }
