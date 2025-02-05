@@ -63,8 +63,14 @@ function Dashboard() {
           const data = querySnapshot?.docs[0].data();
           setUserID(data.id);
           const bothNames = data.name.trim().split(" ");
-          const initial = bothNames[1].substring(0, 1);
-          setName(bothNames[0] + " " + initial);
+          console.log(bothNames);
+          if (bothNames.length > 1) {
+            const initial = bothNames[1].substring(0, 1);
+            setName(bothNames[0] + " " + initial);
+          } else {
+            setName(bothNames[0]);
+          }
+
           fetchUserStatus();
           getQuestionList();
           getGameStatus();

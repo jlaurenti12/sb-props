@@ -110,9 +110,16 @@ function Leaderboard({ remaining, status, end }) {
           }
         }
         quiz.score = score;
+
         const bothNames = user.name.trim().split(" ");
-        const initial = bothNames[1].substring(0, 1);
-        quiz.user = bothNames[0] + " " + initial;
+        console.log(bothNames);
+        if (bothNames.length > 1) {
+          const initial = bothNames[1].substring(0, 1);
+          quiz.user = bothNames[0] + " " + initial
+        } else {
+          quiz.user = bothNames[0];
+        }
+
         quiz.userId = user.id;
         const quizDoc = doc(userCollectionRef, user.id, "quizzes", quiz.id);
         //updateDoc(quizDoc, { score: score });
