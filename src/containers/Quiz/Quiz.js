@@ -132,7 +132,7 @@ function Quiz() {
               type="number"
               isRequired
               errorMessage="Please enter a total score"
-              label="Tiebreaker"
+              label="Tiebreaker - TOTAL SCORE"
               labelPlacement="outside"
               placeholder="Total score - Price is right rules"
               name="tiebreaker"
