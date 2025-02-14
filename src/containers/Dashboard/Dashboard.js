@@ -15,7 +15,8 @@ import {
   orderBy,
 } from "firebase/firestore";
 import Leaderboard from "./Leaderboard";
-import CustomDrawer from "./CustomDrawer.js";
+// import CustomDrawer from "./CustomDrawer.js";
+import NewDrawer from "./NewDrawer.js";
 import { IoEllipsisHorizontalCircleSharp } from "react-icons/io5";
 import {
   Table,
@@ -52,6 +53,8 @@ function Dashboard() {
   const [gameOver, setGameOver] = useState();
   const [isLoaded, setIsLoaded] = useState(false);
   const [tiebreaker, setTiebreaker] = useState(null);
+  const [selectedUser, setSelectedUser] = useState(null);
+
 
   const fetchUser = () => {
     try {
@@ -212,37 +215,80 @@ function Dashboard() {
     fetchUserStatus();
   };
 
-  const openDrawer = (responses, score, remaining, tiebreaker) => {
-    setSelectedScore(score);
-    setSelectedMax(score + remaining);
-    setTiebreaker(tiebreaker);
+  // const openDrawer = (responses, score, remaining, tiebreaker) => {
+  //   setSelectedScore(score);
+  //   setSelectedMax(score + remaining);
+  //   setTiebreaker(tiebreaker);
+  //   let arr = [];
+  //   let arr2 = [];
+
+  //   for (let index = 0; index < questionList.length; index++) {
+  //     if (questionList[index].correctChoice == null) {
+  //       arr.push(questionList[index].prompt, responses[index], "--", "--");
+  //     } else if (
+  //       questionList[index].correctChoice === "N/A" ||
+  //       questionList[index].correctChoice === "Push"
+  //     ) {
+  //       arr.push(
+  //         questionList[index].prompt,
+  //         responses[index],
+  //         questionList[index].correctChoice,
+  //         "--"
+  //       );
+  //     } else if (questionList[index].correctChoice == responses[index]) {
+  //       arr.push(
+  //         questionList[index].prompt,
+  //         responses[index],
+  //         questionList[index].correctChoice,
+  //         "Correct"
+  //       );
+  //     } else {
+  //       arr.push(
+  //         questionList[index].prompt,
+  //         responses[index],
+  //         questionList[index].correctChoice,
+  //         "Incorrect"
+  //       );
+  //     }
+
+  //     arr2.push(arr);
+  //     arr = [];
+  //   }
+
+  //   setSelectedResponses(arr2);
+  //   setIsDrawerOpen(true);
+  // };
+
+  const openDrawer = (quiz, remaining) => {
+    setSelectedMax(quiz.score + remaining);
+    setSelectedUser(quiz);
     let arr = [];
     let arr2 = [];
 
     for (let index = 0; index < questionList.length; index++) {
       if (questionList[index].correctChoice == null) {
-        arr.push(questionList[index].prompt, responses[index], "--", "--");
+        arr.push(questionList[index].prompt, quiz.responses[index], "--", "--");
       } else if (
         questionList[index].correctChoice === "N/A" ||
         questionList[index].correctChoice === "Push"
       ) {
         arr.push(
           questionList[index].prompt,
-          responses[index],
+          quiz.responses[index],
           questionList[index].correctChoice,
           "--"
         );
-      } else if (questionList[index].correctChoice == responses[index]) {
+      } else if (questionList[index].correctChoice == quiz.responses[index]) {
         arr.push(
           questionList[index].prompt,
-          responses[index],
+          quiz.responses[index],
           questionList[index].correctChoice,
           "Correct"
         );
       } else {
         arr.push(
           questionList[index].prompt,
-          responses[index],
+          quiz.responses[index],
           questionList[index].correctChoice,
           "Incorrect"
         );
@@ -346,10 +392,11 @@ function Dashboard() {
                             variant="light"
                             onPress={() =>
                               openDrawer(
-                                quiz.responses,
-                                quiz.score,
-                                remainingQuestions,
-                                quiz.tiebreaker
+                                // quiz.responses,
+                                // quiz.score,
+                                quiz,
+                                remainingQuestions
+                                // quiz.tiebreaker
                               )
                             }
                             aria-label=""
@@ -357,7 +404,7 @@ function Dashboard() {
                             <IoArrowForwardCircleSharp fontSize="24px" />
                           </Button>
                         </Tooltip>
-                        <CustomDrawer
+                        {/* <CustomDrawer
                           isOpen={isDrawerOpen}
                           userEntries={selectedResponses}
                           userName={name}
@@ -365,7 +412,7 @@ function Dashboard() {
                           maxScore={selectedMax}
                           tiebreaker={tiebreaker}
                           isClosed={closeDrawer}
-                        />
+                        /> */}
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -403,6 +450,15 @@ function Dashboard() {
             )}
           </Table>
         </Skeleton>
+
+        <NewDrawer
+          isOpen={isDrawerOpen}
+          name={name}
+          quizData={selectedUser}
+          userEntries={selectedResponses}
+          maxScore={selectedMax}
+          isClosed={closeDrawer}
+        />
 
         <div className="section-divider">
           <Divider className="my-4" />

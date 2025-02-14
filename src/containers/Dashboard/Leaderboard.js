@@ -12,7 +12,8 @@ import {
   where,
 } from "firebase/firestore";
 import "../../assets/styles/Leaderboard.css";
-import CustomDrawer from "./CustomDrawer.js";
+// import CustomDrawer from "./CustomDrawer.js";
+import NewDrawer from "./NewDrawer.js";
 import {
   Table,
   TableHeader,
@@ -112,7 +113,6 @@ function Leaderboard({ remaining, status, end }) {
         quiz.score = score;
 
         const bothNames = user.name.trim().split(" ");
-        console.log(bothNames);
         if (bothNames.length > 1) {
           const initial = bothNames[1].substring(0, 1);
           quiz.user = bothNames[0] + " " + initial
@@ -186,38 +186,37 @@ function Leaderboard({ remaining, status, end }) {
     }
   };
 
-  const openDrawer = (user, responses, score, remaining, tiebreaker) => {
-    setSelectedScore(score);
-    setSelectedMax(score + remaining);
-    setSelectedUser(user);
-    setTiebreaker(tiebreaker);
+  const openDrawer = (quiz, remaining) => {
+    console.log(quiz);
+    setSelectedMax(quiz.score + remaining);
+    setSelectedUser(quiz);
     let arr = [];
     let arr2 = [];
 
     for (let index = 0; index < questionList.length; index++) {
       if (questionList[index].correctChoice == null) {
-        arr.push(questionList[index].prompt, responses[index], "--", "--");
+        arr.push(questionList[index].prompt, quiz.responses[index], "--", "--");
       } else if (
         questionList[index].correctChoice === "N/A" ||
         questionList[index].correctChoice === "Push"
       ) {
         arr.push(
           questionList[index].prompt,
-          responses[index],
+          quiz.responses[index],
           questionList[index].correctChoice,
           "--"
         );
-      } else if (questionList[index].correctChoice == responses[index]) {
+      } else if (questionList[index].correctChoice == quiz.responses[index]) {
         arr.push(
           questionList[index].prompt,
-          responses[index],
+          quiz.responses[index],
           questionList[index].correctChoice,
           "Correct"
         );
       } else {
         arr.push(
           questionList[index].prompt,
-          responses[index],
+          quiz.responses[index],
           questionList[index].correctChoice,
           "Incorrect"
         );
@@ -232,12 +231,7 @@ function Leaderboard({ remaining, status, end }) {
   };
 
   const closeDrawer = () => {
-    setSelectedUser(null);
-    setSelectedScore(null);
-    setSelectedMax(null);
-    setSelectedResponses([]);
     setIsDrawerOpen(false);
-    setTiebreaker(null);
   };
 
   useEffect(() => {
@@ -296,11 +290,13 @@ function Leaderboard({ remaining, status, end }) {
                           variant="light"
                           onPress={() =>
                             openDrawer(
-                              quiz.user,
-                              quiz.responses,
-                              quiz.score,
-                              remaining,
-                              quiz.tiebreaker
+                              quiz,
+                              remaining
+                              // remaining
+                              // quiz.user,
+                              // quiz.responses,
+                              // quiz.score,
+                              // quiz.tiebreaker
                             )
                           }
                           aria-label=""
@@ -308,15 +304,6 @@ function Leaderboard({ remaining, status, end }) {
                           <IoArrowForwardCircleSharp fontSize="24px" />
                         </Button>
                       </Tooltip>
-                      <CustomDrawer
-                        isOpen={isDrawerOpen}
-                        userEntries={selectedResponses}
-                        userName={selectedUser}
-                        userScore={selectedScore}
-                        maxScore={selectedMax}
-                        tiebreaker={tiebreaker}
-                        isClosed={closeDrawer}
-                      />
                     </>
                   ) : (
                     <>
@@ -345,6 +332,13 @@ function Leaderboard({ remaining, status, end }) {
           </TableBody>
         </Table>
       </Skeleton>
+      <NewDrawer
+        isOpen={isDrawerOpen}
+        quizData={selectedUser}
+        userEntries={selectedResponses}
+        maxScore={selectedMax}
+        isClosed={closeDrawer}
+      />
     </div>
   );
 }

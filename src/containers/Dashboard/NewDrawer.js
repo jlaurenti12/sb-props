@@ -16,21 +16,20 @@ import {
   DrawerBody,
 } from "@heroui/react";
 
-function CustomDrawer({
+function NewDrawer({
   isOpen,
   isClosed,
-  userName,
-  userEntries,
-  userScore,
-  tiebreaker,
+  quizData,
   maxScore,
+  name,
+  userEntries
 }) {
   const statusColorMap = {
     Correct: "success",
     Incorrect: "danger",
   };
 
-  console.log(userName);
+  console.log(quizData);
 
   const answerAccuracy = (response) => {
     if (response === "Correct") {
@@ -55,17 +54,18 @@ function CustomDrawer({
   };
 
   return (
+    
     <Drawer isOpen={isOpen} size="2xl" onClose={isClosed} backdrop="blur">
       <DrawerContent>
         {(onClose) => (
           <>
             <DrawerHeader className="flex flex-col gap-1">
-              {userName}
+              {quizData.user === undefined ? name : quizData.user}
             </DrawerHeader>
             <DrawerBody>
               <div className="margin-bottom: 16px">
                 <span className="text-default-300 text-small">
-                  Current score: {userScore}
+                  Current score: {quizData.score}
                 </span>
                 &nbsp; &nbsp;
                 <span className="text-default-300 text-small">
@@ -73,7 +73,7 @@ function CustomDrawer({
                 </span>
                 &nbsp; &nbsp;
                 <span className="text-default-300 text-small">
-                  Tiebreaker: {tiebreaker}
+                  Tiebreaker: {quizData.tiebreaker}
                 </span>
               </div>
               <div className="section-divider">
@@ -88,8 +88,8 @@ function CustomDrawer({
                   <TableColumn></TableColumn>
                 </TableHeader>
                 <TableBody>
-                  {userEntries.map((responses) => (
-                    <TableRow>
+                  {userEntries.map((responses, index) => (
+                    <TableRow key={index}>
                       <TableCell>{responses[0]}</TableCell>
                       <TableCell>{responses[1]}</TableCell>
                       <TableCell>{responses[2]}</TableCell>
@@ -106,4 +106,4 @@ function CustomDrawer({
   );
 }
 
-export default CustomDrawer;
+export default NewDrawer;
