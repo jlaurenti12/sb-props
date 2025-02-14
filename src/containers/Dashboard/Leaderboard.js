@@ -12,7 +12,6 @@ import {
   where,
 } from "firebase/firestore";
 import "../../assets/styles/Leaderboard.css";
-// import CustomDrawer from "./CustomDrawer.js";
 import NewDrawer from "./NewDrawer.js";
 import {
   Table,
@@ -32,10 +31,8 @@ function Leaderboard({ remaining, status, end }) {
   const [quizList, setQuizList] = useState([]);
   const userCollectionRef = collection(db, "users");
   const [selectedUser, setSelectedUser] = useState(null);
-  const [selectedScore, setSelectedScore] = useState(null);
   const [selectedMax, setSelectedMax] = useState(null);
   const [selectedResponses, setSelectedResponses] = useState([]);
-  const [tiebreaker, setTiebreaker] = useState(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [winner, setWinner] = useState();
@@ -122,7 +119,6 @@ function Leaderboard({ remaining, status, end }) {
 
         quiz.userId = user.id;
         const quizDoc = doc(userCollectionRef, user.id, "quizzes", quiz.id);
-        //updateDoc(quizDoc, { score: score });
         quiz.isCompleted ? quizzes.push(quiz) : <></>;
       });
     });
@@ -187,9 +183,6 @@ function Leaderboard({ remaining, status, end }) {
   };
 
   const openDrawer = (quiz, remaining) => {
-    console.log(quiz);
-    setSelectedMax(quiz.score + remaining);
-    setSelectedUser(quiz);
     let arr = [];
     let arr2 = [];
 
@@ -226,6 +219,8 @@ function Leaderboard({ remaining, status, end }) {
       arr = [];
     }
 
+    setSelectedMax(quiz.score + remaining);
+    setSelectedUser(quiz);
     setSelectedResponses(arr2);
     setIsDrawerOpen(true);
   };
@@ -292,11 +287,6 @@ function Leaderboard({ remaining, status, end }) {
                             openDrawer(
                               quiz,
                               remaining
-                              // remaining
-                              // quiz.user,
-                              // quiz.responses,
-                              // quiz.score,
-                              // quiz.tiebreaker
                             )
                           }
                           aria-label=""
@@ -332,13 +322,17 @@ function Leaderboard({ remaining, status, end }) {
           </TableBody>
         </Table>
       </Skeleton>
-      <NewDrawer
-        isOpen={isDrawerOpen}
-        quizData={selectedUser}
-        userEntries={selectedResponses}
-        maxScore={selectedMax}
-        isClosed={closeDrawer}
-      />
+      { isDrawerOpen ? (
+          <NewDrawer
+          isOpen={isDrawerOpen}
+          quizData={selectedUser}
+          userEntries={selectedResponses}
+          maxScore={selectedMax}
+          isClosed={closeDrawer}
+        />
+        ) : ( 
+          <></>
+        )}
     </div>
   );
 }

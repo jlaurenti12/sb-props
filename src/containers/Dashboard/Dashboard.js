@@ -15,7 +15,6 @@ import {
   orderBy,
 } from "firebase/firestore";
 import Leaderboard from "./Leaderboard";
-// import CustomDrawer from "./CustomDrawer.js";
 import NewDrawer from "./NewDrawer.js";
 import { IoEllipsisHorizontalCircleSharp } from "react-icons/io5";
 import {
@@ -52,7 +51,6 @@ function Dashboard() {
   const [gameStarted, setGameStarted] = useState();
   const [gameOver, setGameOver] = useState();
   const [isLoaded, setIsLoaded] = useState(false);
-  const [tiebreaker, setTiebreaker] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
 
 
@@ -66,7 +64,6 @@ function Dashboard() {
           const data = querySnapshot?.docs[0].data();
           setUserID(data.id);
           const bothNames = data.name.trim().split(" ");
-          console.log(bothNames);
           if (bothNames.length > 1) {
             const initial = bothNames[1].substring(0, 1);
             setName(bothNames[0] + " " + initial);
@@ -215,50 +212,6 @@ function Dashboard() {
     fetchUserStatus();
   };
 
-  // const openDrawer = (responses, score, remaining, tiebreaker) => {
-  //   setSelectedScore(score);
-  //   setSelectedMax(score + remaining);
-  //   setTiebreaker(tiebreaker);
-  //   let arr = [];
-  //   let arr2 = [];
-
-  //   for (let index = 0; index < questionList.length; index++) {
-  //     if (questionList[index].correctChoice == null) {
-  //       arr.push(questionList[index].prompt, responses[index], "--", "--");
-  //     } else if (
-  //       questionList[index].correctChoice === "N/A" ||
-  //       questionList[index].correctChoice === "Push"
-  //     ) {
-  //       arr.push(
-  //         questionList[index].prompt,
-  //         responses[index],
-  //         questionList[index].correctChoice,
-  //         "--"
-  //       );
-  //     } else if (questionList[index].correctChoice == responses[index]) {
-  //       arr.push(
-  //         questionList[index].prompt,
-  //         responses[index],
-  //         questionList[index].correctChoice,
-  //         "Correct"
-  //       );
-  //     } else {
-  //       arr.push(
-  //         questionList[index].prompt,
-  //         responses[index],
-  //         questionList[index].correctChoice,
-  //         "Incorrect"
-  //       );
-  //     }
-
-  //     arr2.push(arr);
-  //     arr = [];
-  //   }
-
-  //   setSelectedResponses(arr2);
-  //   setIsDrawerOpen(true);
-  // };
-
   const openDrawer = (quiz, remaining) => {
     setSelectedMax(quiz.score + remaining);
     setSelectedUser(quiz);
@@ -307,7 +260,6 @@ function Dashboard() {
     setSelectedMax(null);
     setSelectedResponses([]);
     setIsDrawerOpen(false);
-    setTiebreaker(null);
   };
 
   useEffect(() => {
@@ -392,11 +344,8 @@ function Dashboard() {
                             variant="light"
                             onPress={() =>
                               openDrawer(
-                                // quiz.responses,
-                                // quiz.score,
                                 quiz,
                                 remainingQuestions
-                                // quiz.tiebreaker
                               )
                             }
                             aria-label=""
@@ -404,15 +353,6 @@ function Dashboard() {
                             <IoArrowForwardCircleSharp fontSize="24px" />
                           </Button>
                         </Tooltip>
-                        {/* <CustomDrawer
-                          isOpen={isDrawerOpen}
-                          userEntries={selectedResponses}
-                          userName={name}
-                          userScore={selectedScore}
-                          maxScore={selectedMax}
-                          tiebreaker={tiebreaker}
-                          isClosed={closeDrawer}
-                        /> */}
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -451,7 +391,8 @@ function Dashboard() {
           </Table>
         </Skeleton>
 
-        <NewDrawer
+        { isDrawerOpen ? (
+          <NewDrawer
           isOpen={isDrawerOpen}
           name={name}
           quizData={selectedUser}
@@ -459,6 +400,11 @@ function Dashboard() {
           maxScore={selectedMax}
           isClosed={closeDrawer}
         />
+        ) : ( 
+          <></>
+        )}
+
+
 
         <div className="section-divider">
           <Divider className="my-4" />
@@ -470,7 +416,6 @@ function Dashboard() {
           end={gameOver}
         />
       </div>
-      {/* )} */}
     </div>
   );
 }
