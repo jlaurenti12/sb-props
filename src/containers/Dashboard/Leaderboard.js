@@ -6,7 +6,6 @@ import {
   collection,
   doc,
   query,
-  updateDoc,
   onSnapshot,
   orderBy,
   where,
@@ -49,6 +48,87 @@ function Leaderboard({ remaining, status, end }) {
       getScores();
     });
   };
+
+  // test and functions for db migration
+
+  // const fetchGames = async () => {
+  //   console.log("test");
+  //   const gamesRef = collection(db, "games", "2025", "propEntries");
+  //   const docSnap = await getDocs(gamesRef);
+  //   const data = docSnap.docs.map((question) => ({
+  //     ...question.data(),
+  //   }));
+  //   console.log(data);
+  // };
+
+  // const transferQuestions = async () => {
+  //   console.log("running");
+  //   const userData = await getDocs(collection(db, "users"));
+  //   console.log(userData);
+  //   const filteredUserData = userData.docs.map((doc) => ({
+  //     ...doc.data(),
+  //   }));
+  //   console.log(filteredUserData);
+
+
+    //     await Promise.all(
+    //     filteredQuestionData.map((question) => {
+    //       console.log(question)
+    //       addDoc (collection(db, "games", "2025", "propQuestions"), {
+    //         choices: question.choices,
+    //         correctChoice: question.correctChoice,
+    //         prompt: question.prompt,
+    //         order: question.order,
+    //       })
+    //     })
+    //   ) 
+    // }
+
+
+
+  //   await Promise.all(
+  //     filteredUserData.map(async (user) => {
+  //       const q = query(collection(db, "users", user.uid, "quizzes"));
+  //       const a = await getDocs(q);
+  //       const quizzes = a.docs.map((quiz) => ({
+  //         ...quiz.data(),
+  //         user: doc(db, 'users/' + user.uid),
+  //       }));
+  //       console.log(quizzes)
+  //       quizzes.map(async (quiz) => {
+  //         addDoc (collection(db, "games", "2025", "propEntries"), {
+  //           isCompleted: quiz.isCompleted,
+  //           responses: quiz.responses,
+  //           score: quiz.score,
+  //           tiebreaker: quiz.tiebreaker,
+  //           user: quiz.user,
+  //         })
+  //       })
+  //     }))
+  // }
+
+  // await addDoc (collection(db, "2025", "hPexVdDAYXAfAhl7KR8a"), {
+  //   filteredQuestionData.map((question) => {
+  //     choices: question.choices,
+  //     correctChoice: question.correctChoice,
+  //     prompt: question.prompt,
+  //     order: question.order,
+  //   }
+  // });
+
+  // const transferStatus = async () => {
+  //   const statusData = await getDocs(collection(db, "status"));
+  //   const filteredStatusData = statusData.docs.map((doc) => ({
+  //     ...doc.data(),
+  //   }));
+  //   console.log(filteredStatusData[0]);
+  //   await updateDoc(doc(db, "games", "2025"), {
+  //     finalScore: filteredStatusData[0].finalScore,
+  //     entries: filteredStatusData[0].entries,
+  //     gameOver: filteredStatusData[0].gameOver,
+  //     gameStatus: filteredStatusData[0].gameStatus,
+  //   });
+  // }
 
   const getScores = async () => {
     const userData = await getDocs(collection(db, "users"));

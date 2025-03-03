@@ -9,6 +9,7 @@ import {
   query,
   where,
   updateDoc,
+  getDoc,
   doc,
   orderBy,
 } from "firebase/firestore";
@@ -31,7 +32,7 @@ function Admin() {
 
   // For questions
   const [questionList, setQuestionList] = useState([]);
-  const questionsCollectionRef = collection(db, "questions");
+  const questionsCollectionRef = collection(db, "games", "2025", "propQuestions");
 
   const getQuestionList = async () => {
     try {
@@ -82,22 +83,16 @@ function Admin() {
   // For game status
   const [gameStarted, setGameStarted] = useState();
   const [gameOver, setGameOver] = useState();
+  const statusDoc = doc(db, "games", "2025");
 
   const getGameStatus = async () => {
-    const gameCollectionRef = collection(db, "status");
-    const q = query(
-      gameCollectionRef,
-      where("uid", "==", "1KnxfOXfSOJFb5OdezcY")
-    );
-    const doc = await getDocs(q);
-    const snapshot = doc.docs[0];
-    const data = snapshot.data();
+    const docSnap = await getDoc(statusDoc);
+    const data = docSnap.data();
     setGameStarted(data.gameStatus);
     setGameOver(data.gameOver);
   };
 
   const changeStatus = async () => {
-    const statusDoc = doc(db, "status", "1KnxfOXfSOJFb5OdezcY");
     gameStarted === true
       ? await updateDoc(statusDoc, { gameStatus: false })
       : await updateDoc(statusDoc, { gameStatus: true });
@@ -105,7 +100,6 @@ function Admin() {
   };
 
   const changeEnd = async () => {
-    const statusDoc = doc(db, "status", "1KnxfOXfSOJFb5OdezcY");
     gameOver === true
       ? await updateDoc(statusDoc, { gameOver: false })
       : await updateDoc(statusDoc, { gameOver: true });
@@ -113,8 +107,6 @@ function Admin() {
   };
 
   const addFinalScore = async (final) => {
-    console.log(final);
-    const statusDoc = doc(db, "status", "1KnxfOXfSOJFb5OdezcY");
     await updateDoc(statusDoc, { finalScore: final });
     getGameStatus();
   };
