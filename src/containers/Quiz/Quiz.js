@@ -9,7 +9,6 @@ import {
   addDoc,
   orderBy,
   query,
-  where,
 } from "firebase/firestore";
 import { RadioGroup, Button, Form, Skeleton, Input } from "@heroui/react";
 import CustomRadio from "../../components/Radio/CustomRadio";
@@ -18,13 +17,12 @@ function Quiz() {
   const location = useLocation();
   const navigate = useNavigate();
   const [questionList, setQuestionList] = useState([]);
-  const userCollectionRef = collection(db, "users");
   const userID = location.state.id;
   const [isLoaded, setIsLoaded] = useState(false);
 
   const getQuestionList = async () => {
     try {
-      const questionsCollectionRef = collection(db, "questions");
+      const questionsCollectionRef = collection(db, "games", "2025", "propQuestions");
       const data = await getDocs(
         query(questionsCollectionRef, orderBy("order"))
       );
@@ -60,11 +58,12 @@ function Quiz() {
 
       const arr = mapResponses(data);
 
-      await addDoc(collection(userCollectionRef, userID, "quizzes"), {
+      await addDoc(collection(db, "games", "2025", "propEntries"), {
         responses: arr,
         score: 0,
         isCompleted: true,
         tiebreaker: Number(data.tiebreaker),
+        user: doc(db, `users/${userID}`),
       });
 
       const b = doc(db, `users/${userID}`);
@@ -72,19 +71,6 @@ function Quiz() {
       await updateDoc(b, {
         takenQuiz: true,
       });
-
-      const statusDoc = await getDocs(
-        query(
-          collection(db, "status"),
-          where("uid", "==", "1KnxfOXfSOJFb5OdezcY")
-        )
-      );
-      const snapshot = statusDoc.docs[0];
-      const r = snapshot.data();
-      let count = r.entries;
-
-      const gameEntries = doc(db, "status", "1KnxfOXfSOJFb5OdezcY");
-      await updateDoc(gameEntries, { entries: count + 1 });
 
       return navigate("/");
     } catch (err) {

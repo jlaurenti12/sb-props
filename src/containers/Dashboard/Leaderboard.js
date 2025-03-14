@@ -5,6 +5,7 @@ import {
   getDocs,
   collection,
   doc,
+  getDoc,
   query,
   onSnapshot,
   orderBy,
@@ -138,22 +139,17 @@ function Leaderboard({ remaining, status, end }) {
       quizzes: [],
     }));
 
-    const h = await getDocs(
-      query(
-        collection(db, "status"),
-        where("uid", "==", "1KnxfOXfSOJFb5OdezcY")
-      )
-    );
-    const snapshot = h.docs[0];
-    const data = snapshot.data();
+    const docRef = doc(db, "games", "2025");
+    const docSnap = await getDoc(docRef);
+    const data = docSnap.data();
     const end = data.gameOver;
     const final = data.finalScore;
 
     await Promise.all(
       filteredUserData.map(async (user) => {
-        const q = query(collection(userCollectionRef, user.id, "quizzes"));
-        const a = await getDocs(q);
-        const b = [];
+        const docRef = doc(userCollectionRef, user.id);
+        const c = query(collection(db, "games", "2025", "propEntries"), where("user", "==", docRef));
+        const a = await getDocs(c);
 
         const snapshot = a.docs.map((quiz) => ({
           ...quiz.data(),
@@ -167,8 +163,9 @@ function Leaderboard({ remaining, status, end }) {
     );
 
     const answerData = await getDocs(
-      query(collection(db, "questions"), orderBy("order"))
+      query(collection(db, "games", "2025", "propQuestions"), orderBy("order"))
     );
+
     const filteredAnswerData = answerData.docs.map((doc) => ({
       ...doc.data(),
     }));
@@ -198,7 +195,6 @@ function Leaderboard({ remaining, status, end }) {
         }
 
         quiz.userId = user.id;
-        const quizDoc = doc(userCollectionRef, user.id, "quizzes", quiz.id);
         quiz.isCompleted ? quizzes.push(quiz) : <></>;
       });
     });
@@ -250,7 +246,7 @@ function Leaderboard({ remaining, status, end }) {
   const getQuestionList = async () => {
     try {
       const data = await getDocs(
-        query(collection(db, "questions"), orderBy("order"))
+        query(collection(db, "games", "2025", "propQuestions"), orderBy("order"))
       );
       const filteredData = data.docs.map((doc) => ({
         ...doc.data(),

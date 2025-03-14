@@ -176,7 +176,9 @@ function Dashboard() {
 
   const onStartQuiz = async () => {
     const person = doc(userCollectionRef, user?.uid);
-    const test = person.docs[0].id;
+    console.log(person);
+    const test = person.id;
+    console.log(test);
     return navigate("/quiz", { state: { id: test } });
   };
 
