@@ -26,7 +26,7 @@ import {
   Skeleton,
 } from "@heroui/react";
 
-function Leaderboard({ remaining, status, end }) {
+function Leaderboard({ remaining, status, end, year }) {
   const [questionList, setQuestionList] = useState([]);
   const [quizList, setQuizList] = useState([]);
   const userCollectionRef = collection(db, "users");
@@ -50,87 +50,6 @@ function Leaderboard({ remaining, status, end }) {
     });
   };
 
-  // test and functions for db migration
-
-  // const fetchGames = async () => {
-  //   console.log("test");
-  //   const gamesRef = collection(db, "games", "2025", "propEntries");
-  //   const docSnap = await getDocs(gamesRef);
-  //   const data = docSnap.docs.map((question) => ({
-  //     ...question.data(),
-  //   }));
-  //   console.log(data);
-  // };
-
-  // const transferQuestions = async () => {
-  //   console.log("running");
-  //   const userData = await getDocs(collection(db, "users"));
-  //   console.log(userData);
-  //   const filteredUserData = userData.docs.map((doc) => ({
-  //     ...doc.data(),
-  //   }));
-  //   console.log(filteredUserData);
-
-
-    //     await Promise.all(
-    //     filteredQuestionData.map((question) => {
-    //       console.log(question)
-    //       addDoc (collection(db, "games", "2025", "propQuestions"), {
-    //         choices: question.choices,
-    //         correctChoice: question.correctChoice,
-    //         prompt: question.prompt,
-    //         order: question.order,
-    //       })
-    //     })
-    //   ) 
-    // }
-
-
-
-  //   await Promise.all(
-  //     filteredUserData.map(async (user) => {
-  //       const q = query(collection(db, "users", user.uid, "quizzes"));
-  //       const a = await getDocs(q);
-  //       const quizzes = a.docs.map((quiz) => ({
-  //         ...quiz.data(),
-  //         user: doc(db, 'users/' + user.uid),
-  //       }));
-  //       console.log(quizzes)
-  //       quizzes.map(async (quiz) => {
-  //         addDoc (collection(db, "games", "2025", "propEntries"), {
-  //           isCompleted: quiz.isCompleted,
-  //           responses: quiz.responses,
-  //           score: quiz.score,
-  //           tiebreaker: quiz.tiebreaker,
-  //           user: quiz.user,
-  //         })
-  //       })
-  //     }))
-  // }
-
-  // await addDoc (collection(db, "2025", "hPexVdDAYXAfAhl7KR8a"), {
-  //   filteredQuestionData.map((question) => {
-  //     choices: question.choices,
-  //     correctChoice: question.correctChoice,
-  //     prompt: question.prompt,
-  //     order: question.order,
-  //   }
-  // });
-
-  // const transferStatus = async () => {
-  //   const statusData = await getDocs(collection(db, "status"));
-  //   const filteredStatusData = statusData.docs.map((doc) => ({
-  //     ...doc.data(),
-  //   }));
-  //   console.log(filteredStatusData[0]);
-  //   await updateDoc(doc(db, "games", "2025"), {
-  //     finalScore: filteredStatusData[0].finalScore,
-  //     entries: filteredStatusData[0].entries,
-  //     gameOver: filteredStatusData[0].gameOver,
-  //     gameStatus: filteredStatusData[0].gameStatus,
-  //   });
-  // }
-
   const getScores = async () => {
     const userData = await getDocs(collection(db, "users"));
     const filteredUserData = userData.docs.map((doc) => ({
@@ -139,7 +58,7 @@ function Leaderboard({ remaining, status, end }) {
       quizzes: [],
     }));
 
-    const docRef = doc(db, "games", "2025");
+    const docRef = doc(db, "games", year);
     const docSnap = await getDoc(docRef);
     const data = docSnap.data();
     const end = data.gameOver;
@@ -148,7 +67,7 @@ function Leaderboard({ remaining, status, end }) {
     await Promise.all(
       filteredUserData.map(async (user) => {
         const docRef = doc(userCollectionRef, user.id);
-        const c = query(collection(db, "games", "2025", "propEntries"), where("user", "==", docRef));
+        const c = query(collection(db, "games", year, "propEntries"), where("user", "==", docRef));
         const a = await getDocs(c);
 
         const snapshot = a.docs.map((quiz) => ({
@@ -163,7 +82,7 @@ function Leaderboard({ remaining, status, end }) {
     );
 
     const answerData = await getDocs(
-      query(collection(db, "games", "2025", "propQuestions"), orderBy("order"))
+      query(collection(db, "games", year, "propQuestions"), orderBy("order"))
     );
 
     const filteredAnswerData = answerData.docs.map((doc) => ({
@@ -246,7 +165,7 @@ function Leaderboard({ remaining, status, end }) {
   const getQuestionList = async () => {
     try {
       const data = await getDocs(
-        query(collection(db, "games", "2025", "propQuestions"), orderBy("order"))
+        query(collection(db, "games",  year, "propQuestions"), orderBy("order"))
       );
       const filteredData = data.docs.map((doc) => ({
         ...doc.data(),
@@ -309,7 +228,7 @@ function Leaderboard({ remaining, status, end }) {
     fetchAnswers();
     fetchStatus();
     getQuestionList();
-  }, []);
+  }, [year]);
 
   return (
     <div className="flex flex-col gap-4">

@@ -26,6 +26,9 @@ import {
   Button,
   Divider,
   Skeleton,
+  Select, 
+  SelectSection, 
+  SelectItem
 } from "@heroui/react";
 
 function Dashboard() {
@@ -41,6 +44,8 @@ function Dashboard() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [gameStarted, setGameStarted] = useState();
   const [gameOver, setGameOver] = useState();
+  const [years, setYears] = useState([]);
+  const [currentYear, setCurrentYear] = useState("2026");
   const [isLoaded, setIsLoaded] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
 
@@ -66,7 +71,7 @@ function Dashboard() {
         }
       });
 
-      onSnapshot(doc(db, "games", "2025"), (snapshot) => {
+      onSnapshot(doc(db, "games", currentYear), (snapshot) => {
         getGameStatus();
       });
     } catch (err) {
@@ -76,11 +81,22 @@ function Dashboard() {
   };
 
   const getGameStatus = async () => {
-    const docRef = doc(db, "games", "2025");
+    const docRef = doc(db, "games", currentYear);
     const docSnap = await getDoc(docRef);
     const data = docSnap.data();
     setGameStarted(data.gameStatus);
     setGameOver(data.gameOver);
+    const d = [];
+    const a = collection(db, "games");
+    const b = await getDocs(a);
+    const c = b.docs.map((doc) => ({
+      ...doc.data(),
+      id: doc.id
+    }));
+    c.map((year) => {
+      d.push({key: year.id, label: year.id})
+    })
+    setYears(d);
   };
 
   const getRemainingQuestions = (questions) => {
@@ -94,7 +110,7 @@ function Dashboard() {
   const getQuestionList = async () => {
     try {
       onSnapshot(
-        query(collection(db, "games", "2025", "propQuestions"), orderBy("order")),
+        query(collection(db, "games", currentYear, "propQuestions"), orderBy("order")),
         (snapshot) => {
           const filteredData = snapshot.docs.map((doc) => ({
             ...doc.data(),
@@ -114,7 +130,7 @@ function Dashboard() {
     const docRef = doc(userCollectionRef, user?.uid);
     const docSnap = await getDoc(docRef);
     const person = docSnap.data();
-    const c = query(collection(db, "games", "2025", "propEntries"), where("user", "==", docRef));
+    const c = query(collection(db, "games", currentYear, "propEntries"), where("user", "==", docRef));
     const a = await getDocs(c);
 
     const data = a.docs.map((quiz) => ({
@@ -123,7 +139,7 @@ function Dashboard() {
     }));
 
     const answerData = await getDocs(
-      query(collection(db, "games", "2025", "propQuestions"), orderBy("order"))
+      query(collection(db, "games", currentYear, "propQuestions"), orderBy("order"))
     );
 
     const filteredAnswerData = answerData.docs.map((doc) => ({
@@ -159,7 +175,7 @@ function Dashboard() {
   const fetchUserStatus = async () => {
     try {
       const docRef = doc(userCollectionRef, user?.uid);
-      const c = query(collection(db, "games", "2025", "propEntries"), where("user", "==", docRef));
+      const c = query(collection(db, "games", currentYear, "propEntries"), where("user", "==", docRef));
       const r = await getDocs(c);
 
       const filteredData = r.docs.map((doc) => ({
@@ -231,6 +247,10 @@ function Dashboard() {
     setIsDrawerOpen(false);
   };
 
+  const handleSelectionChange = (e) => {
+    setCurrentYear(e.target.value);
+  } 
+
   useEffect(() => {
     if (loading) {
       return;
@@ -239,10 +259,20 @@ function Dashboard() {
 
     fetchUser();
     getGameStatus();
-  }, [user, loading]);
+  }, [user, loading, currentYear]);
 
   return (
+
     <div className="table">
+      <Select 
+        label="Select a year"
+        selectedKeys={[currentYear]}
+        onChange={handleSelectionChange}
+        >
+          {years.map((year) => (
+            <SelectItem key={year.key}>{year.label}</SelectItem>
+          ))}
+      </Select>
       <div className="tableContent flex flex-col gap-4">
         <div className="flex justify-between items-center">
           <span className="text-default-300 text-medium table-header">
@@ -350,9 +380,11 @@ function Dashboard() {
           remaining={remainingQuestions}
           status={gameStarted}
           end={gameOver}
+          year={currentYear}
         />
       </div>
     </div>
+
   );
 }
 
