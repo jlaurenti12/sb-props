@@ -13,11 +13,11 @@ import {
   DrawerFooter,
 } from "@heroui/react";
 
-function QuestionDrawer({ isOpen, isClosed, questionObject }) {
+function QuestionDrawer({ isOpen, isClosed, year, questionObject }) {
   let questionDoc;
 
   if (questionObject) {
-    questionDoc = doc(db, "questions", questionObject.id);
+    questionDoc = doc(db, "games", year, "propQuestions", questionObject.id);
   } else {
     questionDoc = "";
   }
@@ -145,7 +145,9 @@ function QuestionDrawer({ isOpen, isClosed, questionObject }) {
                 type="submit"
                 color="danger"
                 variant="flat"
-                onPress={() => deleteQuestion(questionObject.id)}
+                onPress={
+                  () => {deleteQuestion(questionObject.id); onClose()}
+                }
               >
                 Delete Question
               </Button>

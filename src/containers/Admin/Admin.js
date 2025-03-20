@@ -17,6 +17,8 @@ import {
   Form,
   Input,
   Button,
+  Select,
+  SelectItem,
   Table,
   TableHeader,
   TableBody,
@@ -30,9 +32,17 @@ import { IoPencil } from "react-icons/io5";
 function Admin() {
   const navigate = useNavigate();
 
+  // For years
+  const [currentYear, setCurrentYear] = useState("2026");
+  const [years, setYears] = useState([]);
+
+  const handleSelectionChange = (e) => {
+    setCurrentYear(e.target.value);
+  } 
+
   // For questions
   const [questionList, setQuestionList] = useState([]);
-  const questionsCollectionRef = collection(db, "games", "2025", "propQuestions");
+  const questionsCollectionRef = collection(db, "games", currentYear, "propQuestions");
 
   const getQuestionList = async () => {
     try {
@@ -83,13 +93,24 @@ function Admin() {
   // For game status
   const [gameStarted, setGameStarted] = useState();
   const [gameOver, setGameOver] = useState();
-  const statusDoc = doc(db, "games", "2025");
+  const statusDoc = doc(db, "games", currentYear);
 
   const getGameStatus = async () => {
     const docSnap = await getDoc(statusDoc);
     const data = docSnap.data();
     setGameStarted(data.gameStatus);
     setGameOver(data.gameOver);
+    const d = [];
+    const a = collection(db, "games");
+    const b = await getDocs(a);
+    const c = b.docs.map((doc) => ({
+      ...doc.data(),
+      id: doc.id
+    }));
+    c.map((year) => {
+      d.push({key: year.id, label: year.id})
+    })
+    setYears(d);
   };
 
   const changeStatus = async () => {
@@ -136,12 +157,21 @@ function Admin() {
     getQuestionList();
     getGameStatus();
     setSelectedQuestion(null);
-  }, [user, loading]);
+  }, [user, loading, currentYear]);
 
   return (
     <div>
       {isAdmin ? (
         <>
+        <Select 
+          label="Select a year"
+          selectedKeys={[currentYear]}
+          onChange={handleSelectionChange}
+          >
+            {years.map((year) => (
+              <SelectItem key={year.key}>{year.label}</SelectItem>
+            ))}
+        </Select>
           <div className="flex flex-wrap gap-4 items-center">
             {gameStarted ? (
               <Button onPress={() => changeStatus()}>Unstart Game</Button>
@@ -166,7 +196,6 @@ function Admin() {
             onSubmit={(e) => {
               e.preventDefault();
               let data = Object.fromEntries(new FormData(e.currentTarget));
-              console.log(data);
               addFinalScore(data.final);
               document.getElementById("finalScoreForm").reset();
             }}
@@ -243,16 +272,22 @@ function Admin() {
                     >
                       <IoPencil fontSize="20px" />
                     </Button>
-                    <QuestionDrawer
-                      isOpen={isDrawerOpen}
-                      questionObject={selectedQuestion}
-                      isClosed={closeDrawer}
-                    />
                   </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
+
+          { isDrawerOpen ? (
+            <QuestionDrawer
+            isOpen={isDrawerOpen}
+            questionObject={selectedQuestion}
+            year={currentYear}
+            isClosed={closeDrawer}
+          />
+          ) : ( 
+            <></>
+          )}
         </>
       ) : (
         <>
