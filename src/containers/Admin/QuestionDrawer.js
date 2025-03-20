@@ -23,6 +23,7 @@ function QuestionDrawer({ isOpen, isClosed, year, questionObject }) {
   }
 
   const updateQuestionPrompt = async (updatedQuestionPrompt) => {
+    console.log(questionDoc);
     await updateDoc(questionDoc, { prompt: updatedQuestionPrompt });
   };
 
@@ -59,7 +60,9 @@ function QuestionDrawer({ isOpen, isClosed, year, questionObject }) {
                 onSubmit={(e) => {
                   e.preventDefault();
                   let data = Object.fromEntries(new FormData(e.currentTarget));
+                  console.log(data);
                   updateQuestionPrompt(data.prompt);
+                  onClose();
                 }}
               >
                 <Input
@@ -73,7 +76,6 @@ function QuestionDrawer({ isOpen, isClosed, year, questionObject }) {
                   type="submit"
                   variant="solid"
                   color="secondary"
-                  onPress={onClose}
                 >
                   Update Prompt
                 </Button>
@@ -90,6 +92,7 @@ function QuestionDrawer({ isOpen, isClosed, year, questionObject }) {
                   e.preventDefault();
                   let data = Object.fromEntries(new FormData(e.currentTarget));
                   updateChoices(data.choices.split(","));
+                  onClose();
                 }}
               >
                 <Input
@@ -103,7 +106,6 @@ function QuestionDrawer({ isOpen, isClosed, year, questionObject }) {
                   type="submit"
                   variant="solid"
                   color="secondary"
-                  onPress={onClose}
                 >
                   Update Choices
                 </Button>
@@ -120,6 +122,7 @@ function QuestionDrawer({ isOpen, isClosed, year, questionObject }) {
                   e.preventDefault();
                   let data = Object.fromEntries(new FormData(e.currentTarget));
                   updateCorrectChoice(data.correctChoice);
+                  onClose();
                 }}
               >
                 <Input
@@ -133,7 +136,6 @@ function QuestionDrawer({ isOpen, isClosed, year, questionObject }) {
                   type="submit"
                   variant="solid"
                   color="secondary"
-                  onPress={onClose}
                 >
                   Add Correct Choice
                 </Button>
