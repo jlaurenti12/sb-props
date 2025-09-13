@@ -225,9 +225,12 @@ function Leaderboard({ remaining, status, end, year }) {
   };
 
   useEffect(() => {
-    fetchAnswers();
-    fetchStatus();
-    getQuestionList();
+    if (year) {
+      fetchAnswers();
+      fetchStatus();
+      getQuestionList();
+    }
+
   }, [year]);
 
   return (

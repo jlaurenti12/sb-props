@@ -3,6 +3,8 @@ import { useAuthState } from "react-firebase-hooks/auth";
 import { useNavigate, NavLink } from "react-router-dom";
 import { auth, logout, db } from "../../services/firebase.js";
 import {
+  doc,
+  getDoc,
   getDocs,
   collection,
   query,
@@ -10,6 +12,7 @@ import {
   onSnapshot,
 } from "firebase/firestore";
 import {
+  Button,
   Navbar,
   NavbarBrand,
   NavbarContent,
@@ -20,10 +23,12 @@ import {
   DropdownMenu,
   Avatar,
   Skeleton,
+  Select, 
+  SelectItem
 } from "@heroui/react";
 import mainLogo from "../../assets/images/sb_logo.png";
 
-const Navigation = () => {
+const Navigation = ({getCurrentYear}) => {
   const [user, loading] = useAuthState(auth);
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
@@ -32,10 +37,23 @@ const Navigation = () => {
   const userCollectionRef = collection(db, "users");
   const navigate = useNavigate();
   const [isLoaded, setIsLoaded] = useState(false);
+  const [years, setYears] = useState([]);
+  // const [gameStarted, setGameStarted] = useState();
+  // const [gameOver, setGameOver] = useState();
+  let z;
+  const [currentYear, setCurrentYear] = useState();
 
-  const fetchUser = () => {
+
+  const fetchYear = async (year) => {
+    z = await getCurrentYear(year);
+    console.log(z);
+    fetchUser(z);
+  }
+
+  const fetchUser = (year) => {
     try {
       const q = query(userCollectionRef, where("uid", "==", user?.uid));
+      setCurrentYear(year);
 
       onSnapshot(q, (querySnapshot) => {
         var test = querySnapshot.docs;
@@ -43,11 +61,37 @@ const Navigation = () => {
           fetchUserInfo();
         }
       });
+
+      onSnapshot(doc(db, "games", `{year}`), (snapshot) => {
+        getGameStatus();
+      });      
     } catch (err) {
       console.error(err);
       alert("An error occured while fetching user data");
     }
   };
+
+
+  const getGameStatus = async () => {
+    const docRef = doc(db, "games", z);
+    const docSnap = await getDoc(docRef);
+    const data = docSnap.data();
+    // setGameStarted(data.gameStatus);
+    // setGameOver(data.gameOver);
+    const d = [];
+    const a = collection(db, "games");
+    const b = await getDocs(a);
+    const c = b.docs.map((doc) => ({
+      ...doc.data(),
+      id: doc.id
+    }));
+    c.map((y) => {
+      d.push({key: y.id, label: y.id})
+    })
+    console.log(d);
+    setYears(d);
+  };
+
   const fetchUserInfo = async () => {
     try {
       const a = query(userCollectionRef, where("uid", "==", user?.uid));
@@ -69,11 +113,19 @@ const Navigation = () => {
     }
   };
 
+  const handleSelectionChange = (year) => {
+    console.log(year);
+    getCurrentYear(year);
+    fetchYear(year);
+  } 
+
   useEffect(() => {
     if (loading) return;
     if (!user) return navigate("/");
 
-    fetchUser();
+    fetchYear();
+    // fetchUser();
+
   }, [user, loading]);
 
   return (
@@ -96,6 +148,25 @@ const Navigation = () => {
             </NavbarBrand>
 
             <NavbarContent as="div" justify="end">
+              <Dropdown>
+                <DropdownTrigger>
+                  <Button
+                  disableRipple
+                  className="p-0 bg-transparent data-[hover=true]:bg-transparent"
+                  radius="sm"
+                  variant="light"
+                >
+                  {currentYear}
+                </Button>
+                </DropdownTrigger>
+                <DropdownMenu>
+                  {years.map((year) => (
+                    <DropdownItem key={year.key} onPress={() => handleSelectionChange(year.key)} >{year.label}</DropdownItem>
+                  ))}           
+                </DropdownMenu>
+
+              </Dropdown>
+
               <Dropdown placement="bottom-end">
                 <DropdownTrigger>
                   <Skeleton className="rounded-full" isLoaded={isLoaded}>
@@ -112,9 +183,13 @@ const Navigation = () => {
                 <DropdownMenu aria-label="Profile Actions" variant="flat">
                   <DropdownItem key="profile" className="h-14 gap-2">
                     <NavLink to="/dashboard">
+                    {/* <NavLink to={{
+                        pathname:'/dashboard',
+                        state: currentYear, 
+                      }}>
                       <p className="font-semibold">Signed in as</p>
                       <p className="font-semibold">{name}</p>
-                      <p className="font-semibold">{email}</p>
+                      <p className="font-semibold">{email}</p> */}
                     </NavLink>
                   </DropdownItem>
                   {isAdmin ? (

@@ -26,34 +26,44 @@ import {
   Button,
   Divider,
   Skeleton,
-  Select, 
-  SelectSection, 
-  SelectItem
 } from "@heroui/react";
 
-function Dashboard() {
+function Dashboard({year}) {
   const [user, loading] = useAuthState(auth);
   const [questionList, setQuestionList] = useState([]);
   const navigate = useNavigate();
   const userCollectionRef = collection(db, "users");
   const [quizList, setQuizList] = useState([]);
   const [name, setName] = useState("");
-  const [remainingQuestions, setRemainingQuestions] = useState("");
+  const [remainingQuestions, setRemainingQuestions] = useState();
   const [selectedMax, setSelectedMax] = useState(null);
   const [selectedResponses, setSelectedResponses] = useState([]);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [gameStarted, setGameStarted] = useState();
   const [gameOver, setGameOver] = useState();
   const [years, setYears] = useState([]);
-  const [currentYear, setCurrentYear] = useState("2026");
+  // const [currentYear, setCurrentYear] = useState("2026");
   const [isLoaded, setIsLoaded] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
+  // let z;
+
+  // const fetchYear = async (year) => {
+  //   const y = await getCurrentYear(year);
+  //   z = y.toString();
+  //   console.log(z);
+  //   setCurrentYear(z);
+  //   fetchUser();
+  // }
 
   const fetchUser = () => {
+
+    console.log(year);
+
     try {
       const q = query(userCollectionRef, where("uid", "==", user?.uid));
 
       onSnapshot(q, (querySnapshot) => {
+        console.log(year);
         var test = querySnapshot.docs;
         if (test.length > 0) {
           const data = querySnapshot?.docs[0].data();
@@ -66,12 +76,12 @@ function Dashboard() {
           }
 
           fetchUserStatus();
-          getQuestionList();
           getGameStatus();
+          getQuestionList();
         }
       });
 
-      onSnapshot(doc(db, "games", currentYear), (snapshot) => {
+      onSnapshot(doc(db, "games", year), (snapshot) => {
         getGameStatus();
       });
     } catch (err) {
@@ -81,9 +91,11 @@ function Dashboard() {
   };
 
   const getGameStatus = async () => {
-    const docRef = doc(db, "games", currentYear);
+    const docRef = doc(db, "games", year);
+
     const docSnap = await getDoc(docRef);
     const data = docSnap.data();
+    console.log(data);
     setGameStarted(data.gameStatus);
     setGameOver(data.gameOver);
     const d = [];
@@ -110,7 +122,7 @@ function Dashboard() {
   const getQuestionList = async () => {
     try {
       onSnapshot(
-        query(collection(db, "games", currentYear, "propQuestions"), orderBy("order")),
+        query(collection(db, "games", year, "propQuestions"), orderBy("order")),
         (snapshot) => {
           const filteredData = snapshot.docs.map((doc) => ({
             ...doc.data(),
@@ -130,7 +142,7 @@ function Dashboard() {
     const docRef = doc(userCollectionRef, user?.uid);
     const docSnap = await getDoc(docRef);
     const person = docSnap.data();
-    const c = query(collection(db, "games", currentYear, "propEntries"), where("user", "==", docRef));
+    const c = query(collection(db, "games", year, "propEntries"), where("user", "==", docRef));
     const a = await getDocs(c);
 
     const data = a.docs.map((quiz) => ({
@@ -139,7 +151,7 @@ function Dashboard() {
     }));
 
     const answerData = await getDocs(
-      query(collection(db, "games", currentYear, "propQuestions"), orderBy("order"))
+      query(collection(db, "games", year, "propQuestions"), orderBy("order"))
     );
 
     const filteredAnswerData = answerData.docs.map((doc) => ({
@@ -175,7 +187,7 @@ function Dashboard() {
   const fetchUserStatus = async () => {
     try {
       const docRef = doc(userCollectionRef, user?.uid);
-      const c = query(collection(db, "games", currentYear, "propEntries"), where("user", "==", docRef));
+      const c = query(collection(db, "games", year, "propEntries"), where("user", "==", docRef));
       const r = await getDocs(c);
 
       const filteredData = r.docs.map((doc) => ({
@@ -192,9 +204,7 @@ function Dashboard() {
 
   const onStartQuiz = async () => {
     const person = doc(userCollectionRef, user?.uid);
-    console.log(person);
     const test = person.id;
-    console.log(test);
     return navigate("/quiz", { state: { id: test } });
   };
 
@@ -247,24 +257,23 @@ function Dashboard() {
     setIsDrawerOpen(false);
   };
 
-  const handleSelectionChange = (e) => {
-    setCurrentYear(e.target.value);
-  } 
+  // const handleSelectionChange = (e) => {
+  //   setCurrentYear(e.target.value);
+  // } 
 
   useEffect(() => {
     if (loading) {
       return;
     }
     if (!user) return navigate("/");
-
-    fetchUser();
-    getGameStatus();
-  }, [user, loading, currentYear]);
+    if (year) fetchUser();
+    
+  }, [user, loading, year]);
 
   return (
 
     <div className="table">
-      <Select 
+      {/* <Select 
         label="Select a year"
         selectedKeys={[currentYear]}
         onChange={handleSelectionChange}
@@ -272,7 +281,7 @@ function Dashboard() {
           {years.map((year) => (
             <SelectItem key={year.key}>{year.label}</SelectItem>
           ))}
-      </Select>
+      </Select> */}
       <div className="tableContent flex flex-col gap-4">
         <div className="flex justify-between items-center">
           <span className="text-default-300 text-medium table-header">
@@ -380,7 +389,7 @@ function Dashboard() {
           remaining={remainingQuestions}
           status={gameStarted}
           end={gameOver}
-          year={currentYear}
+          year={year}
         />
       </div>
     </div>

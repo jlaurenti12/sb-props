@@ -22,7 +22,7 @@ function Quiz() {
 
   const getQuestionList = async () => {
     try {
-      const questionsCollectionRef = collection(db, "games", "2025", "propQuestions");
+      const questionsCollectionRef = collection(db, "games", "2026", "propQuestions");
       const data = await getDocs(
         query(questionsCollectionRef, orderBy("order"))
       );
@@ -58,7 +58,7 @@ function Quiz() {
 
       const arr = mapResponses(data);
 
-      await addDoc(collection(db, "games", "2025", "propEntries"), {
+      await addDoc(collection(db, "games", "2026", "propEntries"), {
         responses: arr,
         score: 0,
         isCompleted: true,
