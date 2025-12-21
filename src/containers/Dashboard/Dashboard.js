@@ -205,7 +205,8 @@ function Dashboard({year}) {
   const onStartQuiz = async () => {
     const person = doc(userCollectionRef, user?.uid);
     const test = person.id;
-    return navigate("/quiz", { state: { id: test } });
+    console.log(year);
+    return navigate("/quiz", { state: { id: test, year: year } });
   };
 
   const openDrawer = (quiz, remaining) => {

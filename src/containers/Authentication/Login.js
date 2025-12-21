@@ -8,7 +8,7 @@ import {
 import { useAuthState } from "react-firebase-hooks/auth";
 import { Form, Input, Button, Image, Divider } from "@heroui/react";
 import { IoLogoGoogle } from "react-icons/io5";
-import mainLogo from "../../assets/images/sb_logo.png";
+import mainLogo from "../../assets/images/sb_logo_lx.png";
 
 function Login() {
   const [user, loading] = useAuthState(auth);

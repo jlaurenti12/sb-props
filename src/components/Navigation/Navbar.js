@@ -26,7 +26,7 @@ import {
   Select, 
   SelectItem
 } from "@heroui/react";
-import mainLogo from "../../assets/images/sb_logo.png";
+import mainLogo from "../../assets/images/sb_logo_lx.png";
 
 const Navigation = ({getCurrentYear}) => {
   const [user, loading] = useAuthState(auth);

@@ -18,11 +18,12 @@ function Quiz() {
   const navigate = useNavigate();
   const [questionList, setQuestionList] = useState([]);
   const userID = location.state.id;
+  const year = location.state.year
   const [isLoaded, setIsLoaded] = useState(false);
 
   const getQuestionList = async () => {
     try {
-      const questionsCollectionRef = collection(db, "games", "2026", "propQuestions");
+      const questionsCollectionRef = collection(db, "games", year, "propQuestions");
       const data = await getDocs(
         query(questionsCollectionRef, orderBy("order"))
       );
@@ -58,7 +59,7 @@ function Quiz() {
 
       const arr = mapResponses(data);
 
-      await addDoc(collection(db, "games", "2026", "propEntries"), {
+      await addDoc(collection(db, "games", year, "propEntries"), {
         responses: arr,
         score: 0,
         isCompleted: true,
