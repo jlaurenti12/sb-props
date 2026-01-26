@@ -40,7 +40,7 @@ function Quiz() {
 
   const mapResponses = (data) => {
     const arr = [];
-    questionList.map((question) => {
+    questionList.forEach((question) => {
       for (let [key, value] of Object.entries(data)) {
         if (key === question.prompt) arr.push(value);
       }
@@ -85,6 +85,7 @@ function Quiz() {
 
   useEffect(() => {
     getQuestionList();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

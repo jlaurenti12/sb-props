@@ -75,7 +75,7 @@ function Leaderboard({ remaining, status, end, year }) {
           id: quiz.id,
         }));
 
-        snapshot.map((quiz) => {
+        snapshot.forEach((quiz) => {
           user.quizzes.push(quiz);
         });
       })
@@ -91,12 +91,12 @@ function Leaderboard({ remaining, status, end, year }) {
     const answers = [];
     const quizzes = [];
 
-    filteredAnswerData.map((question) => {
+    filteredAnswerData.forEach((question) => {
       answers.push(question.correctChoice);
     });
 
-    filteredUserData.map((user) => {
-      user.quizzes?.map((quiz) => {
+    filteredUserData.forEach((user) => {
+      user.quizzes?.forEach((quiz) => {
         let score = 0;
         for (let index = 0; index < quiz.responses.length; index++) {
           if (quiz.responses[index] === answers[index]) {
@@ -114,7 +114,7 @@ function Leaderboard({ remaining, status, end, year }) {
         }
 
         quiz.userId = user.id;
-        quiz.isCompleted ? quizzes.push(quiz) : <></>;
+        if (quiz.isCompleted) quizzes.push(quiz);
       });
     });
 
@@ -123,13 +123,13 @@ function Leaderboard({ remaining, status, end, year }) {
     setQuizList(quizzes);
     setIsLoaded(true);
 
-    end ? getFinal(quizzes, final) : <></>;
+    if (end) getFinal(quizzes, final);
   };
 
   const getFinal = (quizzes, finalScore) => {
     const max = Math.max(...quizzes.map((o) => o.score));
     const highScores = [];
-    quizzes.map((quiz) => {
+    quizzes.forEach((quiz) => {
       if (quiz.score === max) {
         highScores.push(quiz);
       }
@@ -145,17 +145,15 @@ function Leaderboard({ remaining, status, end, year }) {
   const tiebreakerCheck = (highScores, finalScore) => {
     let closest = null;
 
-    highScores.map((quiz) => {
+    highScores.forEach((quiz) => {
       if (quiz.tiebreaker === finalScore) {
         closest = quiz;
       } else if (quiz.tiebreaker < finalScore) {
         if (closest === null) {
           closest = quiz;
         } else {
-          quiz.tiebreaker > closest.tiebreaker ? (closest = quiz) : <></>;
+          if (quiz.tiebreaker > closest.tiebreaker) closest = quiz;
         }
-      } else {
-        <></>;
       }
     });
 
@@ -194,7 +192,7 @@ function Leaderboard({ remaining, status, end, year }) {
           questionList[index].correctChoice,
           "--"
         );
-      } else if (questionList[index].correctChoice == quiz.responses[index]) {
+      } else if (questionList[index].correctChoice === quiz.responses[index]) {
         arr.push(
           questionList[index].prompt,
           quiz.responses[index],
@@ -231,6 +229,7 @@ function Leaderboard({ remaining, status, end, year }) {
       getQuestionList();
     }
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [year]);
 
   return (

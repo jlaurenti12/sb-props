@@ -107,9 +107,9 @@ function Admin() {
       ...doc.data(),
       id: doc.id
     }));
-    c.map((year) => {
+    c.forEach((year) => {
       d.push({key: year.id, label: year.id})
-    })
+    });
     setYears(d);
   };
 
@@ -157,6 +157,7 @@ function Admin() {
     getQuestionList();
     getGameStatus();
     setSelectedQuestion(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, loading, currentYear]);
 
   return (

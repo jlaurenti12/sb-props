@@ -41,7 +41,6 @@ function Dashboard({year}) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [gameStarted, setGameStarted] = useState();
   const [gameOver, setGameOver] = useState();
-  const [years, setYears] = useState([]);
   // const [currentYear, setCurrentYear] = useState("2026");
   const [isLoaded, setIsLoaded] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -98,23 +97,12 @@ function Dashboard({year}) {
     console.log(data);
     setGameStarted(data.gameStatus);
     setGameOver(data.gameOver);
-    const d = [];
-    const a = collection(db, "games");
-    const b = await getDocs(a);
-    const c = b.docs.map((doc) => ({
-      ...doc.data(),
-      id: doc.id
-    }));
-    c.map((year) => {
-      d.push({key: year.id, label: year.id})
-    })
-    setYears(d);
   };
 
   const getRemainingQuestions = (questions) => {
     let total = 0;
-    questions.map((question) => {
-      question.correctChoice ? total++ : <></>;
+    questions.forEach((question) => {
+      if (question.correctChoice) total++;
     });
     setRemainingQuestions(26 - total);
   };
@@ -160,11 +148,11 @@ function Dashboard({year}) {
     const answers = [];
     const quizzes = [];
 
-    filteredAnswerData.map((question) => {
+    filteredAnswerData.forEach((question) => {
       answers.push(question.correctChoice);
     });
 
-    data.map((quiz) => {
+    data.forEach((quiz) => {
       let score = 0;
       for (let index = 0; index < quiz.responses.length; index++) {
         if (quiz.responses[index] === answers[index]) {
@@ -228,7 +216,7 @@ function Dashboard({year}) {
           questionList[index].correctChoice,
           "--"
         );
-      } else if (questionList[index].correctChoice == quiz.responses[index]) {
+      } else if (questionList[index].correctChoice === quiz.responses[index]) {
         arr.push(
           questionList[index].prompt,
           quiz.responses[index],
@@ -269,6 +257,7 @@ function Dashboard({year}) {
     if (!user) return navigate("/");
     if (year) fetchUser();
     
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, loading, year]);
 
   return (

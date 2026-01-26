@@ -4,7 +4,6 @@ import { useNavigate, NavLink, useLocation } from "react-router-dom";
 import { auth, logout, db } from "../../services/firebase.js";
 import {
   doc,
-  getDoc,
   getDocs,
   collection,
   query,
@@ -24,8 +23,6 @@ import {
   DropdownMenu,
   Avatar,
   Skeleton,
-  Select, 
-  SelectItem
 } from "@heroui/react";
 import mainLogo from "../../assets/images/sb_logo_lx.png";
 
@@ -65,7 +62,7 @@ const Navigation = ({getCurrentYear}) => {
         }
       });
 
-      onSnapshot(doc(db, "games", `{year}`), (snapshot) => {
+      onSnapshot(doc(db, "games", year), (snapshot) => {
         getGameStatus();
       });      
     } catch (err) {
@@ -76,10 +73,6 @@ const Navigation = ({getCurrentYear}) => {
 
 
   const getGameStatus = async () => {
-    const docRef = doc(db, "games", z);
-    const docSnap = await getDoc(docRef);
-    const data = docSnap.data();
-;
     const d = [];
     const a = collection(db, "games");
     const b = await getDocs(a);
@@ -87,9 +80,9 @@ const Navigation = ({getCurrentYear}) => {
       ...doc.data(),
       id: doc.id
     }));
-    c.map((y) => {
+    c.forEach((y) => {
       d.push({key: y.id, label: y.id})
-    })
+    });
     console.log(d);
     setYears(d);
   };
@@ -128,6 +121,9 @@ const Navigation = ({getCurrentYear}) => {
     fetchYear();
 
 
+    // CRA/Vercel builds run with CI=true; we intentionally only re-run this
+    // effect when auth state changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, loading]);
 
   return (
@@ -213,7 +209,8 @@ const Navigation = ({getCurrentYear}) => {
                 <DropdownMenu aria-label="Profile Actions" variant="flat">
                   <DropdownItem key="profile" className="h-14 gap-2">
                     <NavLink to="/dashboard">
-
+                      <p className="font-semibold">{name}</p>
+                      <p className="text-small text-default-500">{email}</p>
                     </NavLink>
                   </DropdownItem>
                   {isAdmin ? (
