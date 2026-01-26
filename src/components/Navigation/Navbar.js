@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { useNavigate, NavLink } from "react-router-dom";
+import { useNavigate, NavLink, useLocation } from "react-router-dom";
 import { auth, logout, db } from "../../services/firebase.js";
 import {
   doc,
@@ -11,6 +11,7 @@ import {
   where,
   onSnapshot,
 } from "firebase/firestore";
+import { FiChevronDown } from "react-icons/fi";
 import {
   Button,
   Navbar,
@@ -36,12 +37,14 @@ const Navigation = ({getCurrentYear}) => {
   const [isAdmin, setIsAdmin] = useState("false");
   const userCollectionRef = collection(db, "users");
   const navigate = useNavigate();
+  const location = useLocation();
   const [isLoaded, setIsLoaded] = useState(false);
   const [years, setYears] = useState([]);
-  // const [gameStarted, setGameStarted] = useState();
-  // const [gameOver, setGameOver] = useState();
+  const [isYearDropdownOpen, setIsYearDropdownOpen] = useState(false);
+
   let z;
   const [currentYear, setCurrentYear] = useState();
+  const isQuizPage = location.pathname.startsWith("/quiz");
 
 
   const fetchYear = async (year) => {
@@ -76,8 +79,7 @@ const Navigation = ({getCurrentYear}) => {
     const docRef = doc(db, "games", z);
     const docSnap = await getDoc(docRef);
     const data = docSnap.data();
-    // setGameStarted(data.gameStatus);
-    // setGameOver(data.gameOver);
+;
     const d = [];
     const a = collection(db, "games");
     const b = await getDocs(a);
@@ -124,7 +126,7 @@ const Navigation = ({getCurrentYear}) => {
     if (!user) return navigate("/");
 
     fetchYear();
-    // fetchUser();
+
 
   }, [user, loading]);
 
@@ -148,9 +150,8 @@ const Navigation = ({getCurrentYear}) => {
             </NavbarBrand>
 
             <NavbarContent as="div" justify="end">
-              <Dropdown>
-                <DropdownTrigger>
-                  <Button
+              {isQuizPage ? (
+                <Button
                   disableRipple
                   className="p-0 bg-transparent data-[hover=true]:bg-transparent"
                   radius="sm"
@@ -158,14 +159,43 @@ const Navigation = ({getCurrentYear}) => {
                 >
                   {currentYear}
                 </Button>
-                </DropdownTrigger>
-                <DropdownMenu>
-                  {years.map((year) => (
-                    <DropdownItem key={year.key} onPress={() => handleSelectionChange(year.key)} >{year.label}</DropdownItem>
-                  ))}           
-                </DropdownMenu>
-
-              </Dropdown>
+              ) : (
+                <Dropdown onOpenChange={setIsYearDropdownOpen}>
+                  <DropdownTrigger>
+                    <Button
+                      disableRipple
+                      className="p-0 bg-transparent data-[hover=true]:bg-transparent"
+                      radius="sm"
+                      variant="light"
+                    >
+                      <span className="inline-flex items-center gap-1">
+                        <span>{currentYear}</span>
+                        <FiChevronDown
+                          aria-hidden="true"
+                          className={[
+                            "h-4 w-4 shrink-0 transform-gpu",
+                            "transition-transform duration-200 ease-out",
+                            "motion-reduce:transition-none motion-reduce:transform-none",
+                            isYearDropdownOpen
+                              ? "-translate-y-0.5 rotate-180"
+                              : "translate-y-0 rotate-0",
+                          ].join(" ")}
+                        />
+                      </span>
+                    </Button>
+                  </DropdownTrigger>
+                  <DropdownMenu>
+                    {years.map((year) => (
+                      <DropdownItem
+                        key={year.key}
+                        onPress={() => handleSelectionChange(year.key)}
+                      >
+                        {year.label}
+                      </DropdownItem>
+                    ))}
+                  </DropdownMenu>
+                </Dropdown>
+              )}
 
               <Dropdown placement="bottom-end">
                 <DropdownTrigger>
@@ -183,13 +213,7 @@ const Navigation = ({getCurrentYear}) => {
                 <DropdownMenu aria-label="Profile Actions" variant="flat">
                   <DropdownItem key="profile" className="h-14 gap-2">
                     <NavLink to="/dashboard">
-                    {/* <NavLink to={{
-                        pathname:'/dashboard',
-                        state: currentYear, 
-                      }}>
-                      <p className="font-semibold">Signed in as</p>
-                      <p className="font-semibold">{name}</p>
-                      <p className="font-semibold">{email}</p> */}
+
                     </NavLink>
                   </DropdownItem>
                   {isAdmin ? (
