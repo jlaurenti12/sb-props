@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { db } from "../../services/firebase";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   getDocs,
   collection,
@@ -17,53 +18,86 @@ function Quiz() {
   const location = useLocation();
   const navigate = useNavigate();
   const [questionList, setQuestionList] = useState([]);
-  const userID = location.state.id;
-  const year = location.state.year
+  const userID = location.state?.id;
+  const year = location.state?.year;
   const [isLoaded, setIsLoaded] = useState(false);
 
-  const getQuestionList = async () => {
-    try {
-      const questionsCollectionRef = collection(db, "games", year, "propQuestions");
-      const data = await getDocs(
-        query(questionsCollectionRef, orderBy("order"))
-      );
-      const filteredData = data.docs.map((doc) => ({
-        ...doc.data(),
-        id: doc.id,
-      }));
-      setQuestionList(filteredData);
-      setIsLoaded(true);
-    } catch (err) {
-      console.error(err);
+  const [currentIndex, setCurrentIndex] = useState(0); // 0..questionList.length (last index is tiebreaker)
+  const [direction, setDirection] = useState(1); // -1 back, +1 forward (for animations)
+  const [answersById, setAnswersById] = useState({});
+  const [tiebreaker, setTiebreaker] = useState("");
+  const [isReviewing, setIsReviewing] = useState(false);
+  const [hasReviewed, setHasReviewed] = useState(false);
+  const autoAdvanceTimerRef = useRef(null);
+
+  const isTiebreakerStep = currentIndex === questionList.length;
+  const totalQuestions = questionList.length;
+  const totalSteps = totalQuestions + 1; // + tiebreaker
+  const completedQuestions = useMemo(() => {
+    return questionList.reduce((count, q) => (answersById[q.id] != null ? count + 1 : count), 0);
+  }, [answersById, questionList]);
+
+  const progressPct = useMemo(() => {
+    if (isReviewing) return 100;
+    if (totalSteps === 0) return 0;
+    // currentIndex ranges [0..totalQuestions], so step number is currentIndex+1
+    return Math.round(((currentIndex + 1) / totalSteps) * 100);
+  }, [currentIndex, isReviewing, totalSteps]);
+
+  const goToIndex = (nextIndex) => {
+    const clamped = Math.max(0, Math.min(nextIndex, questionList.length));
+    setDirection(clamped >= currentIndex ? 1 : -1);
+    setCurrentIndex(clamped);
+  };
+
+  const goBack = () => {
+    if (isReviewing) {
+      setIsReviewing(false);
+      setDirection(-1);
+      setCurrentIndex(questionList.length);
+      return;
     }
+    if (currentIndex === 0) return;
+    setDirection(-1);
+    setCurrentIndex((i) => Math.max(0, i - 1));
   };
 
-  const mapResponses = (data) => {
-    const arr = [];
-    questionList.forEach((question) => {
-      for (let [key, value] of Object.entries(data)) {
-        if (key === question.prompt) arr.push(value);
-      }
-    });
-    return arr;
+  const goNext = () => {
+    if (isReviewing) return;
+
+    // Tiebreaker step -> Review
+    if (isTiebreakerStep) {
+      if (tiebreaker.trim() === "") return;
+      setIsReviewing(true);
+      setHasReviewed(true);
+      return;
+    }
+
+    // Question step -> next question or tiebreaker
+    const q = questionList[currentIndex];
+    if (!q) return;
+    if (answersById[q.id] == null) return;
+
+    setDirection(1);
+    setCurrentIndex((i) => Math.min(questionList.length, i + 1));
   };
 
-  const onSubmitQuiz = async (data) => {
+  const onSubmitQuiz = async () => {
     try {
-      const size = Object.keys(data).length;
+      const responses = questionList.map((q) => answersById[q.id]);
+      const missing = responses.some((v) => v == null);
+      const tiebreakerNumber = Number(tiebreaker);
 
-      if (size < questionList.length + 1 || data.tiebreaker === "") {
+      if (missing || tiebreaker.trim() === "" || Number.isNaN(tiebreakerNumber)) {
         alert("Answer all questions to submit entry.");
         return;
       }
 
-      const arr = mapResponses(data);
-
       await addDoc(collection(db, "games", year, "propEntries"), {
-        responses: arr,
+        responses,
         score: 0,
         isCompleted: true,
-        tiebreaker: Number(data.tiebreaker),
+        tiebreaker: tiebreakerNumber,
         user: doc(db, `users/${userID}`),
       });
 
@@ -84,58 +118,281 @@ function Quiz() {
   };
 
   useEffect(() => {
-    getQuestionList();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (!userID || !year) {
+      navigate("/dashboard");
+      return;
+    }
+
+    let isCancelled = false;
+    const run = async () => {
+      try {
+        const questionsCollectionRef = collection(db, "games", year, "propQuestions");
+        const data = await getDocs(query(questionsCollectionRef, orderBy("order")));
+        if (isCancelled) return;
+        const filteredData = data.docs.map((d) => ({
+          ...d.data(),
+          id: d.id,
+        }));
+        setQuestionList(filteredData);
+        setIsLoaded(true);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    run();
+    return () => {
+      isCancelled = true;
+    };
+  }, [navigate, userID, year]);
+
+  useEffect(() => {
+    // Clear any pending auto-advance when changing steps
+    if (autoAdvanceTimerRef.current) {
+      clearTimeout(autoAdvanceTimerRef.current);
+      autoAdvanceTimerRef.current = null;
+    }
+  }, [currentIndex, isReviewing]);
+
+  const currentQuestion = !isReviewing && !isTiebreakerStep ? questionList[currentIndex] : null;
+  const canGoBack = isReviewing || currentIndex > 0;
+  const canGoNext = useMemo(() => {
+    if (isReviewing) return false;
+    if (!isLoaded) return false;
+    if (isTiebreakerStep) return tiebreaker.trim() !== "";
+    if (!currentQuestion) return false;
+    return answersById[currentQuestion.id] != null;
+  }, [answersById, currentQuestion, isLoaded, isReviewing, isTiebreakerStep, tiebreaker]);
+
+  const handleChoiceChange = (value) => {
+    if (!currentQuestion) return;
+    const nextValue = typeof value === "string" ? value : value?.target?.value;
+
+    setAnswersById((prev) => ({
+      ...prev,
+      [currentQuestion.id]: nextValue,
+    }));
+
+    // Auto-advance (Typeform feel)
+    // if (autoAdvanceTimerRef.current) clearTimeout(autoAdvanceTimerRef.current);
+    // autoAdvanceTimerRef.current = setTimeout(() => {
+    //   setDirection(1);
+    //   setCurrentIndex((i) => Math.min(questionList.length, i + 1));
+    // }, 220);
+  };
+
+  const stepKey = isReviewing ? "review" : isTiebreakerStep ? "tiebreaker" : `q-${currentQuestion?.id ?? currentIndex}`;
+  const variants = {
+    enter: (dir) => ({ x: dir > 0 ? 24 : -24, opacity: 0 }),
+    center: { x: 0, opacity: 1 },
+    exit: (dir) => ({ x: dir > 0 ? -24 : 24, opacity: 0 }),
+  };
 
   return (
-    <div className="quiz">
+    <div className="quiz max-w-2xl mx-auto w-full p-4">
       <Skeleton className="rounded-lg" isLoaded={isLoaded}>
-        <Form
-          className="grid"
-          onSubmit={(e) => {
-            e.preventDefault();
-            let data = Object.fromEntries(new FormData(e.currentTarget));
-            onSubmitQuiz(data);
-          }}
-        >
-          <>
-            {questionList.map((question) => (
-              <div className="group-choices rounded-md p-4">
-                <RadioGroup label={question.prompt} name={question.prompt}>
-                  {question.choices.map((choice) => (
-                    <CustomRadio
-                      id={question.id}
-                      value={`${choice}`}
-                      className="radio"
-                    >
-                      {choice}
-                    </CustomRadio>
-                  ))}
-                </RadioGroup>
+        <div className="grid gap-4">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              <div className="text-small text-default-500 whitespace-nowrap">
+                {isReviewing
+                  ? "Review answers"
+                  : isTiebreakerStep
+                    ? `Tiebreaker`
+                    : `Question ${Math.min(currentIndex + 1, totalQuestions)}/${totalQuestions}`}
               </div>
-            ))}
+              <div className="h-2 w-full bg-content2 rounded-full overflow-hidden">
+                <div
+                  className="h-2 bg-primary rounded-full transition-all duration-300"
+                  style={{ width: `${progressPct}%` }}
+                />
+              </div>
+            </div>
 
-            <Input
-              type="number"
-              isRequired
-              errorMessage="Please enter a total score"
-              label="Tiebreaker - TOTAL SCORE"
-              labelPlacement="outside"
-              placeholder="Total score - Price is right rules"
-              name="tiebreaker"
-            ></Input>
-          </>
-
-          <div className="quizSubmit flex gap-4">
-            <Button fullWidth onPress={onDeleteQuiz}>
-              Cancel
-            </Button>
-            <Button fullWidth type="submit" color="primary">
-              Submit
+            <Button size="sm" variant="light" onPress={onDeleteQuiz}>
+              Exit
             </Button>
           </div>
-        </Form>
+
+          <AnimatePresence mode="wait" custom={direction}>
+            <motion.div
+              key={stepKey}
+              custom={direction}
+              variants={variants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.18, ease: "easeOut" }}
+              className="grid gap-4"
+            >
+              {isReviewing ? (
+                <div className="grid gap-4">
+                    {/* <div className="text-medium font-semibold">Review your answers</div> */}
+                    {/* <div className="text-small text-default-500 mt-1">
+                      Answered {completedQuestions}/{totalQuestions} questions
+                      {tiebreaker.trim() !== "" ? ` • Tiebreaker: ${tiebreaker}` : ""}
+                    </div> */}
+
+                  <div className="grid gap-3">
+                    {questionList.map((q, idx) => {
+                      const answer = answersById[q.id];
+                      const isMissing = answer == null;
+                      return (
+                        <button
+                          key={q.id}
+                          type="button"
+                          onClick={() => {
+                            setIsReviewing(false);
+                            goToIndex(idx);
+                          }}
+                          className={[
+                            "text-left rounded-lg p-4 border transition-colors",
+                            isMissing ? "border-danger/50 bg-danger/5" : "border-default-200 bg-content1",
+                          ].join(" ")}
+                        >
+                          <div className="text-small text-default-500">Question {idx + 1}</div>
+                          <div className="text-medium font-semibold mt-1">{q.prompt}</div>
+                          <div className="text-small mt-2">
+                            <span className="text-default-500">Your answer: </span>
+                            <span className={isMissing ? "text-danger" : ""}>
+                              {isMissing ? "Not answered" : answer}
+                            </span>
+                          </div>
+                          <div className="text-small text-primary mt-2">Edit</div>
+                        </button>
+                      );
+                    })}
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsReviewing(false);
+                        goToIndex(questionList.length);
+                      }}
+                      className="text-left rounded-lg p-4 border border-default-200 bg-content1 transition-colors hover:bg-content2"
+                    >
+                      <div className="text-small text-default-500">Tiebreaker</div>
+                      <div className="text-medium font-semibold mt-1">
+                        {tiebreaker.trim() === "" ? "Not set" : tiebreaker}
+                      </div>
+                      <div className="text-small text-primary mt-2">Edit</div>
+                    </button>
+                  </div>
+
+                  <div className="flex gap-3">
+                    {/* <Button fullWidth variant="flat" onPress={goBack}>
+                      Back
+                    </Button> */}
+                    <Button
+                      fullWidth
+                      color="primary"
+                      onPress={onSubmitQuiz}
+                      isDisabled={completedQuestions !== totalQuestions || tiebreaker.trim() === ""}
+                    >
+                      Submit Entry
+                    </Button>
+                  </div>
+                </div>
+              ) : isTiebreakerStep ? (
+                <div className="grid gap-4">
+                  <div className="rounded-lg bg-content1 p-4">
+                    <div className="text-medium font-semibold">Tiebreaker</div>
+                    <div className="text-small text-default-500 mt-1">
+                      Enter the total score (Price is Right rules).
+                    </div>
+                  </div>
+
+                  <Form
+                    className="grid gap-4"
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      goNext();
+                    }}
+                  >
+                    <Input
+                      type="number"
+                      isRequired
+                      errorMessage="Please enter a total score"
+                      label="TOTAL SCORE"
+                      labelPlacement="outside"
+                      placeholder="e.g. 54"
+                      value={tiebreaker}
+                      onChange={(e) => setTiebreaker(e.target.value)}
+                    />
+
+                    <div className="flex gap-3">
+                      { hasReviewed ? (
+                        <Button fullWidth color="primary"                       
+                          onPress={() => {
+                            setIsReviewing(true);
+                          }} >Save and Go to Review</Button>
+                        ) : (
+                        <>
+                          <Button fullWidth variant="flat" onPress={goBack} isDisabled={!canGoBack}>
+                          Back
+                          </Button>
+                          <Button fullWidth color="primary" type="submit" isDisabled={!canGoNext}>
+                            Review
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  </Form>
+                </div>
+              ) : (
+                <div className="grid gap-4">
+                  {/* <div className="rounded-lg bg-content1 p-4"> */}
+                    {/* <div className="text-small text-default-500">
+                      Question {currentIndex + 1} of {totalQuestions}
+                    </div> */}
+                    <div className="text-large font-semibold mt-2">{currentQuestion?.prompt}</div>
+                    {/* <div className="text-small text-default-500 mt-2">
+                      Select an answer to auto-advance.
+                    </div> */}
+                  {/* </div> */}
+
+                  {/* <div className="group-choices rounded-md p-4"> */}
+                    <RadioGroup
+                      aria-label={currentQuestion?.prompt ?? "Question"}
+                      value={currentQuestion ? answersById[currentQuestion.id] ?? "" : ""}
+                      onValueChange={handleChoiceChange}
+                    >
+                      {currentQuestion?.choices?.map((choice) => (
+                        <CustomRadio
+                          key={`${currentQuestion.id}-${choice}`}
+                          id={currentQuestion.id}
+                          value={`${choice}`}
+                          className="radio"
+                        >
+                          {choice}
+                        </CustomRadio>
+                      ))}
+                    </RadioGroup>
+                  {/* </div> */}
+
+                  <div className="flex gap-3">
+                    { hasReviewed ? (
+
+                        <Button fullWidth color="primary"                       
+                          onPress={() => {
+                            setIsReviewing(true);
+                          }} >Save and Go to Review</Button>
+                    ) : (
+                    <>
+                    <Button fullWidth variant="flat" onPress={goBack} isDisabled={!canGoBack}>
+                      Back
+                    </Button>
+                    <Button fullWidth color="primary" onPress={goNext} isDisabled={!canGoNext}>
+                      Next
+                    </Button>
+                    </>
+                    )}
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          </AnimatePresence>
+        </div>
       </Skeleton>
     </div>
   );
