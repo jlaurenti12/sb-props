@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { useNavigate } from "react-router-dom";
 import { auth, db } from "../../services/firebase";
@@ -26,6 +26,7 @@ import {
   Tooltip,
   Button,
   Skeleton,
+  Alert,
 } from "@heroui/react";
 
 function Dashboard({year}) {
@@ -46,6 +47,8 @@ function Dashboard({year}) {
   const [, setLeaderboardStats] = useState({ entryCount: 0, winner: null });
   const [selectedUser, setSelectedUser] = useState(null);
   const [isBreakdownOpen, setIsBreakdownOpen] = useState(false);
+  const [toast, setToast] = useState({ show: false, color: "success", title: "", description: "" });
+  const prevAnswersRef = useRef([]);
   // let z;
 
   // const fetchYear = async (year) => {
@@ -154,6 +157,9 @@ function Dashboard({year}) {
       answers.push(question.correctChoice);
     });
 
+    const isRevealed = (choice) =>
+      choice != null && choice !== "" && choice !== "N/A" && choice !== "Push";
+
     data.forEach((quiz) => {
       let score = 0;
       for (let index = 0; index < quiz.responses.length; index++) {
@@ -169,6 +175,34 @@ function Dashboard({year}) {
     });
 
     quizzes.sort((a, b) => parseFloat(b.score) - parseFloat(a.score));
+
+    // Check for newly revealed questions and show toast
+    if (quizzes.length > 0 && prevAnswersRef.current.length > 0) {
+      const userQuiz = quizzes[0];
+      for (let i = 0; i < answers.length; i++) {
+        const wasRevealed = isRevealed(prevAnswersRef.current[i]);
+        const isNowRevealed = isRevealed(answers[i]);
+        
+        if (!wasRevealed && isNowRevealed) {
+          // This question was just revealed
+          const question = filteredAnswerData[i];
+          const userAnswer = userQuiz.responses[i];
+          const isCorrect = userAnswer === answers[i];
+          
+          setToast({
+            show: true,
+            color: isCorrect ? "success" : "danger",
+            title: isCorrect ? "Correct" : "Incorrect",
+            description: `Your answer "${userAnswer}" to "${question.prompt}" was ${isCorrect ? "correct!" : "incorrect :("}`,
+          });
+          
+          // Only show toast for the first newly revealed question
+          break;
+        }
+      }
+    }
+    
+    prevAnswersRef.current = [...answers];
 
     setQuizList(quizzes);
     setIsLoaded(true);
@@ -262,9 +296,27 @@ function Dashboard({year}) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, loading, year]);
 
+  useEffect(() => {
+    if (!toast.show) return;
+    const t = setTimeout(() => setToast((prev) => ({ ...prev, show: false })), 6500);
+    return () => clearTimeout(t);
+  }, [toast.show]);
+
   return (
 
     <div className="table">
+      {toast.show && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[9999] max-w-lg animate-in fade-in slide-in-from-top-4 duration-300">
+          <Alert
+            color={toast.color}
+            title={toast.title}
+            description={toast.description}
+            isClosable
+            onClose={() => setToast((prev) => ({ ...prev, show: false }))}
+            classNames={{ base: "shadow-lg" }}
+          />
+        </div>
+      )}
       {/* <Select 
         label="Select a year"
         selectedKeys={[currentYear]}

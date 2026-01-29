@@ -38,10 +38,13 @@ function Leaderboard({ remaining, status, end, year, onStatsReady, onAnswerBreak
   const [winner, setWinner] = useState();
 
   const fetchAnswers = async () => {
-    onSnapshot(collection(db, "questions"), (snapshot) => {
-      getScores();
-      getQuestionList();
-    });
+    onSnapshot(
+      query(collection(db, "games", year, "propQuestions"), orderBy("order")),
+      (snapshot) => {
+        getScores();
+        getQuestionList();
+      }
+    );
   };
 
   const fetchStatus = async () => {
