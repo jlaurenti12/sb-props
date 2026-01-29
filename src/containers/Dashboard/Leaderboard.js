@@ -235,7 +235,7 @@ function Leaderboard({ remaining, status, end, year }) {
   return (
     <div className="flex flex-col gap-4">
       <Skeleton className="rounded-lg" isLoaded={isLoaded}>
-        <div className="text-default-300 text-medium">Leaderboard</div>
+        <h2 className="text-lg font-semibold text-foreground">Leaderboard</h2>
       </Skeleton>
 
       <Skeleton className="rounded-lg" isLoaded={isLoaded}>

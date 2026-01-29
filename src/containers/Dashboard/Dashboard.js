@@ -274,9 +274,7 @@ function Dashboard({year}) {
       </Select> */}
       <div className="tableContent flex flex-col gap-4">
         <div className="flex justify-between items-center">
-          <span className="text-default-300 text-medium table-header">
-            Your entries
-          </span>
+        <h2 className="text-lg font-semibold text-foreground">Your entries</h2>
           {gameStarted ? (
             <Tooltip
               delay={0}

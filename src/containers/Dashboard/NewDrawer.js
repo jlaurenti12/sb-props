@@ -9,7 +9,6 @@ import {
   TableRow,
   TableCell,
   Chip,
-  Divider,
   Drawer,
   DrawerContent,
   DrawerHeader,
@@ -55,7 +54,7 @@ function NewDrawer({
 
   return (
     
-    <Drawer isOpen={isOpen} size="2xl" onClose={isClosed} backdrop="blur">
+    <Drawer isOpen={isOpen} size="xl" onClose={isClosed} backdrop="blur">
       <DrawerContent>
         {(onClose) => (
           <>
@@ -63,41 +62,41 @@ function NewDrawer({
               {quizData.user === undefined ? name : quizData.user}
             </DrawerHeader>
             <DrawerBody>
-              <div className="margin-bottom: 16px">
-                <span className="text-default-300 text-small">
-                  Current score: {quizData.score}
-                </span>
-                &nbsp; &nbsp;
-                <span className="text-default-300 text-small">
-                  Max score: {maxScore}
-                </span>
-                &nbsp; &nbsp;
-                <span className="text-default-300 text-small">
-                  Tiebreaker: {quizData.tiebreaker}
-                </span>
-              </div>
-              <div className="section-divider">
-                <Divider className="my-4" />
+              <div className="grid grid-cols-3 gap-3 mb-6">
+                <div className="rounded-lg bg-default-100 p-4 text-center">
+                  <div className="text-small text-default-500 mb-1">Correct</div>
+                  <div className="text-xl font-semibold">{quizData.score}</div>
+                </div>
+                <div className="rounded-lg bg-default-100 p-4 text-center">
+                  <div className="text-small text-default-500 mb-1">Max</div>
+                  <div className="text-xl font-semibold">{maxScore}</div>
+                </div>
+                <div className="rounded-lg bg-default-100 p-4 text-center">
+                  <div className="text-small text-default-500 mb-1">Tiebreaker</div>
+                  <div className="text-xl font-semibold">{quizData.tiebreaker}</div>
+                </div>
               </div>
 
-              <Table removeWrapper>
-                <TableHeader>
-                  <TableColumn>QUESTION</TableColumn>
-                  <TableColumn>RESPONSE</TableColumn>
-                  <TableColumn>CORRECT</TableColumn>
-                  <TableColumn></TableColumn>
-                </TableHeader>
-                <TableBody>
-                  {userEntries.map((responses, index) => (
-                    <TableRow key={index}>
-                      <TableCell>{responses[0]}</TableCell>
-                      <TableCell>{responses[1]}</TableCell>
-                      <TableCell>{responses[2]}</TableCell>
-                      <TableCell>{answerAccuracy(responses[3])}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              <div className="min-w-0 w-full [&_table]:table-fixed [&_table]:w-full [&_th]:break-words [&_td]:break-words [&_td]:align-top">
+                <Table removeWrapper>
+                  <TableHeader>
+                    <TableColumn>QUESTION</TableColumn>
+                    <TableColumn>ENTRY</TableColumn>
+                    <TableColumn>CORRECT</TableColumn>
+                    <TableColumn></TableColumn>
+                  </TableHeader>
+                  <TableBody>
+                    {userEntries.map((responses, index) => (
+                      <TableRow key={index}>
+                        <TableCell>{responses[0]}</TableCell>
+                        <TableCell>{responses[1]}</TableCell>
+                        <TableCell>{responses[2]}</TableCell>
+                        <TableCell>{answerAccuracy(responses[3])}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </DrawerBody>
           </>
         )}
