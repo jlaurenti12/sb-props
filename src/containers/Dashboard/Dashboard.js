@@ -1,7 +1,6 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import { auth, db } from "../../services/firebase";
 import { IoArrowForwardCircleSharp } from "react-icons/io5";
 import {
@@ -29,27 +28,6 @@ import {
   Skeleton,
 } from "@heroui/react";
 
-function useCountUp(target, duration = 800) {
-  const [display, setDisplay] = useState(0);
-  const ref = useRef(0);
-  ref.current = display;
-  useEffect(() => {
-    const startVal = ref.current;
-    const endVal = typeof target === "number" ? target : 0;
-    let start = null;
-    const step = (timestamp) => {
-      if (!start) start = timestamp;
-      const elapsed = timestamp - start;
-      const progress = Math.min(elapsed / duration, 1);
-      const eased = 1 - (1 - progress) ** 3;
-      setDisplay(Math.round(startVal + (endVal - startVal) * eased));
-      if (progress < 1) requestAnimationFrame(step);
-    };
-    requestAnimationFrame(step);
-  }, [target, duration]);
-  return display;
-}
-
 function Dashboard({year}) {
   const [user, loading] = useAuthState(auth);
   const [questionList, setQuestionList] = useState([]);
@@ -65,12 +43,9 @@ function Dashboard({year}) {
   const [gameOver, setGameOver] = useState();
   // const [currentYear, setCurrentYear] = useState("2026");
   const [isLoaded, setIsLoaded] = useState(false);
-  const [leaderboardStats, setLeaderboardStats] = useState({ entryCount: 0, winner: null });
+  const [, setLeaderboardStats] = useState({ entryCount: 0, winner: null });
   const [selectedUser, setSelectedUser] = useState(null);
   const [isBreakdownOpen, setIsBreakdownOpen] = useState(false);
-  const animatedEntryCount = useCountUp(leaderboardStats.entryCount);
-  const animatedPrize = useCountUp(leaderboardStats.entryCount * 10);
-  const hasWinner = gameOver && leaderboardStats.winner && leaderboardStats.winner !== "TBD";
   // let z;
 
   // const fetchYear = async (year) => {
