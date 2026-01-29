@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import "../../assets/styles/Leaderboard.css";
 import { db } from "../../services/firebase";
 import { updateDoc, doc, deleteDoc } from "firebase/firestore";
@@ -14,30 +14,56 @@ import {
 } from "@heroui/react";
 
 function QuestionDrawer({ isOpen, isClosed, year, questionObject }) {
-  let questionDoc;
+  const [prompt, setPrompt] = useState("");
+  const [choicesText, setChoicesText] = useState("");
+  const [correctChoice, setCorrectChoice] = useState("");
 
-  if (questionObject) {
-    questionDoc = doc(db, "games", year, "propQuestions", questionObject.id);
-  } else {
-    questionDoc = "";
-  }
+  const questionDoc = questionObject
+    ? doc(db, "games", year, "propQuestions", questionObject.id)
+    : null;
 
-  const updateQuestionPrompt = async (updatedQuestionPrompt) => {
-    console.log(questionDoc);
-    await updateDoc(questionDoc, { prompt: updatedQuestionPrompt });
+  useEffect(() => {
+    if (questionObject) {
+      setPrompt(questionObject.prompt ?? "");
+      setChoicesText(
+        Array.isArray(questionObject.choices)
+          ? questionObject.choices.join(", ")
+          : questionObject.choices ?? ""
+      );
+      setCorrectChoice(questionObject.correctChoice ?? "");
+    }
+  }, [questionObject, isOpen]);
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    if (!questionDoc) return;
+    try {
+      await updateDoc(questionDoc, {
+        prompt: prompt.trim(),
+        choices: choicesText.split(",").map((c) => c.trim()).filter(Boolean),
+        correctChoice: correctChoice.trim() || null,
+      });
+      isClosed();
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  const updateCorrectChoice = async (updatedCorrectChoice) => {
-    await updateDoc(questionDoc, { correctChoice: updatedCorrectChoice });
+  const handleCancel = () => {
+    isClosed();
   };
 
-  const updateChoices = async (updatedChoices) => {
-    await updateDoc(questionDoc, { choices: updatedChoices });
+  const handleDelete = async () => {
+    if (!questionDoc || !window.confirm("Delete this question? This cannot be undone.")) return;
+    try {
+      await deleteDoc(questionDoc);
+      isClosed();
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  const deleteQuestion = async (id) => {
-    await deleteDoc(questionDoc);
-  };
+  if (!questionObject) return null;
 
   return (
     <Drawer isOpen={isOpen} size="md" onClose={isClosed} backdrop="blur">
@@ -45,113 +71,65 @@ function QuestionDrawer({ isOpen, isClosed, year, questionObject }) {
         {(onClose) => (
           <>
             <DrawerHeader className="flex flex-col gap-1">
-              {questionObject.prompt}
+              Edit question
             </DrawerHeader>
 
             <DrawerBody>
-              <div>
-                <span className="text-default-300 text-small">
-                  Prompt: {questionObject.prompt}
-                </span>
-                &nbsp;
-              </div>
               <Form
-                className="questionDrawerForm"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  let data = Object.fromEntries(new FormData(e.currentTarget));
-                  console.log(data);
-                  updateQuestionPrompt(data.prompt);
-                  onClose();
-                }}
+                id="edit-question-form"
+                className="flex flex-col gap-4"
+                onSubmit={handleSave}
               >
                 <Input
-                  label="New Prompt"
-                  labelPlacement="inside"
-                  name="prompt"
+                  label="Prompt"
+                  labelPlacement="outside"
+                  placeholder="Question prompt"
+                  value={prompt}
+                  onValueChange={setPrompt}
                   variant="bordered"
+                  description="The question text shown to users."
                 />
-                <Button
-                  fullWidth
-                  type="submit"
-                  variant="solid"
-                  color="secondary"
-                >
-                  Update Prompt
-                </Button>
-              </Form>
-              <div>
-                <span className="text-default-300 text-small">
-                  Choices: {questionObject.choices}
-                </span>
-                &nbsp;
-              </div>
-              <Form
-                className="questionDrawerForm"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  let data = Object.fromEntries(new FormData(e.currentTarget));
-                  updateChoices(data.choices.split(","));
-                  onClose();
-                }}
-              >
                 <Input
                   label="Choices"
-                  labelPlacement="inside"
-                  name="choices"
+                  labelPlacement="outside"
+                  placeholder="Choice 1, Choice 2, Choice 3"
+                  value={choicesText}
+                  onValueChange={setChoicesText}
                   variant="bordered"
+                  description="Separate choices with commas."
                 />
-                <Button
-                  fullWidth
-                  type="submit"
-                  variant="solid"
-                  color="secondary"
-                >
-                  Update Choices
-                </Button>
-              </Form>
-              <div>
-                <span className="text-default-300 text-small">
-                  Correct Choice: {questionObject.correctChoice}
-                </span>
-                &nbsp;
-              </div>
-              <Form
-                className="questionDrawerForm"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  let data = Object.fromEntries(new FormData(e.currentTarget));
-                  updateCorrectChoice(data.correctChoice);
-                  onClose();
-                }}
-              >
                 <Input
-                  label="Correct Choice"
-                  labelPlacement="inside"
-                  name="correctChoice"
+                  label="Correct choice"
+                  labelPlacement="outside"
+                  placeholder="Exact text of the correct choice"
+                  value={correctChoice}
+                  onValueChange={setCorrectChoice}
                   variant="bordered"
+                  description="Must match one of the choices exactly, or leave blank."
                 />
-                <Button
-                  fullWidth
-                  type="submit"
-                  variant="solid"
-                  color="secondary"
-                >
-                  Add Correct Choice
-                </Button>
               </Form>
+
+              <div className="mt-6 pt-4 border-t border-default-200">
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  className="text-sm text-danger hover:underline focus:outline-none focus:underline"
+                >
+                  Delete question
+                </button>
+              </div>
             </DrawerBody>
-            <DrawerFooter className="flex flex-col gap-1">
+
+            <DrawerFooter className="flex gap-2 justify-end">
+              <Button variant="flat" onPress={handleCancel}>
+                Cancel
+              </Button>
               <Button
-                className="w-full"
+                color="primary"
                 type="submit"
-                color="danger"
-                variant="flat"
-                onPress={
-                  () => {deleteQuestion(questionObject.id); onClose()}
-                }
+                form="edit-question-form"
               >
-                Delete Question
+                Save
               </Button>
             </DrawerFooter>
           </>

@@ -12,44 +12,6 @@ import Leaderboard from "./containers/Dashboard/Leaderboard";
 import Navbar from "./components/Navigation/Navbar.js";
 import {ThemeProvider as NextThemesProvider} from "next-themes";
 
-// let currentYear;
-
-
-// const getGameStatus = async (year) => {
-//   // const docRef = doc(db, "games", currentYear);
-//   // const docSnap = await getDoc(docRef);
-//   // const data = docSnap.data();
-//   // setGameStarted(data.gameStatus);
-//   // setGameOver(data.gameOver);
-//   // const d = [];
-//   // const a = collection(db, "games");
-//   // const b = await getDocs(a);
-//   // const c = b.docs.map((doc) => ({
-//   //   ...doc.data(),
-//   //   id: doc.id
-//   // }));
-//   // c.map((year) => {
-//   //   d.push({key: year.id, label: year.id})
-//   // })
-//   // console.log(d);
-
-
-//   if (year) {
-//     currentYear = year;
-//     console.log(currentYear)
-//     setA(currentYear);
-//     return currentYear;
-//   } else {
-//     currentYear = "2026"
-//     console.log(currentYear)
-//     setA(currentYear);
-//     return currentYear;
-//   }
-
-//   console.log(currentYear);
-// };
-
-
 
 function App() {
 
@@ -89,7 +51,7 @@ function App() {
                 <Route exact path="/dashboard" element={<Dashboard year={a} />} />
                 <Route exact path="/leaderboard" element={<Leaderboard />} />
                 <Route exact path="/quiz" element={<Quiz />} />
-                <Route exact path="/admin" element={<Admin />} />
+                <Route exact path="/admin" element={<Admin year={a} />} />
               </Routes>
             </div>
             </NextThemesProvider>
