@@ -14,20 +14,21 @@ import {
   Pie,
   Cell,
   ResponsiveContainer,
-  Legend,
   Tooltip,
 } from "recharts";
 
-const CHART_COLORS = [
-  "#6366f1",
-  "#8b5cf6",
-  "#a855f7",
-  "#d946ef",
-  "#ec4899",
-  "#f43f5e",
-  "#f97316",
-  "#eab308",
-];
+// Hero UI purple 500 -> 200 (first 4 choices)
+const PURPLE_LEVELS = ["#7828c8", "#9353d3", "#ae7ede", "#c9a9e9"];
+// Hero UI pink 500 -> 200 (choices 5–8)
+const PINK_LEVELS = ["#ff4ecd", "#ff71d7", "#ff95e1", "#ffb8eb"];
+// Hero UI blue 700 -> 200 (choices 9+)
+const BLUE_LEVELS = ["#004493", "#005bc4", "#006FEE", "#338ef7", "#66aaf9", "#99c7fb"];
+
+function getChartColor(index) {
+  if (index < 4) return PURPLE_LEVELS[index];
+  if (index < 8) return PINK_LEVELS[index - 4];
+  return BLUE_LEVELS[(index - 8) % 6];
+}
 
 function AnswerBreakdownDrawer({ isOpen, onClose, year }) {
   const [questions, setQuestions] = useState([]);
@@ -102,8 +103,8 @@ function AnswerBreakdownDrawer({ isOpen, onClose, year }) {
             <DrawerHeader className="flex flex-col gap-1">
               Answer breakdown
             </DrawerHeader>
-            <DrawerBody className="px-4 pb-8">
-              <Skeleton className="rounded-lg" isLoaded={isLoaded}>
+            <DrawerBody className="px-4 pb-8 overflow-x-hidden">
+              <Skeleton className="rounded-lg overflow-hidden" isLoaded={isLoaded}>
                 {!isLoaded ? (
                   <div className="h-64 rounded-lg bg-default-100" />
                 ) : breakdown.length === 0 ? (
@@ -111,7 +112,7 @@ function AnswerBreakdownDrawer({ isOpen, onClose, year }) {
                     No entries or questions yet for this game.
                   </p>
                 ) : (
-                  <div className="grid gap-8">
+                  <div className="grid gap-8 min-w-0">
                     {breakdown.map((item, idx) => {
                       const correctIndex =
                         item.question.correctChoice != null && item.question.correctChoice !== ""
@@ -123,13 +124,13 @@ function AnswerBreakdownDrawer({ isOpen, onClose, year }) {
                           item.question.correctChoice !== "" &&
                           correctIndex < 0);
                       const chartColorForCorrect =
-                        isNA ? "#6b7280" : CHART_COLORS[correctIndex % CHART_COLORS.length];
+                        isNA ? "#6b7280" : getChartColor(correctIndex);
                       const showCorrectChip =
                         item.question.correctChoice != null && item.question.correctChoice !== "";
                       return (
                       <div
                         key={item.question.id ?? idx}
-                        className="rounded-xl bg-default-300 dark:bg-default-100/75 p-5"
+                        className="rounded-xl bg-default-300 dark:bg-default-100/75 p-5 overflow-hidden"
                       >
                         <div className="text-small text-default-500 mb-1">
                           Question {idx + 1}
@@ -149,8 +150,8 @@ function AnswerBreakdownDrawer({ isOpen, onClose, year }) {
                               </Chip>
                             </div>
                         )}
-                        <div className="flex justify-center items-center w-full">
-                          <div className="w-full max-w-sm h-72">
+                        <div className="flex flex-col sm:flex-row justify-center items-center gap-4 w-full min-w-0">
+                          <div className="w-full max-w-sm h-72 shrink-0">
                             <ResponsiveContainer width="100%" height="100%">
                               <PieChart>
                                 <Pie
@@ -161,11 +162,13 @@ function AnswerBreakdownDrawer({ isOpen, onClose, year }) {
                                   outerRadius="85%"
                                   paddingAngle={2}
                                   dataKey="value"
+                                  startAngle={90}
+                                  endAngle={-270}
                                 >
                                   {item.data.map((_, i) => (
                                     <Cell
                                       key={i}
-                                      fill={CHART_COLORS[i % CHART_COLORS.length]}
+                                      fill={getChartColor(i)}
                                       stroke={i === correctIndex ? "#fff" : "transparent"}
                                       strokeWidth={i === correctIndex ? 2 : 0}
                                     />
@@ -181,20 +184,23 @@ function AnswerBreakdownDrawer({ isOpen, onClose, year }) {
                                     border: "1px solid var(--default-200)",
                                   }}
                                 />
-                                <Legend
-                                  layout="vertical"
-                                  align="right"
-                                  verticalAlign="middle"
-                                  formatter={(value) => {
-                                    const d = item.data.find((x) => x.name === value);
-                                    return `${value} ${d ? d.percent : 0}%`;
-                                  }}
-                                  iconType="circle"
-                                  iconSize={8}
-                                  wrapperStyle={{ fontSize: "13px" }}
-                                />
                               </PieChart>
                             </ResponsiveContainer>
+                          </div>
+                          <div className="flex flex-wrap justify-center gap-2 min-w-0 w-full pl-1 pr-4">
+                            {item.data.map((d, i) => (
+                              <Chip
+                                key={d.name}
+                                size="sm"
+                                variant="flat"
+                                style={{
+                                  backgroundColor: getChartColor(i),
+                                  color: "#fff",
+                                }}
+                              >
+                                {d.name} {d.percent}%
+                              </Chip>
+                            ))}
                           </div>
                         </div>
                       </div>
