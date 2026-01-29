@@ -59,48 +59,44 @@ function NewDrawer({
         {(onClose) => (
           <>
             <DrawerHeader className="flex flex-col gap-1">
-              {quizData == null || quizData.user === undefined ? name : quizData.user}
+              {quizData.user === undefined ? name : quizData.user}
             </DrawerHeader>
             <DrawerBody className="px-4">
-              {quizData != null && (
-                <>
-                  <div className="grid grid-cols-3 gap-3 mb-6">
-                    <div className="rounded-lg bg-default-100 p-4 text-center">
-                      <div className="text-small text-default-500 mb-1">Correct</div>
-                      <div className="text-xl font-semibold">{quizData.score}</div>
-                    </div>
-                    <div className="rounded-lg bg-default-100 p-4 text-center">
-                      <div className="text-small text-default-500 mb-1">Max</div>
-                      <div className="text-xl font-semibold">{maxScore}</div>
-                    </div>
-                    <div className="rounded-lg bg-default-100 p-4 text-center">
-                      <div className="text-small text-default-500 mb-1">Tiebreaker</div>
-                      <div className="text-xl font-semibold">{quizData.tiebreaker}</div>
-                    </div>
-                  </div>
+              <div className="grid grid-cols-3 gap-3 mb-6">
+                <div className="rounded-lg bg-default-100 p-4 text-center">
+                  <div className="text-small text-default-500 mb-1">Correct</div>
+                  <div className="text-xl font-semibold">{quizData.score}</div>
+                </div>
+                <div className="rounded-lg bg-default-100 p-4 text-center">
+                  <div className="text-small text-default-500 mb-1">Max</div>
+                  <div className="text-xl font-semibold">{maxScore}</div>
+                </div>
+                <div className="rounded-lg bg-default-100 p-4 text-center">
+                  <div className="text-small text-default-500 mb-1">Tiebreaker</div>
+                  <div className="text-xl font-semibold">{quizData.tiebreaker}</div>
+                </div>
+              </div>
 
-                  <div className="min-w-0 w-full [&_table]:table-fixed [&_table]:w-full [&_th]:break-words [&_td]:break-words [&_th:last-child]:w-20 [&_td:last-child]:w-20 [&_th:last-child]:whitespace-nowrap [&_td:last-child]:whitespace-nowrap">
-                    <Table removeWrapper>
-                      <TableHeader>
-                        <TableColumn>QUESTION</TableColumn>
-                        <TableColumn>ENTRY</TableColumn>
-                        <TableColumn>CORRECT</TableColumn>
-                        <TableColumn className="!w-20"></TableColumn>
-                      </TableHeader>
-                      <TableBody>
-                        {(userEntries ?? []).map((responses, index) => (
-                          <TableRow key={index}>
-                            <TableCell>{responses[0]}</TableCell>
-                            <TableCell>{responses[1]}</TableCell>
-                            <TableCell>{responses[2]}</TableCell>
-                            <TableCell>{answerAccuracy(responses[3])}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </>
-              )}
+              <div className="min-w-0 w-full [&_table]:table-fixed [&_table]:w-full [&_th]:break-words [&_td]:break-words">
+                <Table removeWrapper>
+                  <TableHeader>
+                    <TableColumn>QUESTION</TableColumn>
+                    <TableColumn>ENTRY</TableColumn>
+                    <TableColumn>CORRECT</TableColumn>
+                    <TableColumn></TableColumn>
+                  </TableHeader>
+                  <TableBody>
+                    {userEntries.map((responses, index) => (
+                      <TableRow key={index}>
+                        <TableCell>{responses[0]}</TableCell>
+                        <TableCell>{responses[1]}</TableCell>
+                        <TableCell>{responses[2]}</TableCell>
+                        <TableCell className="max-w-[50px]">{answerAccuracy(responses[3])}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </DrawerBody>
           </>
         )}

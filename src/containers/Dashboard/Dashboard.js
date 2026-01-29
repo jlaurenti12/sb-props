@@ -25,6 +25,7 @@ import {
   TableCell,
   Tooltip,
   Button,
+  Divider,
   Skeleton,
 } from "@heroui/react";
 
