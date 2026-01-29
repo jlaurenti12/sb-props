@@ -298,6 +298,7 @@ function Dashboard({year}) {
           ))}
       </Select> */}
       <div className="tableContent flex flex-col gap-4">
+        <h2 className="text-lg font-semibold text-foreground">Game overview</h2>
         {gameOver ? (
           <div className="grid gap-3 mb-4">
             <div className="grid grid-cols-2 gap-3">
@@ -382,39 +383,7 @@ function Dashboard({year}) {
           </div>
         )}
 
-        <div className="flex justify-between items-center">
         <h2 className="text-lg font-semibold text-foreground">Your entries</h2>
-          {gameStarted ? (
-            <Tooltip
-              delay={0}
-              closeDelay={0}
-              content="The game started. No more entries!"
-            >
-              <Skeleton className="rounded-lg" isLoaded={isLoaded}>
-                <Button
-                  radius="full"
-                  isDisabled
-                  size="md"
-                  color="secondary"
-                  onPress={onStartQuiz}
-                >
-                  Add Entry
-                </Button>
-              </Skeleton>
-            </Tooltip>
-          ) : (
-            <Skeleton className="rounded-lg" isLoaded={isLoaded}>
-              <Button
-                adius="full"
-                size="md"
-                color="secondary"
-                onPress={onStartQuiz}
-              >
-                Add Entry
-              </Button>
-            </Skeleton>
-          )}
-        </div>
         <Skeleton className="rounded-lg" isLoaded={isLoaded}>
           <Table color="secondary">
             <TableHeader>
@@ -464,6 +433,35 @@ function Dashboard({year}) {
             )}
           </Table>
         </Skeleton>
+        {gameStarted ? (
+          <Tooltip
+            delay={0}
+            closeDelay={0}
+            content="The game started. No more entries!"
+          >
+            <Skeleton className="rounded-lg" isLoaded={isLoaded}>
+              <Button
+                fullWidth
+                isDisabled
+                size="md"
+                color="secondary"
+                onPress={onStartQuiz}
+              >
+                Add Entry
+              </Button>
+            </Skeleton>
+          </Tooltip>
+        ) : (
+          <Skeleton className="rounded-lg" isLoaded={isLoaded}>
+            <Button
+              fullWidth
+              color="secondary"
+              onPress={onStartQuiz}
+            >
+              Add Entry
+            </Button>
+          </Skeleton>
+        )}
 
         { isDrawerOpen ? (
           <NewDrawer
