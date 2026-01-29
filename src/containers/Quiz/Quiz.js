@@ -28,6 +28,7 @@ function Quiz() {
   const [tiebreaker, setTiebreaker] = useState("");
   const [isReviewing, setIsReviewing] = useState(false);
   const [hasReviewed, setHasReviewed] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
   const autoAdvanceTimerRef = useRef(null);
 
   const isTiebreakerStep = currentIndex === questionList.length;
@@ -107,7 +108,7 @@ function Quiz() {
         takenQuiz: true,
       });
 
-      return navigate("/");
+      setIsSubmitted(true);
     } catch (err) {
       console.error(err);
     }
@@ -198,17 +199,9 @@ function Quiz() {
   };
 
   const renderFooterButtons = () => {
+    if (isSubmitted) return null;
     if (isReviewing) {
-      return (
-        <Button
-          fullWidth
-          color="primary"
-          onPress={onSubmitQuiz}
-          isDisabled={completedQuestions !== totalQuestions || tiebreaker.trim() === ""}
-        >
-          Submit Entry
-        </Button>
-      );
+      return null;
     }
     if (isTiebreakerStep) {
       if (hasReviewed) {
@@ -259,26 +252,28 @@ function Quiz() {
     >
       <Skeleton className="rounded-lg" isLoaded={isLoaded}>
         <div className="grid gap-4">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3 min-w-0 flex-1">
-              <div className="text-small text-default-500 whitespace-nowrap">
-                {isReviewing
-                  ? "Review answers"
-                  : isTiebreakerStep
-                    ? `Tiebreaker`
-                    : `Question ${Math.min(currentIndex + 1, totalQuestions)}/${totalQuestions}`}
+          {!isSubmitted && (
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0 flex-1">
+                <div className="text-small text-default-500 whitespace-nowrap">
+                  {isReviewing
+                    ? "Review answers"
+                    : isTiebreakerStep
+                      ? `Tiebreaker`
+                      : `Question ${Math.min(currentIndex + 1, totalQuestions)}/${totalQuestions}`}
+                </div>
+                <div className="h-2 w-full bg-content2 rounded-full overflow-hidden">
+                  <div
+                    className="h-2 bg-primary rounded-full transition-all duration-300"
+                    style={{ width: `${progressPct}%` }}
+                  />
+                </div>
               </div>
-              <div className="h-2 w-full bg-content2 rounded-full overflow-hidden">
-                <div
-                  className="h-2 bg-primary rounded-full transition-all duration-300"
-                  style={{ width: `${progressPct}%` }}
-                />
-              </div>
+              <Button size="sm" variant="light" onPress={onDeleteQuiz}>
+                Exit
+              </Button>
             </div>
-            <Button size="sm" variant="light" onPress={onDeleteQuiz}>
-              Exit
-            </Button>
-          </div>
+          )}
 
           <AnimatePresence mode="wait" custom={direction}>
             <motion.div
@@ -291,8 +286,18 @@ function Quiz() {
               transition={{ duration: 0.18, ease: "easeOut" }}
               className="grid gap-4"
             >
-                {isReviewing ? (
-                  <div className="grid gap-3">
+                {isSubmitted ? (
+                  <div className="rounded-lg bg-content1 p-6 text-center grid gap-4">
+                    <div className="text-xl font-semibold">Entry submitted!</div>
+                    <div className="text-default-600">
+                      Please Venmo $10 to <span className="font-semibold text-foreground">@JacobLaurenti</span> to complete your entry.
+                    </div>
+                    <Button fullWidth color="primary" onPress={() => navigate("/")}>
+                      Back to Dashboard
+                    </Button>
+                  </div>
+                ) : isReviewing ? (
+                  <div className="grid gap-3 pb-24">
                     {questionList.map((q, idx) => {
                       const answer = answersById[q.id];
                       const isMissing = answer == null;
@@ -336,7 +341,8 @@ function Quiz() {
                       <div className="text-small text-primary mt-2">Edit</div>
                     </button>
                   </div>
-                ) : isTiebreakerStep ? (
+                ) : null}
+                {!isSubmitted && !isReviewing && isTiebreakerStep ? (
                   <Form
                     id="quiz-tiebreaker-form"
                     className="grid gap-4"
@@ -345,12 +351,13 @@ function Quiz() {
                       goNext();
                     }}
                   >
-                    <div className="rounded-lg bg-content1 p-4">
-                      <div className="text-medium font-semibold">Tiebreaker</div>
-                      <div className="text-small text-default-500 mt-1">
+                    <div>
+                      <div className="text-large font-semibold mt-2">Tiebreaker</div>
+                      <div className="text-small text-default-500">
                         Enter the total score (Price is Right rules).
                       </div>
                     </div>
+                   
                     <Input
                       type="number"
                       isRequired
@@ -362,7 +369,7 @@ function Quiz() {
                       onChange={(e) => setTiebreaker(e.target.value)}
                     />
                   </Form>
-                ) : (
+                ) : !isSubmitted && !isReviewing ? (
                   <div className="grid gap-4">
                     <div className="text-large font-semibold mt-2">{currentQuestion?.prompt}</div>
                     <RadioGroup
@@ -382,9 +389,24 @@ function Quiz() {
                       ))}
                     </RadioGroup>
                   </div>
-                )}
+                ) : null}
             </motion.div>
           </AnimatePresence>
+
+          {isReviewing && !isSubmitted && (
+            <div className="fixed bottom-0 left-0 right-0 z-10 bg-background/95 backdrop-blur border-t border-default-200 p-4">
+              <div className="max-w-2xl mx-auto flex">
+                <Button
+                  className="w-full max-w-sm mx-auto"
+                  color="primary"
+                  onPress={onSubmitQuiz}
+                  isDisabled={completedQuestions !== totalQuestions || tiebreaker.trim() === ""}
+                >
+                  Submit Entry
+                </Button>
+              </div>
+            </div>
+          )}
 
           <div className="flex gap-3 pt-2">
             {renderFooterButtons()}

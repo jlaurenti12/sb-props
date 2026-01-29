@@ -61,7 +61,7 @@ function NewDrawer({
             <DrawerHeader className="flex flex-col gap-1">
               {quizData.user === undefined ? name : quizData.user}
             </DrawerHeader>
-            <DrawerBody>
+            <DrawerBody className="px-4">
               <div className="grid grid-cols-3 gap-3 mb-6">
                 <div className="rounded-lg bg-default-100 p-4 text-center">
                   <div className="text-small text-default-500 mb-1">Correct</div>
@@ -77,13 +77,13 @@ function NewDrawer({
                 </div>
               </div>
 
-              <div className="min-w-0 w-full [&_table]:table-fixed [&_table]:w-full [&_th]:break-words [&_td]:break-words [&_td]:align-top">
+              <div className="min-w-0 w-full [&_table]:table-fixed [&_table]:w-full [&_th]:break-words [&_td]:break-words [&_th:last-child]:w-20 [&_td:last-child]:w-20 [&_th:last-child]:whitespace-nowrap [&_td:last-child]:whitespace-nowrap">
                 <Table removeWrapper>
                   <TableHeader>
                     <TableColumn>QUESTION</TableColumn>
                     <TableColumn>ENTRY</TableColumn>
                     <TableColumn>CORRECT</TableColumn>
-                    <TableColumn></TableColumn>
+                    <TableColumn className="!w-20"></TableColumn>
                   </TableHeader>
                   <TableBody>
                     {userEntries.map((responses, index) => (
