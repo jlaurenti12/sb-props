@@ -83,8 +83,9 @@ const Navigation = ({getCurrentYear}) => {
     c.forEach((y) => {
       d.push({key: y.id, label: y.id})
     });
-    console.log(d);
-    setYears(d);
+    const e = d.toReversed();
+    console.log(e);
+    setYears(e);
   };
 
   const fetchUserInfo = async () => {
