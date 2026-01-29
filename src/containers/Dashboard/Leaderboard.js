@@ -269,7 +269,7 @@ function Leaderboard({ remaining, status, end, year, onStatsReady, onAnswerBreak
 
       <Skeleton className="rounded-lg" isLoaded={isLoaded}>
         <div className="grid gap-3">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3">
             <div className="rounded-lg bg-default-100 p-4 text-center">
               <div className="text-small text-default-500 mb-1">Entries</div>
               <div className="text-lg font-semibold">{quizList.length}</div>
