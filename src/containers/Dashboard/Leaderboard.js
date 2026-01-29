@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import { db } from "../../services/firebase";
-import { IoArrowForwardCircleSharp } from "react-icons/io5";
+import { IoArrowForwardCircleSharp, IoChevronForward } from "react-icons/io5";
 import {
   getDocs,
   collection,
@@ -25,7 +26,7 @@ import {
   Skeleton,
 } from "@heroui/react";
 
-function Leaderboard({ remaining, status, end, year, onStatsReady }) {
+function Leaderboard({ remaining, status, end, year, onStatsReady, onAnswerBreakdownClick }) {
   const [questionList, setQuestionList] = useState([]);
   const [quizList, setQuizList] = useState([]);
   const userCollectionRef = collection(db, "users");
@@ -250,7 +251,88 @@ function Leaderboard({ remaining, status, end, year, onStatsReady }) {
   return (
     <div className="flex flex-col gap-4 mt-4">
       <Skeleton className="rounded-lg" isLoaded={isLoaded}>
-        <h2 className="text-lg font-semibold text-foreground">Leaderboard</h2>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-lg font-semibold text-foreground">Leaderboard</h2>
+          {onAnswerBreakdownClick && status && (
+            <Button
+              size="md"
+              variant="light"
+              color="secondary"
+              onPress={onAnswerBreakdownClick}
+              endContent={<IoChevronForward />}
+            >
+              View answer breakdown
+            </Button>
+          )}
+        </div>
+      </Skeleton>
+
+      <Skeleton className="rounded-lg" isLoaded={isLoaded}>
+        <div className="grid gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="rounded-lg bg-default-100 p-4 text-center">
+              <div className="text-small text-default-500 mb-1">Entries</div>
+              <div className="text-lg font-semibold">{quizList.length}</div>
+            </div>
+            <div className="rounded-lg bg-default-100 p-4 text-center">
+              <div className="text-small text-default-500 mb-1">Prize Pool</div>
+              <div className="text-lg font-semibold">${quizList.length * 10}</div>
+            </div>
+          </div>
+          {status && (
+          <div className="relative overflow-visible">
+            {end && winner && (
+              <div
+                className="absolute -inset-2 pointer-events-none overflow-visible z-20"
+                aria-hidden
+              >
+                {[
+                  { x: "8%", y: "12%", color: "#f59e0b", rot: 15, shape: "strip" },
+                  { x: "92%", y: "18%", color: "#10b981", rot: -20, shape: "circle" },
+                  { x: "10%", y: "78%", color: "#ef4444", rot: -10, shape: "strip" },
+                  { x: "90%", y: "72%", color: "#8b5cf6", rot: 25, shape: "strip" },
+                  { x: "18%", y: "48%", color: "#06b6d4", rot: 5, shape: "circle" },
+                  { x: "82%", y: "42%", color: "#ec4899", rot: -15, shape: "strip" },
+                  { x: "50%", y: "8%", color: "#eab308", rot: 0, shape: "strip" },
+                  { x: "50%", y: "92%", color: "#22c55e", rot: 10, shape: "circle" },
+                  { x: "28%", y: "28%", color: "#f97316", rot: -25, shape: "strip" },
+                  { x: "72%", y: "62%", color: "#6366f1", rot: 20, shape: "strip" },
+                  { x: "15%", y: "35%", color: "#ec4899", rot: 40, shape: "strip" },
+                  { x: "88%", y: "55%", color: "#f59e0b", rot: -35, shape: "circle" },
+                  { x: "35%", y: "75%", color: "#10b981", rot: 12, shape: "strip" },
+                  { x: "65%", y: "22%", color: "#ef4444", rot: -8, shape: "circle" },
+                ].map((piece, i) => {
+                  const isStrip = piece.shape === "strip";
+                  const isCircle = piece.shape === "circle";
+                  return (
+                    <motion.div
+                      key={i}
+                      className={`absolute ${isCircle ? "rounded-full w-2 h-2" : isStrip ? "w-4 h-1 rounded-full" : "w-2 h-2 rounded-sm"}`}
+                      style={{
+                        left: piece.x,
+                        top: piece.y,
+                        backgroundColor: piece.color,
+                        transform: `translate(-50%, -50%) rotate(${piece.rot}deg)`,
+                      }}
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 0.95 }}
+                      transition={{ delay: i * 0.04, duration: 0.4, type: "spring", stiffness: 180 }}
+                    />
+                  );
+                })}
+              </div>
+            )}
+            <div className="rounded-lg bg-default-100 p-4 text-center relative z-10">
+              <div className="text-small text-default-500 mb-1">
+                {end ? "Winner" : "Current leader"}
+              </div>
+              <div className="text-lg font-semibold truncate" title={end ? (winner ?? "TBD") : (quizList[0]?.score > 0 ? quizList[0]?.user : "—")}>
+                {end ? (winner ?? "TBD") : (quizList[0]?.score > 0 ? quizList[0]?.user : "—")}
+              </div>
+            </div>
+          </div>
+          )}
+        </div>
       </Skeleton>
 
       <Skeleton className="rounded-lg" isLoaded={isLoaded}>
