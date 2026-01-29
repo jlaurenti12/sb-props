@@ -22,11 +22,10 @@ import {
   TableCell,
   Tooltip,
   Button,
-  ButtonGroup,
   Skeleton,
 } from "@heroui/react";
 
-function Leaderboard({ remaining, status, end, year }) {
+function Leaderboard({ remaining, status, end, year, onStatsReady }) {
   const [questionList, setQuestionList] = useState([]);
   const [quizList, setQuizList] = useState([]);
   const userCollectionRef = collection(db, "users");
@@ -157,7 +156,7 @@ function Leaderboard({ remaining, status, end, year }) {
       }
     });
 
-    setWinner(closest.user);
+    setWinner(closest != null ? closest.user : null);
   };
 
   const getQuestionList = async () => {
@@ -232,25 +231,26 @@ function Leaderboard({ remaining, status, end, year }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [year]);
 
+  // Refetch when game doc changes (e.g. admin sets game over / final score) so winner updates without refresh
+  useEffect(() => {
+    if (!year) return;
+    const unsub = onSnapshot(doc(db, "games", year), () => {
+      getScores();
+    });
+    return () => unsub();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [year]);
+
+  useEffect(() => {
+    if (onStatsReady) {
+      onStatsReady({ entryCount: quizList.length, winner: winner ?? null });
+    }
+  }, [quizList.length, winner, onStatsReady]);
+
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 mt-4">
       <Skeleton className="rounded-lg" isLoaded={isLoaded}>
         <h2 className="text-lg font-semibold text-foreground">Leaderboard</h2>
-      </Skeleton>
-
-      <Skeleton className="rounded-lg" isLoaded={isLoaded}>
-        <ButtonGroup fullWidth isDisabled color="primary" variant="flat">
-          <Button className="overview">
-            Entries: {quizList.length}{" "}
-            <div className="aVerticalSeparator"></div> Prize: $
-            {quizList.length * 10}
-          </Button>
-          {end ? (
-            <Button className="overview">Winner: {winner}</Button>
-          ) : (
-            <Button className="overview">Winner: TBD</Button>
-          )}
-        </ButtonGroup>
       </Skeleton>
 
       <Skeleton className="rounded-lg" isLoaded={isLoaded}>

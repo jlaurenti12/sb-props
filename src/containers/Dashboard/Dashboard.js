@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import { auth, db } from "../../services/firebase";
 import { IoArrowForwardCircleSharp } from "react-icons/io5";
 import {
@@ -24,9 +25,29 @@ import {
   TableCell,
   Tooltip,
   Button,
-  Divider,
   Skeleton,
 } from "@heroui/react";
+
+function useCountUp(target, duration = 800) {
+  const [display, setDisplay] = useState(0);
+  const ref = useRef(0);
+  ref.current = display;
+  useEffect(() => {
+    const startVal = ref.current;
+    const endVal = typeof target === "number" ? target : 0;
+    let start = null;
+    const step = (timestamp) => {
+      if (!start) start = timestamp;
+      const elapsed = timestamp - start;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - (1 - progress) ** 3;
+      setDisplay(Math.round(startVal + (endVal - startVal) * eased));
+      if (progress < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }, [target, duration]);
+  return display;
+}
 
 function Dashboard({year}) {
   const [user, loading] = useAuthState(auth);
@@ -43,7 +64,11 @@ function Dashboard({year}) {
   const [gameOver, setGameOver] = useState();
   // const [currentYear, setCurrentYear] = useState("2026");
   const [isLoaded, setIsLoaded] = useState(false);
+  const [leaderboardStats, setLeaderboardStats] = useState({ entryCount: 0, winner: null });
   const [selectedUser, setSelectedUser] = useState(null);
+  const animatedEntryCount = useCountUp(leaderboardStats.entryCount);
+  const animatedPrize = useCountUp(leaderboardStats.entryCount * 10);
+  const hasWinner = gameOver && leaderboardStats.winner && leaderboardStats.winner !== "TBD";
   // let z;
 
   // const fetchYear = async (year) => {
@@ -273,6 +298,90 @@ function Dashboard({year}) {
           ))}
       </Select> */}
       <div className="tableContent flex flex-col gap-4">
+        {gameOver ? (
+          <div className="grid gap-3 mb-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-lg bg-default-100 p-4 text-center">
+                <div className="text-small text-default-500 mb-1">Entries</div>
+                <div className="text-xl font-semibold">{animatedEntryCount}</div>
+              </div>
+              <div className="rounded-lg bg-default-100 p-4 text-center">
+                <div className="text-small text-default-500 mb-1">Prize Pool</div>
+                <div className="text-xl font-semibold">${animatedPrize}</div>
+              </div>
+            </div>
+            <div className="relative overflow-visible">
+              {hasWinner && (
+                <div
+                  className="absolute -inset-2 pointer-events-none overflow-visible z-20"
+                  aria-hidden
+                >
+                  {[
+                    { x: "8%", y: "12%", color: "#f59e0b", rot: 15, shape: "strip" },
+                    { x: "92%", y: "18%", color: "#10b981", rot: -20, shape: "circle" },
+                    { x: "10%", y: "78%", color: "#ef4444", rot: -10, shape: "strip" },
+                    { x: "90%", y: "72%", color: "#8b5cf6", rot: 25, shape: "strip" },
+                    { x: "18%", y: "48%", color: "#06b6d4", rot: 5, shape: "circle" },
+                    { x: "82%", y: "42%", color: "#ec4899", rot: -15, shape: "strip" },
+                    { x: "50%", y: "8%", color: "#eab308", rot: 0, shape: "strip" },
+                    { x: "50%", y: "92%", color: "#22c55e", rot: 10, shape: "circle" },
+                    { x: "28%", y: "28%", color: "#f97316", rot: -25, shape: "strip" },
+                    { x: "72%", y: "62%", color: "#6366f1", rot: 20, shape: "strip" },
+                    { x: "15%", y: "35%", color: "#ec4899", rot: 40, shape: "strip" },
+                    { x: "88%", y: "55%", color: "#f59e0b", rot: -35, shape: "circle" },
+                    { x: "35%", y: "75%", color: "#10b981", rot: 12, shape: "strip" },
+                    { x: "65%", y: "22%", color: "#ef4444", rot: -8, shape: "circle" },
+                  ].map((piece, i) => {
+                    const isStrip = piece.shape === "strip";
+                    const isCircle = piece.shape === "circle";
+                    return (
+                      <motion.div
+                        key={i}
+                        className={`absolute ${isCircle ? "rounded-full w-2 h-2" : isStrip ? "w-4 h-1 rounded-full" : "w-2 h-2 rounded-sm"}`}
+                        style={{
+                          left: piece.x,
+                          top: piece.y,
+                          backgroundColor: piece.color,
+                          transform: `translate(-50%, -50%) rotate(${piece.rot}deg)`,
+                        }}
+                        initial={{ scale: 0, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 0.95 }}
+                        transition={{ delay: i * 0.04, duration: 0.4, type: "spring", stiffness: 180 }}
+                      />
+                    );
+                  })}
+                </div>
+              )}
+              <div className="rounded-lg bg-default-100 p-4 text-center relative z-10">
+                <div className="text-small text-default-500 mb-1">Winner</div>
+                <motion.span
+                  className="text-xl font-semibold inline-block"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.4 }}
+                >
+                  {leaderboardStats.winner ?? "TBD"}
+                </motion.span>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-3 gap-3 mb-4">
+            <div className="rounded-lg bg-default-100 p-4 text-center">
+              <div className="text-small text-default-500 mb-1">Entries</div>
+              <div className="text-xl font-semibold">{animatedEntryCount}</div>
+            </div>
+            <div className="rounded-lg bg-default-100 p-4 text-center">
+              <div className="text-small text-default-500 mb-1">Prize Pool</div>
+              <div className="text-xl font-semibold">${animatedPrize}</div>
+            </div>
+            <div className="rounded-lg bg-default-100 p-4 text-center">
+              <div className="text-small text-default-500 mb-1">Winner</div>
+              <div className="text-xl font-semibold">TBD</div>
+            </div>
+          </div>
+        )}
+
         <div className="flex justify-between items-center">
         <h2 className="text-lg font-semibold text-foreground">Your entries</h2>
           {gameStarted ? (
@@ -369,15 +478,12 @@ function Dashboard({year}) {
           <></>
         )}
 
-        <div className="section-divider">
-          <Divider className="my-4" />
-        </div>
-
         <Leaderboard
           remaining={remainingQuestions}
           status={gameStarted}
           end={gameOver}
           year={year}
+          onStatsReady={setLeaderboardStats}
         />
       </div>
     </div>
