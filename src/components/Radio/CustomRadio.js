@@ -9,7 +9,7 @@ const CustomRadio = (props) => {
       classNames={{
         base: cn(
           "inline-flex m-0 bg-content1 hover:bg-content2",
-          "max-w-[300px] cursor-pointer rounded-lg gap-2 p-4 border-2 border-transparent",
+          "max-w-[100%] cursor-pointer rounded-lg gap-2 p-4 border-2 border-transparent",
           "data-[selected=true]:border-primary"
         ),
       }}

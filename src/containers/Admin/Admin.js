@@ -467,7 +467,7 @@ function Admin({ year }) {
             <h2 className="text-lg font-semibold mb-4 text-foreground">
               Questions
             </h2>
-            <div className="max-w-5xl overflow-x-auto rounded-xl overflow-hidden border border-default-200 bg-default-100 dark:bg-default-100/20">
+            <div className="max-w-5xl overflow-x-auto rounded-xl overflow-hidden bg-default-100 dark:bg-default-100/20">
               <Table aria-label="Questions table">
                 <TableHeader>
                   <TableColumn key="reorder" width={44} aria-label="Reorder" />

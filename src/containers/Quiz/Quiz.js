@@ -181,6 +181,15 @@ function Quiz() {
     // }, 220);
   };
 
+  const handleQuizKeyDown = (e) => {
+    if (e.key !== "Enter") return;
+    if (isReviewing || !canGoNext) return;
+    // On tiebreaker step, let the form's onSubmit handle Enter from the input
+    if (isTiebreakerStep && e.target.tagName === "INPUT") return;
+    e.preventDefault();
+    goNext();
+  };
+
   const stepKey = isReviewing ? "review" : isTiebreakerStep ? "tiebreaker" : `q-${currentQuestion?.id ?? currentIndex}`;
   const variants = {
     enter: (dir) => ({ x: dir > 0 ? 24 : -24, opacity: 0 }),
@@ -188,8 +197,66 @@ function Quiz() {
     exit: (dir) => ({ x: dir > 0 ? -24 : 24, opacity: 0 }),
   };
 
+  const renderFooterButtons = () => {
+    if (isReviewing) {
+      return (
+        <Button
+          fullWidth
+          color="primary"
+          onPress={onSubmitQuiz}
+          isDisabled={completedQuestions !== totalQuestions || tiebreaker.trim() === ""}
+        >
+          Submit Entry
+        </Button>
+      );
+    }
+    if (isTiebreakerStep) {
+      if (hasReviewed) {
+        return (
+          <Button
+            fullWidth
+            color="primary"
+            onPress={() => setIsReviewing(true)}
+          >
+            Save and Go to Review
+          </Button>
+        );
+      }
+      return (
+        <>
+          <Button fullWidth variant="flat" onPress={goBack} isDisabled={!canGoBack}>
+            Back
+          </Button>
+          <Button fullWidth color="primary" onPress={goNext} isDisabled={!canGoNext}>
+            Review
+          </Button>
+        </>
+      );
+    }
+    if (hasReviewed) {
+      return (
+        <Button fullWidth color="primary" onPress={() => setIsReviewing(true)}>
+          Save and Go to Review
+        </Button>
+      );
+    }
+    return (
+      <>
+        <Button fullWidth variant="flat" onPress={goBack} isDisabled={!canGoBack}>
+          Back
+        </Button>
+        <Button fullWidth color="primary" onPress={goNext} isDisabled={!canGoNext}>
+          Next
+        </Button>
+      </>
+    );
+  };
+
   return (
-    <div className="quiz max-w-2xl mx-auto w-full p-4">
+    <div
+      className="quiz max-w-2xl mx-auto w-full p-4"
+      onKeyDown={handleQuizKeyDown}
+    >
       <Skeleton className="rounded-lg" isLoaded={isLoaded}>
         <div className="grid gap-4">
           <div className="flex items-center justify-between gap-3">
@@ -208,7 +275,6 @@ function Quiz() {
                 />
               </div>
             </div>
-
             <Button size="sm" variant="light" onPress={onDeleteQuiz}>
               Exit
             </Button>
@@ -225,14 +291,7 @@ function Quiz() {
               transition={{ duration: 0.18, ease: "easeOut" }}
               className="grid gap-4"
             >
-              {isReviewing ? (
-                <div className="grid gap-4">
-                    {/* <div className="text-medium font-semibold">Review your answers</div> */}
-                    {/* <div className="text-small text-default-500 mt-1">
-                      Answered {completedQuestions}/{totalQuestions} questions
-                      {tiebreaker.trim() !== "" ? ` • Tiebreaker: ${tiebreaker}` : ""}
-                    </div> */}
-
+                {isReviewing ? (
                   <div className="grid gap-3">
                     {questionList.map((q, idx) => {
                       const answer = answersById[q.id];
@@ -262,7 +321,6 @@ function Quiz() {
                         </button>
                       );
                     })}
-
                     <button
                       type="button"
                       onClick={() => {
@@ -278,37 +336,21 @@ function Quiz() {
                       <div className="text-small text-primary mt-2">Edit</div>
                     </button>
                   </div>
-
-                  <div className="flex gap-3">
-                    {/* <Button fullWidth variant="flat" onPress={goBack}>
-                      Back
-                    </Button> */}
-                    <Button
-                      fullWidth
-                      color="primary"
-                      onPress={onSubmitQuiz}
-                      isDisabled={completedQuestions !== totalQuestions || tiebreaker.trim() === ""}
-                    >
-                      Submit Entry
-                    </Button>
-                  </div>
-                </div>
-              ) : isTiebreakerStep ? (
-                <div className="grid gap-4">
-                  <div className="rounded-lg bg-content1 p-4">
-                    <div className="text-medium font-semibold">Tiebreaker</div>
-                    <div className="text-small text-default-500 mt-1">
-                      Enter the total score (Price is Right rules).
-                    </div>
-                  </div>
-
+                ) : isTiebreakerStep ? (
                   <Form
+                    id="quiz-tiebreaker-form"
                     className="grid gap-4"
                     onSubmit={(e) => {
                       e.preventDefault();
                       goNext();
                     }}
                   >
+                    <div className="rounded-lg bg-content1 p-4">
+                      <div className="text-medium font-semibold">Tiebreaker</div>
+                      <div className="text-small text-default-500 mt-1">
+                        Enter the total score (Price is Right rules).
+                      </div>
+                    </div>
                     <Input
                       type="number"
                       isRequired
@@ -319,39 +361,10 @@ function Quiz() {
                       value={tiebreaker}
                       onChange={(e) => setTiebreaker(e.target.value)}
                     />
-
-                    <div className="flex gap-3">
-                      { hasReviewed ? (
-                        <Button fullWidth color="primary"                       
-                          onPress={() => {
-                            setIsReviewing(true);
-                          }} >Save and Go to Review</Button>
-                        ) : (
-                        <>
-                          <Button fullWidth variant="flat" onPress={goBack} isDisabled={!canGoBack}>
-                          Back
-                          </Button>
-                          <Button fullWidth color="primary" type="submit" isDisabled={!canGoNext}>
-                            Review
-                          </Button>
-                        </>
-                      )}
-                    </div>
                   </Form>
-                </div>
-              ) : (
-                <div className="grid gap-4">
-                  {/* <div className="rounded-lg bg-content1 p-4"> */}
-                    {/* <div className="text-small text-default-500">
-                      Question {currentIndex + 1} of {totalQuestions}
-                    </div> */}
+                ) : (
+                  <div className="grid gap-4">
                     <div className="text-large font-semibold mt-2">{currentQuestion?.prompt}</div>
-                    {/* <div className="text-small text-default-500 mt-2">
-                      Select an answer to auto-advance.
-                    </div> */}
-                  {/* </div> */}
-
-                  {/* <div className="group-choices rounded-md p-4"> */}
                     <RadioGroup
                       aria-label={currentQuestion?.prompt ?? "Question"}
                       value={currentQuestion ? answersById[currentQuestion.id] ?? "" : ""}
@@ -368,30 +381,14 @@ function Quiz() {
                         </CustomRadio>
                       ))}
                     </RadioGroup>
-                  {/* </div> */}
-
-                  <div className="flex gap-3">
-                    { hasReviewed ? (
-
-                        <Button fullWidth color="primary"                       
-                          onPress={() => {
-                            setIsReviewing(true);
-                          }} >Save and Go to Review</Button>
-                    ) : (
-                    <>
-                    <Button fullWidth variant="flat" onPress={goBack} isDisabled={!canGoBack}>
-                      Back
-                    </Button>
-                    <Button fullWidth color="primary" onPress={goNext} isDisabled={!canGoNext}>
-                      Next
-                    </Button>
-                    </>
-                    )}
                   </div>
-                </div>
-              )}
+                )}
             </motion.div>
           </AnimatePresence>
+
+          <div className="flex gap-3 pt-2">
+            {renderFooterButtons()}
+          </div>
         </div>
       </Skeleton>
     </div>
