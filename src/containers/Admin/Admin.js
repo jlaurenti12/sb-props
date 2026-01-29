@@ -183,6 +183,8 @@ function Admin({ year }) {
     return s;
   };
 
+  // Data migration (UI commented out) – keep for potential re-use
+  // eslint-disable-next-line no-unused-vars
   const migrate2025To2026 = async () => {
     if (
       !window.confirm(
@@ -228,6 +230,7 @@ function Admin({ year }) {
     }
   };
 
+  // eslint-disable-next-line no-unused-vars
   const clear2026CorrectChoices = async () => {
     if (
       !window.confirm(
