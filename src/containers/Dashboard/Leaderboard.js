@@ -280,7 +280,11 @@ function Leaderboard({ remaining, status, end, year, onStatsReady, onAnswerBreak
             <div className="w-px m-4 bg-default-200 shrink-0" aria-hidden />
             <div className="flex-1 flex flex-col justify-center text-center">
               <div className="text-small text-default-500 mb-1">Prize</div>
-              <div className="text-lg font-semibold">${quizList.length * 10}</div>
+              { year === "2026" ? (
+                <div className="text-lg font-semibold">${quizList.length * 20}</div>
+              ) : (
+                <div className="text-lg font-semibold">${quizList.length * 10}</div>
+              )}
             </div>
           </div>
           <div className="relative overflow-visible">
