@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import {
   auth,
   logInWithEmailAndPassword,
@@ -13,13 +13,19 @@ import mainLogo from "../../assets/images/sb_logo_lx.png";
 function Login() {
   const [user, loading] = useAuthState(auth);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   useEffect(() => {
+    const oobCode = searchParams.get("oobCode") || searchParams.get("oob_code");
+    if (oobCode) {
+      navigate(`/set-new-password?${searchParams.toString()}`, { replace: true });
+      return;
+    }
     if (loading) {
       return;
     }
     if (user) navigate("/dashboard");
-  }, [user, loading, navigate]);
+  }, [user, loading, navigate, searchParams]);
 
   return (
     <>

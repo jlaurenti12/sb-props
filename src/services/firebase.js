@@ -6,6 +6,7 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   sendPasswordResetEmail,
+  confirmPasswordReset,
   signOut,
 } from "firebase/auth";
 import {
@@ -102,12 +103,22 @@ const registerWithEmailAndPassword = async (name, email, password) => {
 
 const sendPasswordReset = async (email) => {
   try {
-    await sendPasswordResetEmail(auth, email);
-    alert("Password reset link sent!");
+    // continueUrl: where user goes after completing reset (e.g. back to app).
+    // The link IN THE EMAIL is set in Firebase Console → Auth → Email templates → Customize action URL.
+    const actionCodeSettings = {
+      url: `${window.location.origin}/set-new-password`,
+      handleCodeInApp: true,
+    };
+    await sendPasswordResetEmail(auth, email, actionCodeSettings);
+    alert("Password reset link sent! Check your email.");
   } catch (err) {
     console.error(err);
     alert(err.message);
   }
+};
+
+const confirmPasswordResetWithCode = async (oobCode, newPassword) => {
+  await confirmPasswordReset(auth, oobCode, newPassword);
 };
 
 const logout = () => {
@@ -121,6 +132,7 @@ export {
   logInWithEmailAndPassword,
   registerWithEmailAndPassword,
   sendPasswordReset,
+  confirmPasswordResetWithCode,
   logout,
   doc,
 };

@@ -5,6 +5,7 @@ import React, { useState, useEffect } from "react";
 import Login from "./containers/Authentication/Login.js";
 import Register from "./containers/Authentication/Register.js";
 import Reset from "./containers/Authentication/Reset.js";
+import SetNewPassword from "./containers/Authentication/SetNewPassword.js";
 import Dashboard from "./containers/Dashboard/Dashboard.js";
 import Admin from "./containers/Admin/Admin.js";
 import Quiz from "./containers/Quiz/Quiz.js";
@@ -48,6 +49,7 @@ function App() {
                 <Route exact path="/" element={<Login />} />
                 <Route exact path="/register" element={<Register />} />
                 <Route exact path="/reset" element={<Reset />} />
+                <Route exact path="/set-new-password" element={<SetNewPassword />} />
                 <Route exact path="/dashboard" element={<Dashboard year={a} />} />
                 <Route exact path="/leaderboard" element={<Leaderboard />} />
                 <Route exact path="/quiz" element={<Quiz />} />

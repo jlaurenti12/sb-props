@@ -117,7 +117,13 @@ const Navigation = ({getCurrentYear}) => {
 
   useEffect(() => {
     if (loading) return;
-    if (!user) return navigate("/");
+    if (!user) {
+      const publicPaths = ["/", "/register", "/reset", "/set-new-password"];
+      if (!publicPaths.includes(location.pathname)) {
+        navigate("/");
+      }
+      return;
+    }
 
     fetchYear();
 
@@ -125,7 +131,7 @@ const Navigation = ({getCurrentYear}) => {
     // CRA/Vercel builds run with CI=true; we intentionally only re-run this
     // effect when auth state changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, loading]);
+  }, [user, loading, location.pathname]);
 
   return (
     <>
