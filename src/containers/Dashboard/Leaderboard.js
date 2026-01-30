@@ -271,20 +271,17 @@ function Leaderboard({ remaining, status, end, year, onStatsReady, onAnswerBreak
       </Skeleton>
 
       <Skeleton className="rounded-lg" isLoaded={isLoaded}>
-        <div className="grid gap-3">
-          <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-lg bg-default-100 p-4 text-center">
-              <div className="text-small text-default-500 mb-1">Entries</div>
-              <div className="text-lg font-semibold">{quizList.length}</div>
-            </div>
-            <div className="rounded-lg bg-default-100 p-4 text-center">
-              <div className="text-small text-default-500 mb-1">Prize Pool</div>
-              <div className="text-lg font-semibold">${quizList.length * 10}</div>
-            </div>
+        <div className="grid gap-3 grid-cols-4">
+          <div className="rounded-lg bg-default-100 p-4 text-center">
+            <div className="text-small text-default-500 mb-1">Entries</div>
+            <div className="text-lg font-semibold">{quizList.length}</div>
           </div>
-          {status && (
-          <div className="relative overflow-visible">
-            {end && winner && (
+          <div className="rounded-lg bg-default-100 p-4 text-center">
+            <div className="text-small text-default-500 mb-1">Prize</div>
+            <div className="text-lg font-semibold">${quizList.length * 10}</div>
+          </div>
+          <div className="relative overflow-visible col-span-2">
+            {/* {end && winner && (
               <div
                 className="absolute -inset-2 pointer-events-none overflow-visible z-20"
                 aria-hidden
@@ -324,8 +321,8 @@ function Leaderboard({ remaining, status, end, year, onStatsReady, onAnswerBreak
                   );
                 })}
               </div>
-            )}
-            <div className="rounded-lg bg-default-100 p-4 text-center relative z-10">
+            )} */}
+            <div className="rounded-lg bg-default-100 p-4 text-center relative z-10 h-full flex flex-col justify-center">
               <div className="text-small text-default-500 mb-1">
                 {end ? "Winner" : "Current leader"}
               </div>
@@ -334,7 +331,6 @@ function Leaderboard({ remaining, status, end, year, onStatsReady, onAnswerBreak
               </div>
             </div>
           </div>
-          )}
         </div>
       </Skeleton>
 

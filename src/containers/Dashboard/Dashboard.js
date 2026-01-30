@@ -287,6 +287,11 @@ function Dashboard({year}) {
   // } 
 
   useEffect(() => {
+    // Reset the answers ref when year changes to prevent false toast triggers
+    prevAnswersRef.current = [];
+  }, [year]);
+
+  useEffect(() => {
     if (loading) {
       return;
     }
@@ -309,6 +314,7 @@ function Dashboard({year}) {
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[9999] max-w-lg animate-in fade-in slide-in-from-top-4 duration-300">
           <Alert
             color={toast.color}
+            variant="solid"
             title={toast.title}
             description={toast.description}
             isClosable
