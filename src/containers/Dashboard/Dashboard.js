@@ -311,7 +311,7 @@ function Dashboard({year}) {
 
     <div className="table">
       {toast.show && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[9999] max-w-lg animate-in fade-in slide-in-from-top-4 duration-300">
+        <div className="fixed top-4 left-4 right-4 z-[9999] sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:max-w-lg animate-in fade-in slide-in-from-top-4 duration-300">
           <Alert
             color={toast.color}
             variant="solid"
