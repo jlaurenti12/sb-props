@@ -271,16 +271,19 @@ function Leaderboard({ remaining, status, end, year, onStatsReady, onAnswerBreak
       </Skeleton>
 
       <Skeleton className="rounded-lg" isLoaded={isLoaded}>
-        <div className="grid gap-3 grid-cols-4">
-          <div className="rounded-lg bg-default-100 p-4 text-center">
-            <div className="text-small text-default-500 mb-1">Entries</div>
-            <div className="text-lg font-semibold">{quizList.length}</div>
+        <div className="grid gap-3 grid-cols-2">
+          <div className="rounded-lg bg-default-100 p-4 flex items-stretch">
+            <div className="flex-1 flex flex-col justify-center text-center">
+              <div className="text-small text-default-500 mb-1">Entries</div>
+              <div className="text-lg font-semibold">{quizList.length}</div>
+            </div>
+            <div className="w-px m-4 bg-default-200 shrink-0" aria-hidden />
+            <div className="flex-1 flex flex-col justify-center text-center">
+              <div className="text-small text-default-500 mb-1">Prize</div>
+              <div className="text-lg font-semibold">${quizList.length * 10}</div>
+            </div>
           </div>
-          <div className="rounded-lg bg-default-100 p-4 text-center">
-            <div className="text-small text-default-500 mb-1">Prize</div>
-            <div className="text-lg font-semibold">${quizList.length * 10}</div>
-          </div>
-          <div className="relative overflow-visible col-span-2">
+          <div className="relative overflow-visible">
             {/* {end && winner && (
               <div
                 className="absolute -inset-2 pointer-events-none overflow-visible z-20"
