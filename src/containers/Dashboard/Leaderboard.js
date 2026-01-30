@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+// import { motion } from "framer-motion";
 import { db } from "../../services/firebase";
 import { IoArrowForwardCircleSharp, IoChevronForward } from "react-icons/io5";
 import {
