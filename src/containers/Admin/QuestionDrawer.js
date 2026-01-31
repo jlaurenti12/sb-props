@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useMediaQuery } from "react-responsive";
 import "../../assets/styles/Leaderboard.css";
 import { db } from "../../services/firebase";
 import { updateDoc, doc, deleteDoc } from "firebase/firestore";
@@ -14,6 +15,7 @@ import {
 } from "@heroui/react";
 
 function QuestionDrawer({ isOpen, isClosed, year, questionObject }) {
+  const isMobile = useMediaQuery({ maxWidth: 768 });
   const [prompt, setPrompt] = useState("");
   const [choicesText, setChoicesText] = useState("");
   const [correctChoice, setCorrectChoice] = useState("");
@@ -66,7 +68,14 @@ function QuestionDrawer({ isOpen, isClosed, year, questionObject }) {
   if (!questionObject) return null;
 
   return (
-    <Drawer isOpen={isOpen} size="md" onClose={isClosed} backdrop="blur">
+    <Drawer
+      isOpen={isOpen}
+      size={isMobile ? "2xl" : "md"}
+      placement={isMobile ? "bottom" : "right"}
+      onClose={isClosed}
+      backdrop="blur"
+      classNames={isMobile ? { base: "!max-h-[85vh] rounded-t-2xl" } : undefined}
+    >
       <DrawerContent>
         {(onClose) => (
           <>
@@ -74,7 +83,7 @@ function QuestionDrawer({ isOpen, isClosed, year, questionObject }) {
               Edit question
             </DrawerHeader>
 
-            <DrawerBody>
+            <DrawerBody className="overflow-y-auto">
               <Form
                 id="edit-question-form"
                 className="flex flex-col gap-4"

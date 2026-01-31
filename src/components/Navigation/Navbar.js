@@ -214,17 +214,21 @@ const Navigation = ({getCurrentYear}) => {
                   </Skeleton>
                 </DropdownTrigger>
                 <DropdownMenu aria-label="Profile Actions" variant="flat">
-                  <DropdownItem key="profile" className="h-14 gap-2">
-                    <NavLink to="/dashboard">
-                      <p className="font-semibold">{name}</p>
-                      <p className="text-small text-default-500">{email}</p>
-                    </NavLink>
+                  <DropdownItem
+                    key="profile"
+                    className="h-14 gap-2"
+                    onPress={() => navigate("/dashboard")}
+                  >
+                    <p className="font-semibold">{name}</p>
+                    <p className="text-small text-default-500">{email}</p>
                   </DropdownItem>
                   {isAdmin ? (
-                    <DropdownItem key="admin" className="h-14 gap-2">
-                      <NavLink to="/admin">
-                        <p className="font-semibold">Admin</p>
-                      </NavLink>
+                    <DropdownItem
+                      key="admin"
+                      className="h-14 gap-2"
+                      onPress={() => navigate("/admin")}
+                    >
+                      <p className="font-semibold">Admin</p>
                     </DropdownItem>
                   ) : (
                     <></>

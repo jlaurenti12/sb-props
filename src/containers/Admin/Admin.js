@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { auth, db } from "../../services/firebase.js";
 import { useAuthState } from "react-firebase-hooks/auth";
+import { auth, db } from "../../services/firebase.js";
 import { useNavigate, NavLink } from "react-router-dom";
 import {
   getDocs,
@@ -30,6 +30,24 @@ import QuestionDrawer from "./QuestionDrawer.js";
 import { IoPencil, IoReorderThree } from "react-icons/io5";
 import { IoCheckmark, IoClose } from "react-icons/io5";
 
+function useMatchMedia(query) {
+  const [matches, setMatches] = useState(
+    () => (typeof window !== "undefined" ? window.matchMedia(query).matches : false)
+  );
+  useEffect(() => {
+    const mql = window.matchMedia(query);
+    const update = () => setMatches(mql.matches);
+    update();
+    mql.addEventListener("change", update);
+    window.addEventListener("resize", update);
+    return () => {
+      mql.removeEventListener("change", update);
+      window.removeEventListener("resize", update);
+    };
+  }, [query]);
+  return matches;
+}
+
 function arrayMove(arr, fromIndex, toIndex) {
   const copy = [...arr];
   const [removed] = copy.splice(fromIndex, 1);
@@ -40,6 +58,7 @@ function arrayMove(arr, fromIndex, toIndex) {
 function Admin({ year }) {
   const navigate = useNavigate();
   const currentYear = year ?? "2026";
+  const isMobile = useMatchMedia("(max-width: 639px)");
 
   // For questions
   const [questionList, setQuestionList] = useState([]);
@@ -284,16 +303,16 @@ function Admin({ year }) {
   //   Array.isArray(q.choices) ? q.choices : (q.choices ? [q.choices] : []);
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto px-4">
+    <div className="flex flex-col items-center px-4 sm:px-6 w-full min-w-0 pb-8">
       {isAdmin ? (
-        <>
+        <div className="space-y-6 sm:space-y-8 max-w-5xl w-full">
           {/* Game controls section */}
           <section>
             <h2 className="text-lg font-semibold mb-4 text-foreground">
               Game controls
             </h2>
-            <div className="rounded-xl overflow-hidden bg-default-50 p-6">
-            <div className="flex flex-wrap gap-4 items-center">
+            <div className="rounded-xl overflow-hidden bg-default-50 p-4 sm:p-6">
+            <div className="flex flex-wrap gap-3 sm:gap-4 items-center">
               {gameStarted ? (
                 <Button onPress={() => changeStatus()}>Unstart Game</Button>
               ) : (
@@ -311,12 +330,12 @@ function Admin({ year }) {
               )}
             </div>
 
-            <div className="mt-6 pt-6 border-t border-default-200 flex flex-col items-start">
+            <div className="mt-6 pt-6 border-t border-default-200 flex flex-col items-start w-full min-w-0">
               <h3 className="text-sm font-medium text-default-600 mb-3">
                 Final score (tiebreaker)
               </h3>
               {finalScore != null && finalScore !== "" && !isEditingFinalScore ? (
-                <div className="flex flex-row flex-nowrap items-center gap-3 justify-start">
+                <div className="flex flex-row flex-wrap items-center gap-3 justify-start">
                   <span className="text-2xl font-semibold text-foreground">
                     {finalScore}
                   </span>
@@ -329,7 +348,7 @@ function Admin({ year }) {
                   </Button>
                 </div>
               ) : isEditingFinalScore ? (
-                <div className="flex flex-row flex-nowrap items-center gap-2 justify-start">
+                <div className="flex flex-row flex-wrap items-center gap-2 justify-start">
                   <Input
                     type="number"
                     placeholder="Final score"
@@ -360,7 +379,7 @@ function Admin({ year }) {
               ) : (
                 <Form
                   id="finalScoreForm"
-                  className="flex flex-row flex-nowrap items-center gap-2 justify-start w-full max-w-max"
+                  className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 justify-start w-full max-w-full sm:max-w-max"
                   onSubmit={(e) => {
                     e.preventDefault();
                     const data = Object.fromEntries(
@@ -378,7 +397,7 @@ function Admin({ year }) {
                     name="final"
                     type="number"
                     placeholder="Final score"
-                    className="max-w-[120px] w-[120px] shrink-0"
+                    className="w-full sm:max-w-[120px] sm:w-[120px] shrink-0"
                   />
                   <Button type="submit" className="h-14">
                     Add final score
@@ -425,7 +444,7 @@ function Admin({ year }) {
             <h2 className="text-lg font-semibold mb-4 text-foreground">
               Add question
             </h2>
-            <div className="rounded-xl overflow-hidden bg-default-50 p-6">
+            <div className="rounded-xl overflow-hidden bg-default-50 p-4 sm:p-6">
           <Form
             id="questionForm"
             className="grid gap-4 questionDrawerForm"
@@ -436,25 +455,26 @@ function Admin({ year }) {
               document.getElementById("questionForm").reset();
             }}
           >
-            <div className="flex w-full md:flex-nowrap gap-4">
+            <div className="flex flex-col sm:flex-row w-full gap-4 items-stretch sm:items-end">
               <Input
                 label="Prompt"
                 labelPlacement="inside"
                 name="prompt"
                 type="text"
+                className="flex-1 min-w-0"
               />
               <Input
                 label="Choices"
                 labelPlacement="inside"
                 name="choices"
                 type="text"
+                className="flex-1 min-w-0"
               />
               <Button
-                fullWidth
                 type="submit"
                 variant="solid"
                 color="secondary"
-                className="h-14"
+                className="shrink-0 self-start sm:self-end"
               >
                 Submit Question
               </Button>
@@ -463,14 +483,15 @@ function Admin({ year }) {
             </div>
           </section>
 
-          <section className="mt-8">
+          <section className="mt-6 sm:mt-8">
             <h2 className="text-lg font-semibold mb-4 text-foreground">
               Questions
             </h2>
-            <div className="max-w-5xl overflow-x-auto rounded-xl overflow-hidden bg-default-100 dark:bg-default-100/20">
+            <div className="w-full overflow-x-auto rounded-xl overflow-hidden bg-default-100 dark:bg-default-100/20 admin-questions-table">
+              <div className="min-w-[640px]">
               <Table aria-label="Questions table">
                 <TableHeader>
-                  <TableColumn key="reorder" width={44} aria-label="Reorder" />
+                  <TableColumn key="reorder" width={44} aria-label={isMobile ? "Edit" : "Reorder"} />
                   <TableColumn key="no">NO.</TableColumn>
                   <TableColumn key="prompt">PROMPT</TableColumn>
                   <TableColumn key="choices">CHOICES</TableColumn>
@@ -481,7 +502,7 @@ function Admin({ year }) {
                   {(item) => (
                     <TableRow
                       key={item.id}
-                      draggable
+                      draggable={!isMobile}
                       onDragStart={(e) => {
                         e.dataTransfer.setData("text/plain", item.id);
                         e.dataTransfer.effectAllowed = "move";
@@ -508,12 +529,24 @@ function Admin({ year }) {
                       }
                     >
                       <TableCell className="w-10 whitespace-nowrap">
-                        <span
-                          className="inline-flex cursor-grab active:cursor-grabbing text-default-500 hover:text-foreground select-none"
-                          aria-label="Drag to reorder"
-                        >
-                          <IoReorderThree className="text-xl" />
-                        </span>
+                        {isMobile ? (
+                          <Button
+                            isIconOnly
+                            size="sm"
+                            variant="light"
+                            onPress={() => openDrawer(item)}
+                            aria-label="Edit question"
+                          >
+                            <IoPencil fontSize="20px" />
+                          </Button>
+                        ) : (
+                          <span
+                            className="inline-flex cursor-grab active:cursor-grabbing text-default-500 hover:text-foreground select-none"
+                            aria-label="Drag to reorder"
+                          >
+                            <IoReorderThree className="text-xl" />
+                          </span>
+                        )}
                       </TableCell>
                       <TableCell className="whitespace-nowrap">
                         {item.order}
@@ -549,7 +582,7 @@ function Admin({ year }) {
                           </Chip>
                         )}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="admin-questions-table-actions">
                         <Button
                           isIconOnly
                           size="sm"
@@ -564,6 +597,7 @@ function Admin({ year }) {
                   )}
                 </TableBody>
               </Table>
+              </div>
             </div>
           </section>
 
@@ -577,9 +611,9 @@ function Admin({ year }) {
           ) : ( 
             <></>
           )}
-        </>
+        </div>
       ) : (
-        <>
+        <div className="max-w-5xl w-full text-center">
           <h1>You don't have permissions to view this page.</h1>
           <h2>
             Return to{" "}
@@ -587,7 +621,7 @@ function Admin({ year }) {
               Dashboard
             </NavLink>{" "}
           </h2>
-        </>
+        </div>
       )}
     </div>
   );

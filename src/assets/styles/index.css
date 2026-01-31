@@ -104,3 +104,11 @@
 .buttonBreak {
   justify-self: center;
 }
+
+/* Admin questions table: hide actions column on mobile (edit is in first column) */
+@media (max-width: 639px) {
+  .admin-questions-table th:nth-child(6),
+  .admin-questions-table td:nth-child(6) {
+    display: none;
+  }
+}
