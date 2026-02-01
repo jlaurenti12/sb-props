@@ -105,11 +105,11 @@ function Dashboard({year}) {
   };
 
   const getRemainingQuestions = (questions) => {
-    let total = 0;
+    let answeredCount = 0;
     questions.forEach((question) => {
-      if (question.correctChoice) total++;
+      if (question.correctChoice) answeredCount++;
     });
-    setRemainingQuestions(26 - total);
+    setRemainingQuestions(questions.length - answeredCount);
   };
 
   const getQuestionList = async () => {
