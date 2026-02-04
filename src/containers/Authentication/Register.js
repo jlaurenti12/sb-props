@@ -30,7 +30,6 @@ function Register() {
         onSubmit={(e) => {
           e.preventDefault();
           let data = Object.fromEntries(new FormData(e.currentTarget));
-          console.log(data);
           registerWithEmailAndPassword(data.name, data.email, data.password);
         }}
       >

@@ -30,8 +30,6 @@ function CustomDrawer({
     Incorrect: "danger",
   };
 
-  console.log(userName);
-
   const answerAccuracy = (response) => {
     if (response === "Correct") {
       return (

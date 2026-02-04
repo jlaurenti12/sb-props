@@ -46,7 +46,6 @@ const Navigation = ({getCurrentYear}) => {
 
   const fetchYear = async (year) => {
     z = await getCurrentYear(year);
-    console.log(z);
     fetchUser(z);
   }
 
@@ -84,7 +83,6 @@ const Navigation = ({getCurrentYear}) => {
       d.push({key: y.id, label: y.id})
     });
     const e = d.toReversed();
-    console.log(e);
     setYears(e);
   };
 
@@ -110,7 +108,6 @@ const Navigation = ({getCurrentYear}) => {
   };
 
   const handleSelectionChange = (year) => {
-    console.log(year);
     getCurrentYear(year);
     fetchYear(year);
   } 

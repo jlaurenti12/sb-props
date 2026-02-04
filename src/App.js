@@ -21,13 +21,10 @@ function App() {
   const getGameStatus = (year) => {
   
     if (year) {
-      // currentYear = year;
-      console.log(year)
       setA(year);
       return year;
     } else {
       let currentYear = "2026"
-      console.log(currentYear)
       setA(currentYear);
       return currentYear;
     }

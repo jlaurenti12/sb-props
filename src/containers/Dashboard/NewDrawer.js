@@ -28,8 +28,6 @@ function NewDrawer({
     Incorrect: "danger",
   };
 
-  console.log(quizData);
-
   const answerAccuracy = (response) => {
     if (response === "Correct") {
       return (

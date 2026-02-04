@@ -42,32 +42,19 @@ function Dashboard({year}) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [gameStarted, setGameStarted] = useState();
   const [gameOver, setGameOver] = useState();
-  // const [currentYear, setCurrentYear] = useState("2026");
   const [isLoaded, setIsLoaded] = useState(false);
   const [, setLeaderboardStats] = useState({ entryCount: 0, winner: null });
   const [selectedUser, setSelectedUser] = useState(null);
   const [isBreakdownOpen, setIsBreakdownOpen] = useState(false);
   const [toast, setToast] = useState({ show: false, color: "success", title: "", description: "" });
   const prevAnswersRef = useRef([]);
-  // let z;
-
-  // const fetchYear = async (year) => {
-  //   const y = await getCurrentYear(year);
-  //   z = y.toString();
-  //   console.log(z);
-  //   setCurrentYear(z);
-  //   fetchUser();
-  // }
 
   const fetchUser = () => {
-
-    console.log(year);
 
     try {
       const q = query(userCollectionRef, where("uid", "==", user?.uid));
 
       onSnapshot(q, (querySnapshot) => {
-        console.log(year);
         var test = querySnapshot.docs;
         if (test.length > 0) {
           const data = querySnapshot?.docs[0].data();
@@ -99,7 +86,6 @@ function Dashboard({year}) {
 
     const docSnap = await getDoc(docRef);
     const data = docSnap.data();
-    console.log(data);
     setGameStarted(data.gameStatus);
     setGameOver(data.gameOver);
   };
@@ -229,7 +215,6 @@ function Dashboard({year}) {
   const onStartQuiz = async () => {
     const person = doc(userCollectionRef, user?.uid);
     const test = person.id;
-    console.log(year);
     return navigate("/quiz", { state: { id: test, year: year } });
   };
 
