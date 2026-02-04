@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { db } from "../../services/firebase";
 import { IoArrowForwardCircleSharp, IoChevronForward } from "react-icons/io5";
 import {
@@ -250,6 +250,24 @@ function Leaderboard({ remaining, status, end, year, onStatsReady, onAnswerBreak
     }
   }, [quizList.length, winner, onStatsReady]);
 
+  // During the game: all entries tied for top score; when game over we show single winner
+  const currentLeaders = useMemo(() => {
+    if (end) return [];
+    const topScore = quizList[0]?.score ?? 0;
+    if (topScore === 0) return [];
+    return quizList.filter((q) => q.score === topScore);
+  }, [quizList, end]);
+
+  // When game is over, put tiebreaker winner in first row; otherwise use score order
+  const displayQuizList = useMemo(() => {
+    if (!end || !winner) return quizList;
+    const idx = quizList.findIndex((q) => q.user === winner);
+    if (idx <= 0) return quizList;
+    const copy = [...quizList];
+    const [winnerEntry] = copy.splice(idx, 1);
+    return [winnerEntry, ...copy];
+  }, [quizList, end, winner]);
+
   return (
     <div className="flex flex-col gap-4 mt-4">
       <Skeleton className="rounded-lg" isLoaded={isLoaded}>
@@ -287,13 +305,32 @@ function Leaderboard({ remaining, status, end, year, onStatsReady, onAnswerBreak
             </div>
           </div>
           <div className="relative overflow-visible">
-            <div className="rounded-lg bg-default-100 p-4 text-center relative z-10 h-full flex flex-col justify-center">
+            <div className="rounded-lg bg-default-100 p-4 text-center relative z-10 min-h-[4.5rem] flex flex-col justify-center">
               <div className="text-small text-default-500 mb-1">
-                {end ? "Winner" : "Current leader"}
+                {end ? "Winner" : currentLeaders.length === 1 ? "Current leader" : "Current leaders"}
               </div>
-              <div className="text-lg font-semibold truncate" title={end ? (winner ?? "TBD") : (quizList[0]?.score > 0 ? quizList[0]?.user : "—")}>
-                {end ? (winner ?? "TBD") : (quizList[0]?.score > 0 ? quizList[0]?.user : "—")}
-              </div>
+              {end ? (
+                <div className="text-lg font-semibold truncate" title={winner ?? "TBD"}>
+                  {winner ?? "TBD"}
+                </div>
+              ) : currentLeaders.length === 0 ? (
+                <div className="text-lg font-semibold">—</div>
+              ) : currentLeaders.length === 1 ? (
+                <div className="text-lg font-semibold truncate" title={currentLeaders[0].user}>
+                  {currentLeaders[0].user}
+                </div>
+              ) : (
+                <Tooltip
+                  content={currentLeaders.map((e) => e.user).join(", ")}
+                  className="dark"
+                  delay={0}
+                  closeDelay={0}
+                >
+                  <div className="text-lg font-semibold cursor-default">
+                    Tied ({currentLeaders.length})
+                  </div>
+                </Tooltip>
+              )}
             </div>
           </div>
         </div>
@@ -308,8 +345,8 @@ function Leaderboard({ remaining, status, end, year, onStatsReady, onAnswerBreak
             <TableColumn></TableColumn>
           </TableHeader>
           <TableBody>
-            {quizList.map((quiz, index) => (
-              <TableRow key={index}>
+            {displayQuizList.map((quiz, index) => (
+              <TableRow key={`${quiz.userId}-${quiz.id}`}>
                 <TableCell>{quiz.user}</TableCell>
                 <TableCell className="text-center">{quiz.score}</TableCell>
                 <TableCell className="text-center">{remaining + quiz.score}</TableCell>
