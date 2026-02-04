@@ -28,8 +28,13 @@ const firebaseConfig = {
 
 // Validate that environment variables are loaded
 if (!firebaseConfig.apiKey) {
-  console.error('Firebase API key is missing. Make sure .env file exists and dev server was restarted.');
-  throw new Error('Firebase configuration error: Missing API key. Please check your .env file and restart the dev server.');
+  const isDevelopment = process.env.NODE_ENV === 'development';
+  const errorMsg = isDevelopment
+    ? 'Firebase API key is missing. Make sure .env file exists in the project root and restart the dev server (npm start).'
+    : 'Firebase API key is missing in production build. Set environment variables in your hosting platform (Vercel/Netlify/etc). See DEPLOYMENT_ENV_VARS.md for instructions.';
+  
+  console.error(errorMsg);
+  throw new Error(`Firebase configuration error: ${errorMsg}`);
 }
 
 const app = initializeApp(firebaseConfig);
