@@ -338,8 +338,8 @@ function Dashboard({year}) {
           <Table color="secondary">
             <TableHeader>
               <TableColumn>NAME</TableColumn>
-              <TableColumn>SCORE</TableColumn>
-              <TableColumn>MAX</TableColumn>
+              <TableColumn className="text-center">SCORE</TableColumn>
+              <TableColumn className="text-center">MAX</TableColumn>
               <TableColumn></TableColumn>
             </TableHeader>
 
@@ -352,8 +352,8 @@ function Dashboard({year}) {
                 {quizList.map((quiz, index) =>
                     <TableRow key={index}>
                       <TableCell>{name}</TableCell>
-                      <TableCell>{quiz.score}</TableCell>
-                      <TableCell>{remainingQuestions + quiz.score}</TableCell>
+                      <TableCell className="text-center">{quiz.score}</TableCell>
+                      <TableCell className="text-center">{remainingQuestions + quiz.score}</TableCell>
                       <TableCell>
                         <Tooltip
                           delay={0}

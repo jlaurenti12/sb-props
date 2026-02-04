@@ -303,16 +303,16 @@ function Leaderboard({ remaining, status, end, year, onStatsReady, onAnswerBreak
         <Table>
           <TableHeader>
             <TableColumn>NAME</TableColumn>
-            <TableColumn>SCORE</TableColumn>
-            <TableColumn>MAX</TableColumn>
+            <TableColumn className="text-center">SCORE</TableColumn>
+            <TableColumn className="text-center">MAX</TableColumn>
             <TableColumn></TableColumn>
           </TableHeader>
           <TableBody>
             {quizList.map((quiz, index) => (
               <TableRow key={index}>
                 <TableCell>{quiz.user}</TableCell>
-                <TableCell>{quiz.score}</TableCell>
-                <TableCell>{remaining + quiz.score}</TableCell>
+                <TableCell className="text-center">{quiz.score}</TableCell>
+                <TableCell className="text-center">{remaining + quiz.score}</TableCell>
                 <TableCell>
                   {status ? (
                     <>
