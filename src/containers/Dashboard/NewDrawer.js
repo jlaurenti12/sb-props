@@ -77,21 +77,22 @@ function NewDrawer({
                 </div>
               </div>
 
-              <div className="min-w-0 w-full [&_table]:table-fixed [&_table]:w-full [&_th]:break-words [&_td]:break-words">
+              <div className="min-w-0 w-full [&_table]:table-fixed [&_table]:w-full [&_th]:break-words [&_td]:break-words new-drawer-table-wrapper">
                 <Table removeWrapper>
                   <TableHeader>
-                    <TableColumn>QUESTION</TableColumn>
-                    <TableColumn>ENTRY</TableColumn>
-                    <TableColumn>CORRECT</TableColumn>
-                    <TableColumn></TableColumn>
+                    <TableColumn width="46%">QUESTION</TableColumn>
+                    <TableColumn width="28%">ENTRY</TableColumn>
+                    <TableColumn width="28%">CORRECT</TableColumn>
+                    <TableColumn className="w-[50px] max-w-[50px]"></TableColumn>
                   </TableHeader>
+
                   <TableBody>
                     {userEntries.map((responses, index) => (
                       <TableRow key={index}>
-                        <TableCell>{responses[0]}</TableCell>
-                        <TableCell>{responses[1]}</TableCell>
-                        <TableCell>{responses[2]}</TableCell>
-                        <TableCell className="max-w-[50px]">{answerAccuracy(responses[3])}</TableCell>
+                        <TableCell width="46%">{responses[0]}</TableCell>
+                        <TableCell width="28%">{responses[1]}</TableCell>
+                        <TableCell width="28%">{responses[2]}</TableCell>
+                        <TableCell className="w-[50px] max-w-[50px]">{answerAccuracy(responses[3])}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

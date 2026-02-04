@@ -290,7 +290,10 @@ function Quiz() {
                   <div className="rounded-lg bg-content1 p-6 text-center grid gap-4">
                     <div className="text-xl font-semibold">Entry submitted!</div>
                     <div className="text-default-600">
-                      Please Venmo $20 to <span className="font-semibold text-foreground whitespace-nowrap">@Jacob-Laurenti</span> to complete your entry. Don't mention anything about betting in the description.
+                      Venmo $20 to <span className="font-semibold text-foreground whitespace-nowrap">@Jacob-Laurenti</span> to complete your entry.
+                    </div>
+                    <div className="text-default-600">
+                      Please don't mention anything about betting in the description 🙏
                     </div>
                     <Button fullWidth color="primary" onPress={() => navigate("/")}>
                       Back to Dashboard
