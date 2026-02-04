@@ -26,6 +26,16 @@ const firebaseConfig = {
   measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID
 };
 
+// Debug: Log environment variable status (remove after fixing)
+if (process.env.NODE_ENV === 'production') {
+  console.log('Firebase Config Debug:', {
+    apiKey: firebaseConfig.apiKey ? 'SET' : 'MISSING',
+    authDomain: firebaseConfig.authDomain ? 'SET' : 'MISSING',
+    projectId: firebaseConfig.projectId ? 'SET' : 'MISSING',
+    hasAllVars: Object.values(firebaseConfig).every(v => v !== undefined)
+  });
+}
+
 // Validate that environment variables are loaded
 if (!firebaseConfig.apiKey) {
   const isDevelopment = process.env.NODE_ENV === 'development';
@@ -33,6 +43,7 @@ if (!firebaseConfig.apiKey) {
     ? 'Firebase API key is missing. Make sure .env file exists in the project root and restart the dev server (npm start).'
     : 'Firebase API key is missing in production build. Set environment variables in your hosting platform (Vercel/Netlify/etc). See DEPLOYMENT_ENV_VARS.md for instructions.';
   
+  console.error('Firebase Config:', firebaseConfig);
   console.error(errorMsg);
   throw new Error(`Firebase configuration error: ${errorMsg}`);
 }
