@@ -188,6 +188,7 @@ const Navigation = ({getCurrentYear}) => {
                     {years.map((year) => (
                       <DropdownItem
                         key={year.key}
+                        textValue={year.label}
                         onPress={() => handleSelectionChange(year.key)}
                       >
                         {year.label}
@@ -213,6 +214,7 @@ const Navigation = ({getCurrentYear}) => {
                 <DropdownMenu aria-label="Profile Actions" variant="flat">
                   <DropdownItem
                     key="profile"
+                    textValue={`${name} ${email}`}
                     className="h-14 gap-2"
                     onPress={() => navigate("/dashboard")}
                   >
@@ -222,6 +224,7 @@ const Navigation = ({getCurrentYear}) => {
                   {isAdmin ? (
                     <DropdownItem
                       key="admin"
+                      textValue="Admin"
                       className="h-14 gap-2"
                       onPress={() => navigate("/admin")}
                     >
@@ -230,7 +233,7 @@ const Navigation = ({getCurrentYear}) => {
                   ) : (
                     <></>
                   )}
-                  <DropdownItem key="logout" color="danger" onPress={logout}>
+                  <DropdownItem key="logout" textValue="Log Out" color="danger" onPress={logout}>
                     Log Out
                   </DropdownItem>
                 </DropdownMenu>

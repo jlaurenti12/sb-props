@@ -46,11 +46,7 @@ function Leaderboard({ remaining, status, end, year, onStatsReady, onAnswerBreak
     );
   };
 
-  const fetchStatus = async () => {
-    onSnapshot(collection(db, "status"), (snapshot) => {
-      getScores();
-    });
-  };
+  // Removed fetchStatus - game status is tracked via games/{year} document listener below
 
   const getScores = async () => {
     const userData = await getDocs(collection(db, "users"));
@@ -227,7 +223,6 @@ function Leaderboard({ remaining, status, end, year, onStatsReady, onAnswerBreak
   useEffect(() => {
     if (year) {
       fetchAnswers();
-      fetchStatus();
       getQuestionList();
     }
 
@@ -391,7 +386,7 @@ function Leaderboard({ remaining, status, end, year, onStatsReady, onAnswerBreak
       </Skeleton>
 
       <Skeleton className="rounded-lg" isLoaded={isLoaded}>
-        <Table>
+        <Table aria-label="Leaderboard table">
           <TableHeader>
             <TableColumn>NAME</TableColumn>
             <TableColumn className="text-center">SCORE</TableColumn>
@@ -423,7 +418,7 @@ function Leaderboard({ remaining, status, end, year, onStatsReady, onAnswerBreak
                               remaining
                             )
                           }
-                          aria-label=""
+                          aria-label="See responses"
                         >
                           <IoArrowForwardCircleSharp fontSize="24px" />
                         </Button>
@@ -440,7 +435,7 @@ function Leaderboard({ remaining, status, end, year, onStatsReady, onAnswerBreak
                           size="sm"
                           variant="light"
                           color="content4"
-                          aria-label=""
+                          aria-label="Other responses hidden until game time"
                           onPress={() => {
                             alert("Others' responses hidden until game time.");
                           }}

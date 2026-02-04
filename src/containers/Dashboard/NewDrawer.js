@@ -52,7 +52,7 @@ function NewDrawer({
 
   return (
     
-    <Drawer isOpen={isOpen} size="xl" onClose={isClosed} backdrop="blur">
+    <Drawer isOpen={isOpen} size="xl" onClose={isClosed} backdrop="blur" aria-label="Quiz responses drawer">
       <DrawerContent>
         {(onClose) => (
           <>
@@ -76,7 +76,7 @@ function NewDrawer({
               </div>
 
               <div className="min-w-0 w-full [&_table]:table-fixed [&_table]:w-full [&_th]:break-words [&_td]:break-words new-drawer-table-wrapper">
-                <Table removeWrapper>
+                <Table removeWrapper aria-label="Quiz responses table">
                   <TableHeader>
                     <TableColumn width="46%">QUESTION</TableColumn>
                     <TableColumn width="28%">ENTRY</TableColumn>

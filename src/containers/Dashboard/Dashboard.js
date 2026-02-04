@@ -320,7 +320,7 @@ function Dashboard({year}) {
       <div className="tableContent flex flex-col gap-4">
         <h2 className="text-lg font-semibold text-foreground">Your entries</h2>
         <Skeleton className="rounded-lg" isLoaded={isLoaded}>
-          <Table color="secondary">
+          <Table color="secondary" aria-label="Your entries table">
             <TableHeader>
               <TableColumn>NAME</TableColumn>
               <TableColumn className="text-center">SCORE</TableColumn>
@@ -356,7 +356,7 @@ function Dashboard({year}) {
                                 remainingQuestions
                               )
                             }
-                            aria-label=""
+                            aria-label="See your responses"
                           >
                             <IoArrowForwardCircleSharp fontSize="24px" />
                           </Button>
