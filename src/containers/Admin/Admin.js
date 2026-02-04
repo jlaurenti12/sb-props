@@ -249,7 +249,32 @@ function Admin({ year }) {
     }
   };
 
-  // eslint-disable-next-line no-unused-vars
+  const populate2026CorrectChoices = async () => {
+    if (
+      !window.confirm(
+        "Set correctChoice to the first choice for every 2026 question only. 2025 data will not be touched. Continue?"
+      )
+    )
+      return;
+    try {
+      const targetRef = collection(db, "games", "2026", "propQuestions");
+      const snapshot = await getDocs(query(targetRef, orderBy("order")));
+      let updated = 0;
+      for (const d of snapshot.docs) {
+        const data = d.data();
+        const choices = Array.isArray(data.choices) ? data.choices : data.choices ? [data.choices] : [];
+        const firstChoice = choices.length > 0 ? String(choices[0]).trim() : null;
+        await updateDoc(doc(targetRef, d.id), { correctChoice: firstChoice });
+        updated++;
+      }
+      alert(`Set correct choice (first choice) for ${updated} 2026 questions.`);
+      if (currentYear === "2026") getQuestionList();
+    } catch (err) {
+      console.error(err);
+      alert("Failed: " + err.message);
+    }
+  };
+
   const clear2026CorrectChoices = async () => {
     if (
       !window.confirm(
@@ -329,6 +354,35 @@ function Admin({ year }) {
                 </Button>
               )}
             </div>
+
+            {currentYear === "2026" && (
+              <div className="mt-6 pt-6 border-t border-default-200">
+                <h3 className="text-sm font-medium text-default-600 mb-2">
+                  Correct choice (2026 only)
+                </h3>
+                <p className="text-xs text-default-500 mb-3">
+                  Only affects 2026 data. Use to quickly test scoring states.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    variant="flat"
+                    color="primary"
+                    onPress={populate2026CorrectChoices}
+                  >
+                    Populate correct (first choice per question)
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="flat"
+                    color="default"
+                    onPress={clear2026CorrectChoices}
+                  >
+                    Reset correct (clear all)
+                  </Button>
+                </div>
+              </div>
+            )}
 
             <div className="mt-6 pt-6 border-t border-default-200 flex flex-col items-start w-full min-w-0">
               <h3 className="text-sm font-medium text-default-600 mb-3">
