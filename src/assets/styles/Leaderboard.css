@@ -7,7 +7,43 @@
 }
 
 .aVerticalSeparator {
-  border-left: 1px solid #66aaf9; /* Border on the left */
-  width: 1px; /* Width instead of height */
+  border-left: 1px solid #66aaf9;
+  width: 1px;
   height: 12px;
 }
+
+/* Falling confetti animation for winner card */
+@keyframes leaderboard-confetti-fall {
+  0% {
+    transform: translateY(-60px) rotate(0deg);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(120px) rotate(360deg);
+    opacity: 0.25;
+  }
+}
+
+.leaderboard-confetti .leaderboard-confetti-piece {
+  animation: leaderboard-confetti-fall 5s linear infinite;
+  will-change: transform;
+}
+
+.leaderboard-confetti .leaderboard-confetti-piece:nth-child(1) { animation-delay: 0s; }
+.leaderboard-confetti .leaderboard-confetti-piece:nth-child(2) { animation-delay: 0.8s; }
+.leaderboard-confetti .leaderboard-confetti-piece:nth-child(3) { animation-delay: 1.6s; }
+.leaderboard-confetti .leaderboard-confetti-piece:nth-child(4) { animation-delay: 2.4s; }
+.leaderboard-confetti .leaderboard-confetti-piece:nth-child(5) { animation-delay: 0.4s; }
+.leaderboard-confetti .leaderboard-confetti-piece:nth-child(6) { animation-delay: 1.2s; }
+.leaderboard-confetti .leaderboard-confetti-piece:nth-child(7) { animation-delay: 2s; }
+.leaderboard-confetti .leaderboard-confetti-piece:nth-child(8) { animation-delay: 2.8s; }
+.leaderboard-confetti .leaderboard-confetti-piece:nth-child(9) { animation-delay: 0.2s; }
+.leaderboard-confetti .leaderboard-confetti-piece:nth-child(10) { animation-delay: 1s; }
+.leaderboard-confetti .leaderboard-confetti-piece:nth-child(11) { animation-delay: 1.8s; }
+.leaderboard-confetti .leaderboard-confetti-piece:nth-child(12) { animation-delay: 2.6s; }
+.leaderboard-confetti .leaderboard-confetti-piece:nth-child(13) { animation-delay: 0.6s; }
+.leaderboard-confetti .leaderboard-confetti-piece:nth-child(14) { animation-delay: 1.4s; }
+.leaderboard-confetti .leaderboard-confetti-piece:nth-child(15) { animation-delay: 2.2s; }
+.leaderboard-confetti .leaderboard-confetti-piece:nth-child(16) { animation-delay: 3s; }
+.leaderboard-confetti .leaderboard-confetti-piece:nth-child(17) { animation-delay: 0.3s; }
+.leaderboard-confetti .leaderboard-confetti-piece:nth-child(18) { animation-delay: 1.1s; }

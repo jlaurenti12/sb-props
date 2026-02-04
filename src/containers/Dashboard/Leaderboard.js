@@ -270,6 +270,15 @@ function Leaderboard({ remaining, status, end, year, onStatsReady, onAnswerBreak
 
   return (
     <div className="flex flex-col gap-4 mt-4">
+      <style>{`
+        @keyframes leaderboard-confetti-fall {
+          0% { transform: translateY(-50px) rotate(var(--confetti-rotation, 0deg)); opacity: 0.9; }
+          100% { transform: translateY(100px) rotate(calc(360deg + var(--confetti-rotation, 0deg))); opacity: 0.3; }
+        }
+        .leaderboard-confetti-piece {
+          animation: leaderboard-confetti-fall 4s linear infinite;
+        }
+      `}</style>
       <Skeleton className="rounded-lg" isLoaded={isLoaded}>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-lg font-semibold text-foreground">Leaderboard</h2>
@@ -288,30 +297,74 @@ function Leaderboard({ remaining, status, end, year, onStatsReady, onAnswerBreak
       </Skeleton>
 
       <Skeleton className="rounded-lg" isLoaded={isLoaded}>
-        <div className="grid gap-3 grid-cols-2">
-          <div className="rounded-lg bg-default-100 p-4 flex items-stretch">
-            <div className="flex-1 flex flex-col justify-center text-center">
-              <div className="text-small text-default-500 mb-1">Entries</div>
-              <div className="text-lg font-semibold">{quizList.length}</div>
-            </div>
-            <div className="w-px m-4 bg-default-200 shrink-0" aria-hidden />
-            <div className="flex-1 flex flex-col justify-center text-center">
-              <div className="text-small text-default-500 mb-1">Prize</div>
-              { year === "2026" ? (
-                <div className="text-lg font-semibold">${quizList.length * 20}</div>
-              ) : (
-                <div className="text-lg font-semibold">${quizList.length * 10}</div>
-              )}
-            </div>
-          </div>
-          <div className="relative overflow-visible">
-            <div className="rounded-lg bg-default-100 p-4 text-center relative z-10 min-h-[4.5rem] flex flex-col justify-center">
-              <div className="text-small text-default-500 mb-1">
-                {end ? "Winner" : currentLeaders.length === 1 ? "Current leader" : "Current leaders"}
+        <div className={`grid gap-3 ${end && winner ? "grid-cols-1" : "grid-cols-2"}`}>
+          {!(end && winner) && (
+            <div className="rounded-lg bg-default-100 p-4 flex items-stretch">
+              <div className="flex-1 flex flex-col justify-center text-center">
+                <div className="text-small text-default-500 mb-1">Entries</div>
+                <div className="text-lg font-semibold">{quizList.length}</div>
               </div>
-              {end ? (
-                <div className="text-lg font-semibold truncate" title={winner ?? "TBD"}>
-                  {winner ?? "TBD"}
+              <div className="w-px m-4 bg-default-200 shrink-0" aria-hidden />
+              <div className="flex-1 flex flex-col justify-center text-center">
+                <div className="text-small text-default-500 mb-1">Prize</div>
+                { year === "2026" ? (
+                  <div className="text-lg font-semibold">${quizList.length * 20}</div>
+                ) : (
+                  <div className="text-lg font-semibold">${quizList.length * 10}</div>
+                )}
+              </div>
+            </div>
+          )}
+          <div className={`relative overflow-visible ${end && winner ? "col-span-1" : ""}`}>
+            <div
+              className={`rounded-lg p-4 text-center relative min-h-[4.5rem] flex flex-col justify-center overflow-hidden ${
+                end && winner ? "bg-primary/10 border-2 border-primary/30" : "bg-default-100"
+              }`}
+            >
+              {end && (
+                <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-lg" aria-hidden>
+                  <span className="leaderboard-confetti-piece absolute top-2 left-[10%] w-2 h-1 bg-primary/50" style={{ animationDelay: "0s", "--confetti-rotation": "-18deg" }} />
+                  <span className="leaderboard-confetti-piece absolute top-5 right-[15%] w-4 h-2 bg-primary/50" style={{ animationDelay: "0.7s", "--confetti-rotation": "42deg" }} />
+                  <span className="leaderboard-confetti-piece absolute bottom-6 left-[20%] w-1.5 h-1 bg-primary/50" style={{ animationDelay: "1.4s", "--confetti-rotation": "8deg" }} />
+                  <span className="leaderboard-confetti-piece absolute bottom-3 right-[25%] w-3 h-1.5 bg-primary/50" style={{ animationDelay: "2.1s", "--confetti-rotation": "-55deg" }} />
+                  <span className="leaderboard-confetti-piece absolute top-1/2 left-[8%] w-2.5 h-1 bg-primary/50" style={{ animationDelay: "0.35s", "--confetti-rotation": "65deg" }} />
+                  <span className="leaderboard-confetti-piece absolute top-1/3 right-[12%] w-3.5 h-1.5 bg-primary/50" style={{ animationDelay: "1.05s", "--confetti-rotation": "-28deg" }} />
+                  <span className="leaderboard-confetti-piece absolute bottom-1/3 left-[15%] w-2 h-1.5 bg-primary/50" style={{ animationDelay: "1.75s", "--confetti-rotation": "75deg" }} />
+                  <span className="leaderboard-confetti-piece absolute top-2 right-[35%] w-1.5 h-1 bg-primary/50" style={{ animationDelay: "2.45s", "--confetti-rotation": "-40deg" }} />
+                  <span className="leaderboard-confetti-piece absolute top-1/4 left-[40%] w-4 h-2 bg-primary/50" style={{ animationDelay: "0.2s", "--confetti-rotation": "22deg" }} />
+                  <span className="leaderboard-confetti-piece absolute bottom-2 right-[10%] w-2 h-1 bg-primary/50" style={{ animationDelay: "0.9s", "--confetti-rotation": "-72deg" }} />
+                  <span className="leaderboard-confetti-piece absolute bottom-1/4 right-[38%] w-3 h-1 bg-primary/50" style={{ animationDelay: "1.6s", "--confetti-rotation": "35deg" }} />
+                  <span className="leaderboard-confetti-piece absolute top-1/2 right-[20%] w-2.5 h-1.5 bg-primary/50" style={{ animationDelay: "2.3s", "--confetti-rotation": "-12deg" }} />
+                  <span className="leaderboard-confetti-piece absolute bottom-1/2 left-[12%] w-3 h-2 bg-primary/50" style={{ animationDelay: "0.55s", "--confetti-rotation": "58deg" }} />
+                  <span className="leaderboard-confetti-piece absolute top-4 left-[45%] w-2 h-1 bg-primary/50" style={{ animationDelay: "1.25s", "--confetti-rotation": "-35deg" }} />
+                  <span className="leaderboard-confetti-piece absolute bottom-5 right-[18%] w-3.5 h-1 bg-primary/50" style={{ animationDelay: "1.95s", "--confetti-rotation": "82deg" }} />
+                  <span className="leaderboard-confetti-piece absolute top-6 left-[30%] w-1.5 h-1.5 bg-primary/50" style={{ animationDelay: "2.65s", "--confetti-rotation": "-5deg" }} />
+                  <span className="leaderboard-confetti-piece absolute bottom-1/3 right-[32%] w-4 h-1.5 bg-primary/50" style={{ animationDelay: "0.4s", "--confetti-rotation": "48deg" }} />
+                  <span className="leaderboard-confetti-piece absolute top-1/3 left-[22%] w-2 h-1 bg-primary/50" style={{ animationDelay: "1.15s", "--confetti-rotation": "-62deg" }} />
+                </div>
+              )}
+              <div className="relative z-10">
+              {!(end && winner) && (
+                <div className="flex items-center justify-center gap-1.5 text-small text-default-500 mb-1">
+                  <span>
+                    {end ? "Winner" : currentLeaders.length === 1 ? "Current leader" : "Current leaders"}
+                  </span>
+                </div>
+              )}
+              {end && winner ? (
+                <div className="flex flex-col items-center justify-center gap-1 text-center">
+                  <div className="text-small text-default-500">Winner</div>
+                  <div className="text-lg font-semibold truncate max-w-full" title={winner}>
+                    {winner}
+                  </div>
+                  <div className="text-base font-semibold">
+                    <span className="text-small text-default-500 font-normal">Prize: {year === "2026" ? `$${quizList.length * 20}` : `$${quizList.length * 10}`}</span>
+                    
+                  </div>
+                </div>
+              ) : end ? (
+                <div className="text-lg font-semibold truncate" title="TBD">
+                  TBD
                 </div>
               ) : currentLeaders.length === 0 ? (
                 <div className="text-lg font-semibold">—</div>
@@ -331,6 +384,7 @@ function Leaderboard({ remaining, status, end, year, onStatsReady, onAnswerBreak
                   </div>
                 </Tooltip>
               )}
+              </div>
             </div>
           </div>
         </div>
