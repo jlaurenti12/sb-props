@@ -12,7 +12,6 @@ import {
   getDoc,
   doc,
   orderBy,
-  deleteDoc,
 } from "firebase/firestore";
 import {
   Form,
@@ -57,7 +56,7 @@ function arrayMove(arr, fromIndex, toIndex) {
 
 function Admin({ year }) {
   const navigate = useNavigate();
-  const currentYear = year ?? "2026";
+  const currentYear = year ?? "2027";
   const isMobile = useMatchMedia("(max-width: 639px)");
 
   // For questions
@@ -195,69 +194,15 @@ function Admin({ year }) {
     setEditFinalScoreValue("");
   };
 
-  const replaceChoice = (value) => {
-    const s = typeof value === "string" ? value.trim() : String(value ?? "");
-    if (s === "KC") return "NE";
-    if (s === "PHI") return "SEA";
-    return s;
-  };
-
-  // Data migration (UI commented out) – keep for potential re-use
-  // eslint-disable-next-line no-unused-vars
-  const migrate2025To2026 = async () => {
+  const populate2027CorrectChoices = async () => {
     if (
       !window.confirm(
-        "Copy all 2025 questions to 2026 (KC→NE, PHI→SEA) and replace existing 2026 questions?"
+        "Set correctChoice to the first choice for every 2027 question only. 2026 data will not be touched. Continue?"
       )
     )
       return;
     try {
-      const sourceRef = collection(db, "games", "2025", "propQuestions");
-      const targetRef = collection(db, "games", "2026", "propQuestions");
-      const snapshot = await getDocs(
-        query(sourceRef, orderBy("order"))
-      );
-      const questions = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
-
-      const existing2026 = await getDocs(
-        query(targetRef, orderBy("order"))
-      );
-      for (const d of existing2026.docs) {
-        await deleteDoc(doc(targetRef, d.id));
-      }
-
-      for (let i = 0; i < questions.length; i++) {
-        const q = questions[i];
-        const choices = Array.isArray(q.choices)
-          ? q.choices.map(replaceChoice)
-          : [replaceChoice(q.choices)];
-        const correctChoice =
-          q.correctChoice != null ? replaceChoice(q.correctChoice) : null;
-        await addDoc(targetRef, {
-          prompt: q.prompt,
-          choices,
-          correctChoice,
-          order: i + 1,
-        });
-      }
-
-      alert(`Migrated ${questions.length} questions from 2025 to 2026.`);
-      if (currentYear === "2026") getQuestionList();
-    } catch (err) {
-      console.error(err);
-      alert("Migration failed: " + err.message);
-    }
-  };
-
-  const populate2026CorrectChoices = async () => {
-    if (
-      !window.confirm(
-        "Set correctChoice to the first choice for every 2026 question only. 2025 data will not be touched. Continue?"
-      )
-    )
-      return;
-    try {
-      const targetRef = collection(db, "games", "2026", "propQuestions");
+      const targetRef = collection(db, "games", "2027", "propQuestions");
       const snapshot = await getDocs(query(targetRef, orderBy("order")));
       let updated = 0;
       for (const d of snapshot.docs) {
@@ -267,29 +212,29 @@ function Admin({ year }) {
         await updateDoc(doc(targetRef, d.id), { correctChoice: firstChoice });
         updated++;
       }
-      alert(`Set correct choice (first choice) for ${updated} 2026 questions.`);
-      if (currentYear === "2026") getQuestionList();
+      alert(`Set correct choice (first choice) for ${updated} 2027 questions.`);
+      if (currentYear === "2027") getQuestionList();
     } catch (err) {
       console.error(err);
       alert("Failed: " + err.message);
     }
   };
 
-  const clear2026CorrectChoices = async () => {
+  const clear2027CorrectChoices = async () => {
     if (
       !window.confirm(
-        "Set correctChoice to null for every 2026 question only. 2025 data will not be touched. Continue?"
+        "Set correctChoice to null for every 2027 question only. 2026 data will not be touched. Continue?"
       )
     )
       return;
     try {
-      const targetRef = collection(db, "games", "2026", "propQuestions");
+      const targetRef = collection(db, "games", "2027", "propQuestions");
       const snapshot = await getDocs(query(targetRef, orderBy("order")));
       for (const d of snapshot.docs) {
         await updateDoc(doc(targetRef, d.id), { correctChoice: null });
       }
-      alert(`Cleared correct choice from ${snapshot.docs.length} 2026 questions.`);
-      if (currentYear === "2026") getQuestionList();
+      alert(`Cleared correct choice from ${snapshot.docs.length} 2027 questions.`);
+      if (currentYear === "2027") getQuestionList();
     } catch (err) {
       console.error(err);
       alert("Failed: " + err.message);
@@ -355,20 +300,20 @@ function Admin({ year }) {
               )}
             </div>
 
-            {currentYear === "2026" && (
+            {currentYear === "2027" && (
               <div className="mt-6 pt-6 border-t border-default-200">
                 <h3 className="text-sm font-medium text-default-600 mb-2">
-                  Correct choice (2026 only)
+                  Correct choice (2027 only)
                 </h3>
                 <p className="text-xs text-default-500 mb-3">
-                  Only affects 2026 data. Use to quickly test scoring states.
+                  Only affects 2027 data. Use to quickly test scoring states.
                 </p>
                 <div className="flex flex-wrap gap-2">
                   <Button
                     size="sm"
                     variant="flat"
                     color="primary"
-                    onPress={populate2026CorrectChoices}
+                    onPress={populate2027CorrectChoices}
                   >
                     Populate correct (first choice per question)
                   </Button>
@@ -376,7 +321,7 @@ function Admin({ year }) {
                     size="sm"
                     variant="flat"
                     color="default"
-                    onPress={clear2026CorrectChoices}
+                    onPress={clear2027CorrectChoices}
                   >
                     Reset correct (clear all)
                   </Button>
@@ -466,31 +411,6 @@ function Admin({ year }) {
                 </Form>
               )}
             </div>
-            {/* Data migration - commented out
-            <div className="mt-6 pt-6 border-t border-default-200">
-              <h3 className="text-sm font-medium text-default-600 mb-2">
-                Data migration
-              </h3>
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  size="sm"
-                  variant="flat"
-                  color="default"
-                  onPress={migrate2025To2026}
-                >
-                  Copy 2025 questions → 2026 (KC→NE, PHI→SEA)
-                </Button>
-                <Button
-                  size="sm"
-                  variant="flat"
-                  color="default"
-                  onPress={clear2026CorrectChoices}
-                >
-                  Clear correct choice (2026 only)
-                </Button>
-              </div>
-            </div>
-            */}
             </div>
           </section>
 

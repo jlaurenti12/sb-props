@@ -302,10 +302,10 @@ function Leaderboard({ remaining, status, end, year, onStatsReady, onAnswerBreak
               <div className="w-px m-4 bg-default-200 shrink-0" aria-hidden />
               <div className="flex-1 flex flex-col justify-center text-center">
                 <div className="text-small text-default-500 mb-1">Prize</div>
-                { year === "2026" ? (
-                  <div className="text-lg font-semibold">${quizList.length * 20}</div>
-                ) : (
+                { year === "2025" ? (
                   <div className="text-lg font-semibold">${quizList.length * 10}</div>
+                ) : (
+                  <div className="text-lg font-semibold">${quizList.length * 20}</div>
                 )}
               </div>
             </div>
@@ -353,7 +353,7 @@ function Leaderboard({ remaining, status, end, year, onStatsReady, onAnswerBreak
                     {winner}
                   </div>
                   <div className="text-base font-semibold">
-                    <span className="text-small text-default-500 font-normal">Prize: {year === "2026" ? `$${quizList.length * 20}` : `$${quizList.length * 10}`}</span>
+                    <span className="text-small text-default-500 font-normal">Prize: {year === "2025" ? `$${quizList.length * 10}` : `$${quizList.length * 20}`}</span>
                     
                   </div>
                 </div>
