@@ -27,7 +27,22 @@ import {
   Button,
   Skeleton,
   Alert,
+  Tabs,
+  Tab,
 } from "@heroui/react";
+import BoxesPanel from "./BoxesPanel.js";
+
+const seasonTabKey = (year) => `sb-season-tab-${year}`;
+
+const readSeasonTab = (year) => {
+  try {
+    return window.localStorage.getItem(seasonTabKey(year)) === "boxes"
+      ? "boxes"
+      : "props";
+  } catch {
+    return "props";
+  }
+};
 
 function Dashboard({year}) {
   const [user, loading] = useAuthState(auth);
@@ -42,6 +57,9 @@ function Dashboard({year}) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [gameStarted, setGameStarted] = useState();
   const [gameOver, setGameOver] = useState();
+  const [boxesEnabled, setBoxesEnabled] = useState(false);
+  const [statusYear, setStatusYear] = useState(null);
+  const [seasonTab, setSeasonTab] = useState("props");
   const [isLoaded, setIsLoaded] = useState(false);
   const [, setLeaderboardStats] = useState({ entryCount: 0, winner: null });
   const [selectedUser, setSelectedUser] = useState(null);
@@ -88,6 +106,18 @@ function Dashboard({year}) {
     const data = docSnap.data();
     setGameStarted(data.gameStatus);
     setGameOver(data.gameOver);
+    setBoxesEnabled(data.boxesEnabled === true);
+    setStatusYear(year);
+  };
+
+  const selectSeasonTab = (key) => {
+    const next = key === "boxes" ? "boxes" : "props";
+    setSeasonTab(next);
+    try {
+      window.localStorage.setItem(seasonTabKey(year), next);
+    } catch {
+      // Tab still updates for this visit if storage is unavailable.
+    }
   };
 
   const getRemainingQuestions = (questions) => {
@@ -274,6 +304,8 @@ function Dashboard({year}) {
   useEffect(() => {
     // Reset the answers ref when year changes to prevent false toast triggers
     prevAnswersRef.current = [];
+    setStatusYear(null);
+    setSeasonTab(year ? readSeasonTab(year) : "props");
   }, [year]);
 
   useEffect(() => {
@@ -291,6 +323,9 @@ function Dashboard({year}) {
     const t = setTimeout(() => setToast((prev) => ({ ...prev, show: false })), 6500);
     return () => clearTimeout(t);
   }, [toast.show]);
+
+  const showBoxes = statusYear === year && boxesEnabled;
+  const activeTab = showBoxes && seasonTab === "boxes" ? "boxes" : "props";
 
   return (
 
@@ -317,6 +352,23 @@ function Dashboard({year}) {
             <SelectItem key={year.key}>{year.label}</SelectItem>
           ))}
       </Select> */}
+      {showBoxes && (
+        <div className="sticky top-16 z-30 bg-background pb-4">
+          <Tabs
+            aria-label="Season game"
+            fullWidth
+            selectedKey={activeTab}
+            onSelectionChange={(key) => selectSeasonTab(String(key))}
+            classNames={{ panel: "hidden" }}
+          >
+            <Tab key="props" title="Props" />
+            <Tab key="boxes" title="Boxes" />
+          </Tabs>
+        </div>
+      )}
+      {activeTab === "boxes" ? (
+        <BoxesPanel year={year} />
+      ) : (
       <div className="tableContent flex flex-col gap-4">
         <h2 className="text-lg font-semibold text-foreground">Your entries</h2>
         <Skeleton className="rounded-lg" isLoaded={isLoaded}>
@@ -407,6 +459,7 @@ function Dashboard({year}) {
           onAnswerBreakdownClick={() => setIsBreakdownOpen(true)}
         />
       </div>
+      )}
     </div>
 
   );

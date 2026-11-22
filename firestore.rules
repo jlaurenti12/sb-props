@@ -78,6 +78,72 @@ service cloud.firestore {
         // Only admins can delete entries
         allow delete: if isAdmin();
       }
+
+      function boxesAreOpen() {
+        return get(/databases/$(database)/documents/games/$(year)).data.boxesEnabled == true
+          && get(/databases/$(database)/documents/games/$(year)).data.boxesStatus == "open";
+      }
+
+      // One doc per claimed square. Id is "{row}-{col}", both 0-9.
+      // A tap creates the doc with submitted == false. Submit flips that to true.
+      match /boxSquares/{squareId} {
+        allow read: if isAuthenticated();
+
+        allow create: if isAuthenticated()
+          && boxesAreOpen()
+          && squareId.matches('^[0-9]-[0-9]$')
+          && request.resource.data.keys().hasOnly(['uid', 'name', 'row', 'col', 'submitted'])
+          && request.resource.data.uid == request.auth.uid
+          && request.resource.data.name is string
+          && request.resource.data.name.size() > 0
+          && request.resource.data.name.size() < 80
+          && request.resource.data.row is int
+          && request.resource.data.col is int
+          && request.resource.data.row >= 0
+          && request.resource.data.row <= 9
+          && request.resource.data.col >= 0
+          && request.resource.data.col <= 9
+          && request.resource.data.submitted == false
+          && squareId == string(request.resource.data.row) + '-' + string(request.resource.data.col);
+
+        allow update: if isAdmin()
+          || (isAuthenticated()
+              && boxesAreOpen()
+              && resource.data.uid == request.auth.uid
+              && resource.data.submitted == false
+              && request.resource.data.submitted == true
+              && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['submitted']));
+
+        allow delete: if isAdmin()
+          || (isAuthenticated()
+              && boxesAreOpen()
+              && resource.data.uid == request.auth.uid
+              && resource.data.submitted == false);
+      }
+
+      // One doc per player. paidCount is how many submitted squares are marked paid.
+      match /boxEntries/{entryId} {
+        allow read: if isAuthenticated();
+
+        allow create: if isAdmin()
+          || (isAuthenticated()
+              && boxesAreOpen()
+              && entryId == request.auth.uid
+              && request.resource.data.keys().hasOnly(['uid', 'name'])
+              && request.resource.data.uid == request.auth.uid
+              && request.resource.data.name is string
+              && request.resource.data.name.size() > 0
+              && request.resource.data.name.size() < 80);
+
+        allow update: if isAdmin()
+          || (isAuthenticated()
+              && boxesAreOpen()
+              && entryId == request.auth.uid
+              && request.resource.data.uid == resource.data.uid
+              && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name']));
+
+        allow delete: if isAdmin();
+      }
     }
     
     // Deny all other access

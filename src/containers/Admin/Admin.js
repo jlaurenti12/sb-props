@@ -12,12 +12,14 @@ import {
   getDoc,
   doc,
   orderBy,
+  deleteField,
 } from "firebase/firestore";
 import {
   Form,
   Input,
   Button,
   Chip,
+  Switch,
   Table,
   TableHeader,
   TableBody,
@@ -26,6 +28,7 @@ import {
   TableCell,
 } from "@heroui/react";
 import QuestionDrawer from "./QuestionDrawer.js";
+import BoxesAdmin from "./BoxesAdmin.js";
 import { IoPencil, IoReorderThree } from "react-icons/io5";
 import { IoCheckmark, IoClose } from "react-icons/io5";
 
@@ -149,6 +152,11 @@ function Admin({ year }) {
   // For game status
   const [gameStarted, setGameStarted] = useState();
   const [gameOver, setGameOver] = useState();
+  const [boxesEnabled, setBoxesEnabled] = useState(false);
+  const [boxesStatus, setBoxesStatus] = useState("setup");
+  const [numbersDrawn, setNumbersDrawn] = useState(false);
+  const [rowTeam, setRowTeam] = useState("");
+  const [colTeam, setColTeam] = useState("");
   const [finalScore, setFinalScore] = useState(null);
   const [isEditingFinalScore, setIsEditingFinalScore] = useState(false);
   const [editFinalScoreValue, setEditFinalScoreValue] = useState("");
@@ -159,7 +167,73 @@ function Admin({ year }) {
     const data = docSnap.data();
     setGameStarted(data.gameStatus);
     setGameOver(data.gameOver);
+    setBoxesEnabled(data.boxesEnabled === true);
+    setBoxesStatus(
+      data.boxesStatus === "open" || data.boxesStatus === "locked"
+        ? data.boxesStatus
+        : "setup"
+    );
+    setNumbersDrawn(
+      Array.isArray(data.boxRowNumbers) &&
+        data.boxRowNumbers.length === 10 &&
+        Array.isArray(data.boxColNumbers) &&
+        data.boxColNumbers.length === 10
+    );
+    setRowTeam(typeof data.boxRowTeam === "string" ? data.boxRowTeam : "");
+    setColTeam(typeof data.boxColTeam === "string" ? data.boxColTeam : "");
     setFinalScore(data.finalScore != null ? data.finalScore : null);
+  };
+
+  const changeBoxesEnabled = async (enabled) => {
+    await updateDoc(statusDoc, { boxesEnabled: enabled });
+    setBoxesEnabled(enabled);
+  };
+
+  const changeBoxesStatus = async (status) => {
+    await updateDoc(statusDoc, { boxesStatus: status });
+    setBoxesStatus(status);
+  };
+
+  const drawBoxNumbers = async () => {
+    if (
+      numbersDrawn &&
+      !window.confirm("Redraw the numbers? This replaces the digits on the board.")
+    ) {
+      return;
+    }
+    const shuffle = () => {
+      const digits = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+      for (let i = digits.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [digits[i], digits[j]] = [digits[j], digits[i]];
+      }
+      return digits;
+    };
+    await updateDoc(statusDoc, {
+      boxRowNumbers: shuffle(),
+      boxColNumbers: shuffle(),
+    });
+    setNumbersDrawn(true);
+  };
+
+  const clearBoxNumbers = async () => {
+    if (!window.confirm("Clear the numbers? The board goes back to blank axes.")) return;
+    await updateDoc(statusDoc, {
+      boxRowNumbers: deleteField(),
+      boxColNumbers: deleteField(),
+    });
+    setNumbersDrawn(false);
+  };
+
+  const saveBoxTeams = async () => {
+    const left = rowTeam.trim();
+    const top = colTeam.trim();
+    await updateDoc(statusDoc, {
+      boxRowTeam: left || deleteField(),
+      boxColTeam: top || deleteField(),
+    });
+    setRowTeam(left);
+    setColTeam(top);
   };
 
   const changeStatus = async () => {
@@ -300,6 +374,93 @@ function Admin({ year }) {
               )}
             </div>
 
+            <div className="mt-6 pt-6 border-t border-default-200">
+              <Switch
+                isSelected={boxesEnabled}
+                onValueChange={changeBoxesEnabled}
+              >
+                Boxes for this year
+              </Switch>
+              <p className="text-xs text-default-500 mt-2">
+                Shows the Props / Boxes toggle on the season page for this year.
+              </p>
+              {boxesEnabled && (
+                <div className="mt-4 flex flex-col items-start gap-2">
+                  <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-end">
+                    <Input
+                      size="sm"
+                      label="Left team"
+                      labelPlacement="inside"
+                      value={rowTeam}
+                      onValueChange={setRowTeam}
+                      className="sm:max-w-[160px]"
+                    />
+                    <Input
+                      size="sm"
+                      label="Top team"
+                      labelPlacement="inside"
+                      value={colTeam}
+                      onValueChange={setColTeam}
+                      className="sm:max-w-[160px]"
+                    />
+                    <Button size="sm" variant="flat" onPress={saveBoxTeams}>
+                      Save teams
+                    </Button>
+                  </div>
+                  <p className="text-xs text-default-500">
+                    Left is that team’s score. Top is the other team’s score.
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {boxesStatus !== "open" ? (
+                      <Button
+                        size="sm"
+                        color="secondary"
+                        onPress={() => changeBoxesStatus("open")}
+                      >
+                        Open claims
+                      </Button>
+                    ) : (
+                      <Button
+                        size="sm"
+                        color="warning"
+                        onPress={() => changeBoxesStatus("locked")}
+                      >
+                        Lock claims
+                      </Button>
+                    )}
+                    {boxesStatus === "locked" && (
+                      <Button
+                        size="sm"
+                        variant="flat"
+                        onPress={() => changeBoxesStatus("open")}
+                      >
+                        Reopen claims
+                      </Button>
+                    )}
+                    {boxesStatus === "locked" && (
+                      <Button size="sm" color="secondary" onPress={drawBoxNumbers}>
+                        {numbersDrawn ? "Redraw numbers" : "Draw numbers"}
+                      </Button>
+                    )}
+                    {numbersDrawn && (
+                      <Button size="sm" variant="flat" onPress={clearBoxNumbers}>
+                        Clear numbers
+                      </Button>
+                    )}
+                  </div>
+                  <p className="text-xs text-default-500">
+                    {boxesStatus === "open"
+                      ? "People can pick squares and submit an entry. Numbers stay hidden."
+                      : boxesStatus === "locked"
+                        ? numbersDrawn
+                          ? "Numbers are on the board."
+                          : "Claims are closed. Draw numbers when you are ready."
+                        : "Claims stay closed until you open them."}
+                  </p>
+                </div>
+              )}
+            </div>
+
             {currentYear === "2027" && (
               <div className="mt-6 pt-6 border-t border-default-200">
                 <h3 className="text-sm font-medium text-default-600 mb-2">
@@ -413,6 +574,8 @@ function Admin({ year }) {
             </div>
             </div>
           </section>
+
+          {boxesEnabled && <BoxesAdmin year={currentYear} />}
 
           <section>
             <h2 className="text-lg font-semibold mb-4 text-foreground">
