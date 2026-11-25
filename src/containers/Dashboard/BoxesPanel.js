@@ -342,7 +342,7 @@ function BoxesPanel({ year }) {
   return (
     <div className={`flex flex-col gap-4 ${selecting ? "pb-36" : ""}`}>
       <div>
-        <h2 className="text-lg font-semibold text-foreground">Your boxes</h2>
+        <h2 className="text-lg font-semibold text-foreground">Boxes</h2>
         <p className="mt-1 text-sm text-default-500">{statusLine}</p>
       </div>
 
@@ -525,7 +525,7 @@ function BoxesPanel({ year }) {
                 <IoTrophyOutline aria-hidden="true" />
                 Winners
               </div>
-              <ol className="mt-3 flex flex-col">
+              <ol className="flex flex-col">
                 {quarterResults.map((quarter, index) => (
                   <li key={quarter.id} className="flex items-center gap-2">
                     <div className="relative flex w-8 shrink-0 items-center justify-center self-stretch">
@@ -580,12 +580,12 @@ function BoxesPanel({ year }) {
                 </div>
                 {numbersUp ? (
                   <>
-                    <div className="mt-3 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-foreground">
+                    {/* <div className="mt-3 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-foreground">
                       <span className="min-w-6 flex-1 text-center">{rowTeam || "Left"}</span>
                       <span className="invisible" aria-hidden="true">·</span>
                       <span className="min-w-6 flex-1 text-center">{colTeam || "Top"}</span>
-                    </div>
-                    <ul className="mt-1.5 flex flex-col gap-2">
+                    </div> */}
+                    <ul className="mt-3 flex flex-col gap-2">
                       {submitted.map((square) => (
                         <li key={square.id} className="flex items-center gap-1.5">
                           <span
