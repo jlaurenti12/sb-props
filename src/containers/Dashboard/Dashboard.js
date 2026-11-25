@@ -353,7 +353,7 @@ function Dashboard({year}) {
           ))}
       </Select> */}
       {showBoxes && (
-        <div className="sticky top-16 z-30 bg-background pb-4">
+        <div className="pb-4">
           <Tabs
             aria-label="Season game"
             fullWidth

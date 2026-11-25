@@ -13,6 +13,7 @@ import {
 } from "firebase/firestore";
 import { RadioGroup, Button, Form, Skeleton, Input } from "@heroui/react";
 import CustomRadio from "../../components/Radio/CustomRadio";
+import { sillyNote, venmoPayUrl } from "../../data/sillyNotes";
 
 function Quiz() {
   const location = useLocation();
@@ -29,6 +30,7 @@ function Quiz() {
   const [isReviewing, setIsReviewing] = useState(false);
   const [hasReviewed, setHasReviewed] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [paymentNote, setPaymentNote] = useState("");
   const autoAdvanceTimerRef = useRef(null);
 
   const isTiebreakerStep = currentIndex === questionList.length;
@@ -108,6 +110,7 @@ function Quiz() {
         takenQuiz: true,
       });
 
+      setPaymentNote(sillyNote());
       setIsSubmitted(true);
     } catch (err) {
       console.error(err);
@@ -292,10 +295,21 @@ function Quiz() {
                     <div className="text-default-600">
                       Venmo $20 to <span className="font-semibold text-foreground whitespace-nowrap">@Jacob-Laurenti</span> to complete your entry.
                     </div>
-                    <div className="text-default-600">
-                      Please don't mention anything about betting in the description 🙏
-                    </div>
-                    <Button fullWidth color="primary" onPress={() => navigate("/")}>
+                    <Button
+                      as="a"
+                      href={venmoPayUrl({
+                        handle: "Jacob-Laurenti",
+                        amount: 20,
+                        note: paymentNote,
+                      })}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      fullWidth
+                      color="primary"
+                    >
+                      Open Venmo
+                    </Button>
+                    <Button fullWidth variant="flat" onPress={() => navigate("/")}>
                       Back to Dashboard
                     </Button>
                   </div>

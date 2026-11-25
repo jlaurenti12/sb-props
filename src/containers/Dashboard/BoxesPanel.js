@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth, db } from "../../services/firebase";
 import {
@@ -13,6 +14,7 @@ import { Button } from "@heroui/react";
 import { IoTrophyOutline } from "react-icons/io5";
 import { findTeam } from "../../data/nflTeams";
 import { BOX_QUARTERS, quarterPayouts, readQuarterScore } from "../../data/boxQuarters";
+import { sillyNote, venmoPayUrl } from "../../data/sillyNotes";
 
 const GRID_SIZE = 10;
 const SQUARE_PRICE = 10;
@@ -260,6 +262,7 @@ function BoxesPanel({ year }) {
       setConfirmation({
         count: added,
         entryAmount: added * pricePerSquare,
+        note: sillyNote(),
       });
     } catch (err) {
       console.error(err);
@@ -321,21 +324,37 @@ function BoxesPanel({ year }) {
 
   if (confirmation) {
     const boxLabel = confirmation.count === 1 ? "box" : "boxes";
-    return (
-      <div className="rounded-lg bg-content1 p-6 text-center grid gap-4">
-        <div className="text-xl font-semibold">Entry submitted!</div>
-        <div className="text-default-600">
-          You selected {confirmation.count} {boxLabel}. Venmo {money(confirmation.entryAmount)} to{" "}
-          <span className="font-semibold text-foreground whitespace-nowrap">@{venmoName}</span> to
-          complete your entry.
+    return createPortal(
+      <div className="fixed inset-0 z-[100] overflow-y-auto bg-background">
+        <div className="mx-auto w-full max-w-[375px] px-4 py-10">
+          <div className="rounded-lg bg-content1 p-6 text-center grid gap-4">
+            <div className="text-xl font-semibold">Entry submitted!</div>
+            <div className="text-default-600">
+              You selected {confirmation.count} {boxLabel}. Venmo {money(confirmation.entryAmount)} to{" "}
+              <span className="font-semibold text-foreground whitespace-nowrap">@{venmoName}</span> to
+              complete your entry.
+            </div>
+            <Button
+              as="a"
+              href={venmoPayUrl({
+                handle: venmoName,
+                amount: confirmation.entryAmount,
+                note: confirmation.note,
+              })}
+              target="_blank"
+              rel="noopener noreferrer"
+              fullWidth
+              color="primary"
+            >
+              Open Venmo
+            </Button>
+            <Button fullWidth variant="flat" onPress={() => setConfirmation(null)}>
+              Back to Dashboard
+            </Button>
+          </div>
         </div>
-        <div className="text-default-600">
-          Please don't mention anything about betting in the description 🙏
-        </div>
-        <Button fullWidth color="primary" onPress={() => setConfirmation(null)}>
-          Back to Dashboard
-        </Button>
-      </div>
+      </div>,
+      document.body
     );
   }
 
