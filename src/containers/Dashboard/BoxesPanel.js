@@ -10,11 +10,24 @@ import {
   writeBatch,
 } from "firebase/firestore";
 import { Button } from "@heroui/react";
+import { IoTrophyOutline } from "react-icons/io5";
+import { findTeam } from "../../data/nflTeams";
+import { BOX_QUARTERS, quarterPayouts, readQuarterScore } from "../../data/boxQuarters";
 
 const GRID_SIZE = 10;
 const SQUARE_PRICE = 10;
 
 const squareId = (row, col) => `${row}-${col}`;
+
+const shortName = (name) => {
+  const parts = String(name || "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+  if (parts.length === 0) return "Someone";
+  if (parts.length === 1) return parts[0];
+  return `${parts[0]} ${parts[parts.length - 1][0]}.`;
+};
 
 const initialsFor = (name) => {
   const parts = String(name || "")
@@ -37,17 +50,6 @@ const digitAxis = (value) =>
     ? value
     : null;
 
-const venmoHref = (handle, amount, year) => {
-  const params = new URLSearchParams({
-    txn: "pay",
-    audience: "private",
-    recipients: handle,
-    amount: Number(amount).toFixed(2),
-    note: `Super Bowl boxes ${year}`,
-  });
-  return `https://venmo.com/?${params.toString()}`;
-};
-
 function BoxesPanel({ year }) {
   const [user] = useAuthState(auth);
   const [squares, setSquares] = useState({});
@@ -59,9 +61,9 @@ function BoxesPanel({ year }) {
   const [colNumbers, setColNumbers] = useState(null);
   const [rowTeam, setRowTeam] = useState("");
   const [colTeam, setColTeam] = useState("");
+  const [quarterScores, setQuarterScores] = useState(null);
   const [paidCount, setPaidCount] = useState(0);
   const [displayName, setDisplayName] = useState("");
-  const [choosing, setChoosing] = useState(false);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
   const [selectedId, setSelectedId] = useState(null);
@@ -73,7 +75,6 @@ function BoxesPanel({ year }) {
     setSquares({});
     setSelectedId(null);
     setNotice("");
-    setChoosing(false);
     setConfirmation(null);
     const unsubscribe = onSnapshot(
       collection(db, "games", year, "boxSquares"),
@@ -112,6 +113,11 @@ function BoxesPanel({ year }) {
       setColNumbers(digitAxis(data.boxColNumbers));
       setRowTeam(typeof data.boxRowTeam === "string" ? data.boxRowTeam.trim() : "");
       setColTeam(typeof data.boxColTeam === "string" ? data.boxColTeam.trim() : "");
+      setQuarterScores(
+        data.boxQuarterScores && typeof data.boxQuarterScores === "object"
+          ? data.boxQuarterScores
+          : null
+      );
     });
     return unsubscribe;
   }, [year]);
@@ -155,10 +161,8 @@ function BoxesPanel({ year }) {
   );
   const drafts = mySquares.filter((square) => square.submitted === false);
   const submitted = mySquares.filter((square) => square.submitted !== false);
-  const inEntry = choosing || drafts.length > 0;
+  const selecting = drafts.length > 0;
   const pricePerSquare = typeof boxPrice === "number" ? boxPrice : SQUARE_PRICE;
-  const owedSquares = Math.max(0, submitted.length - paidCount);
-  const owedAmount = owedSquares * pricePerSquare;
   const squaresLeft = GRID_SIZE * GRID_SIZE - Object.keys(squares).length;
 
   const claimCell = async (row, col) => {
@@ -181,9 +185,10 @@ function BoxesPanel({ year }) {
   };
 
   const onClaimCell = async (row, col) => {
-    if (!claimsOpen || !inEntry || busy || !displayName) return;
+    if (!claimsOpen || busy || !displayName) return;
     setBusy(true);
     setNotice("");
+    setConfirmation(null);
     try {
       await claimCell(row, col);
     } catch (err) {
@@ -217,11 +222,7 @@ function BoxesPanel({ year }) {
   };
 
   const onCancel = async () => {
-    if (busy) return;
-    if (drafts.length === 0) {
-      setChoosing(false);
-      return;
-    }
+    if (busy || drafts.length === 0) return;
     setBusy(true);
     setNotice("");
     try {
@@ -230,7 +231,6 @@ function BoxesPanel({ year }) {
         batch.delete(doc(db, "games", year, "boxSquares", square.id));
       });
       await batch.commit();
-      setChoosing(false);
     } catch (err) {
       console.error(err);
       setNotice("Couldn't cancel this entry.");
@@ -257,13 +257,10 @@ function BoxesPanel({ year }) {
       );
       await batch.commit();
       const added = drafts.length;
-      const nextOwedSquares = Math.max(0, submitted.length + added - paidCount);
       setConfirmation({
         count: added,
         entryAmount: added * pricePerSquare,
-        owedAmount: nextOwedSquares * pricePerSquare,
       });
-      setChoosing(false);
     } catch (err) {
       console.error(err);
       setNotice(
@@ -277,175 +274,156 @@ function BoxesPanel({ year }) {
   };
 
   const numbersUp = rowNumbers != null && colNumbers != null;
+  const rowTeamColor = findTeam(rowTeam)?.color;
+  const colTeamColor = findTeam(colTeam)?.color;
+  const pool = Object.values(squares).filter((square) => square.submitted !== false).length * pricePerSquare;
+  const payouts = quarterPayouts(pool);
+  const quarterResults = BOX_QUARTERS.map((quarter) => {
+    const score = readQuarterScore(quarterScores, quarter.id);
+    if (!score || !numbersUp) return { ...quarter, score: null };
+    const row = rowNumbers.indexOf(score.rowDigit);
+    const col = colNumbers.indexOf(score.colDigit);
+    const square = squares[squareId(row, col)];
+    const winner = !square
+      ? "Open square"
+      : square.uid === user?.uid
+        ? "You"
+        : shortName(square.name);
+    return { ...quarter, score, row, col, winner };
+  });
+  const winningBadges = new Map();
+  quarterResults.forEach((quarter) => {
+    if (!quarter.score) return;
+    const id = squareId(quarter.row, quarter.col);
+    const list = winningBadges.get(id) || [];
+    list.push({
+      badge: quarter.id === "half" ? "H" : quarter.id === "final" ? "F" : quarter.label,
+      name: quarter.label,
+      place: quarter.id,
+    });
+    winningBadges.set(id, list);
+  });
   const statusLine =
     boxesStatus === "locked"
       ? numbersUp
-        ? "Numbers are up."
+        ? ""
         : "Claims are closed. Numbers haven't been drawn."
       : boxesStatus === "open"
-        ? inEntry
-          ? "Tap an open square to take it. Submit when you're done."
-          : "Numbers stay hidden until claims lock."
+        ? boardLoaded
+          ? `Tap an open square to take it. ${squaresLeft} ${squaresLeft === 1 ? "box remains" : "boxes remain"}.`
+          : "Tap an open square to take it."
         : "Claims haven't opened yet.";
-
-  const openVenmo = (amount) => {
-    const pay = amount ?? owedAmount;
-    if (!venmoHandle || pay == null || pay <= 0) return;
-    window.open(venmoHref(venmoHandle, pay, year), "_blank", "noopener,noreferrer");
-  };
 
   const draftTotal = drafts.length * pricePerSquare;
   const balanceAfterSubmit =
     Math.max(0, submitted.length + drafts.length - paidCount) * pricePerSquare;
+  const venmoName = venmoHandle || "Jacob-Laurenti";
+
+  if (confirmation) {
+    const boxLabel = confirmation.count === 1 ? "box" : "boxes";
+    return (
+      <div className="rounded-lg bg-content1 p-6 text-center grid gap-4">
+        <div className="text-xl font-semibold">Entry submitted!</div>
+        <div className="text-default-600">
+          You selected {confirmation.count} {boxLabel}. Venmo {money(confirmation.entryAmount)} to{" "}
+          <span className="font-semibold text-foreground whitespace-nowrap">@{venmoName}</span> to
+          complete your entry.
+        </div>
+        <div className="text-default-600">
+          Please don't mention anything about betting in the description 🙏
+        </div>
+        <Button fullWidth color="primary" onPress={() => setConfirmation(null)}>
+          Back to Dashboard
+        </Button>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className={`flex flex-col gap-4 ${selecting ? "pb-36" : ""}`}>
       <div>
-        <h2 className="text-lg font-semibold text-foreground">Boxes</h2>
+        <h2 className="text-lg font-semibold text-foreground">Your boxes</h2>
         <p className="mt-1 text-sm text-default-500">{statusLine}</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div className="rounded-lg bg-default-100 p-4 text-center min-h-[4.5rem] flex flex-col justify-center">
-          <div className="text-small text-default-500 mb-1">Remaining</div>
-          <div className="text-lg font-semibold">{boardLoaded ? squaresLeft : "—"}</div>
-        </div>
-        <div className="rounded-lg bg-default-100 p-4 text-center min-h-[4.5rem] flex flex-col justify-center">
-          <div className="text-small text-default-500 mb-1">Your boxes</div>
-          <div className="text-lg font-semibold">{boardLoaded ? mySquares.length : "—"}</div>
-        </div>
-      </div>
-
-      {confirmation && !inEntry && (
-        <div className="flex flex-col gap-3 rounded-xl bg-default-100 px-4 py-4">
-          <h3 className="text-base font-semibold text-foreground">Entry submitted</h3>
-          <p className="text-sm text-foreground">
-            {confirmation.count} {confirmation.count === 1 ? "square" : "squares"}
-            {` · ${money(confirmation.entryAmount)}`}
-          </p>
-          {confirmation.owedAmount > 0 && (
+      {selecting && (
+        <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-default-200 bg-background/95 backdrop-blur">
+          <div className="mx-auto flex w-full max-w-[375px] flex-col gap-3 px-4 py-4">
             <p className="text-sm text-foreground">
-              {venmoHandle
-                ? `Venmo @${venmoHandle} ${money(confirmation.owedAmount)}`
-                : `You owe ${money(confirmation.owedAmount)}`}
+              {drafts.length} {drafts.length === 1 ? "square" : "squares"}
+              {` · ${money(draftTotal)}`}
             </p>
-          )}
-          {confirmation.owedAmount === 0 && (
-            <p className="text-sm text-default-500">Paid</p>
-          )}
-          {venmoHandle && confirmation.owedAmount > 0 && (
-            <Button fullWidth color="secondary" onPress={() => openVenmo(confirmation.owedAmount)}>
-              Venmo @{venmoHandle}
-            </Button>
-          )}
-          <Button fullWidth variant="flat" onPress={() => setConfirmation(null)}>
-            Done
-          </Button>
-        </div>
-      )}
-
-      {!inEntry && !confirmation && owedAmount > 0 && (
-        <div className="flex flex-col gap-2">
-          <p className="text-sm text-foreground">
-            {venmoHandle
-              ? `Venmo @${venmoHandle} ${money(owedAmount)}`
-              : `You owe ${money(owedAmount)}`}
-          </p>
-          {venmoHandle && (
-            <Button fullWidth color="secondary" onPress={() => openVenmo(owedAmount)}>
-              Venmo @{venmoHandle}
-            </Button>
-          )}
-        </div>
-      )}
-
-      {claimsOpen && !inEntry && !confirmation && (
-        <Button
-          fullWidth
-          color="secondary"
-          onPress={() => {
-            setConfirmation(null);
-            setChoosing(true);
-          }}
-        >
-          {submitted.length > 0 ? "Add more squares" : "Add entry"}
-        </Button>
-      )}
-
-      {inEntry && (
-        <div className="flex flex-col gap-3 rounded-xl bg-default-100 px-4 py-4">
-          <p className="text-sm font-semibold text-foreground">
-            {drafts.length} {drafts.length === 1 ? "square" : "squares"} selected
-          </p>
-          <p className="text-sm text-foreground">
-            {money(pricePerSquare)} a square
-            {drafts.length > 0 ? ` · ${money(draftTotal)} this entry` : ""}
-          </p>
-          {venmoHandle && drafts.length > 0 && balanceAfterSubmit > 0 && (
-            <p className="text-sm text-default-500">
-              After you submit, Venmo @{venmoHandle} {money(balanceAfterSubmit)}.
-            </p>
-          )}
-          {submitted.length > 0 && (
-            <p className="text-sm text-default-500">
-              {submitted.length} already submitted
-            </p>
-          )}
-          <Button
-            fullWidth
-            color="secondary"
-            isDisabled={busy || drafts.length === 0 || !claimsOpen}
-            onPress={onSubmit}
-          >
-            Submit
-          </Button>
-          <Button fullWidth variant="flat" isDisabled={busy} onPress={onCancel}>
-            Cancel
-          </Button>
-          {!claimsOpen && drafts.length > 0 && (
-            <p className="text-sm text-default-500">
-              Claims closed before this entry was submitted.
-            </p>
-          )}
-        </div>
-      )}
-
-      <div className={numbersUp ? "flex items-stretch gap-1" : ""}>
-        {numbersUp && rowTeam && (
-          <div className="flex w-4 shrink-0 items-center justify-center">
-            <span className="text-[10px] font-semibold tracking-wide text-default-500 [writing-mode:vertical-lr]">
-              {rowTeam}
-            </span>
+            {venmoHandle && balanceAfterSubmit > 0 && (
+              <p className="text-sm text-default-500">
+                After you submit, Venmo @{venmoHandle} {money(balanceAfterSubmit)}.
+              </p>
+            )}
+            {!claimsOpen && (
+              <p className="text-sm text-default-500">
+                Claims closed before this entry was submitted.
+              </p>
+            )}
+            <div className="flex gap-2">
+              <Button className="flex-1" variant="flat" isDisabled={busy} onPress={onCancel}>
+                Cancel
+              </Button>
+              <Button
+                className="flex-[2]"
+                color="secondary"
+                isDisabled={busy || !claimsOpen}
+                onPress={onSubmit}
+              >
+                Select boxes
+              </Button>
+            </div>
           </div>
-        )}
-        <div className={numbersUp ? "min-w-0 flex-1" : "contents"}>
-          {numbersUp && colTeam && (
-            <div className="mb-1 pl-4 text-center text-[10px] font-semibold tracking-wide text-default-500">
-              {colTeam}
+        </div>
+      )}
+
+      <div className={numbersUp ? "grid grid-cols-[auto_minmax(0,1fr)] gap-0.5" : ""}>
+          {numbersUp && (
+            <div
+              className="col-start-2 row-start-1 rounded-[3px] border text-[10px] font-semibold leading-none text-foreground"
+              style={colTeamColor ? { borderColor: colTeamColor, backgroundColor: `${colTeamColor}2e` } : undefined}
+            >
+              {colTeam && (
+                <div className="px-1 pt-1 text-center tracking-wide">{colTeam}</div>
+              )}
+              <div className="grid grid-cols-10 gap-0.5 py-0.5">
+                {colNumbers.map((digit, index) => (
+                  <div key={`col-${index}`} className="text-center">
+                    {digit}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {numbersUp && (
+            <div
+              className="col-start-1 row-start-2 flex min-h-0 items-stretch overflow-hidden rounded-[3px] border text-[10px] font-semibold leading-none text-foreground"
+              style={rowTeamColor ? { borderColor: rowTeamColor, backgroundColor: `${rowTeamColor}2e` } : undefined}
+            >
+              {rowTeam && (
+                <span className="flex h-full items-center justify-center px-0.5">
+                  <span className="tracking-wide [writing-mode:vertical-lr] rotate-180">
+                    {rowTeam}
+                  </span>
+                </span>
+              )}
+              <div className="grid h-full w-4 grid-rows-10 gap-0.5">
+                {rowNumbers.map((digit, index) => (
+                  <div key={`row-${index}`} className="flex items-center justify-center">
+                    {digit}
+                  </div>
+                ))}
+              </div>
             </div>
           )}
           <div
-            className={
-              numbersUp
-                ? "grid grid-cols-[1rem_repeat(10,minmax(0,1fr))] gap-0.5"
-                : "grid grid-cols-10 gap-0.5"
-            }
+            className={numbersUp ? "col-start-2 row-start-2 grid min-w-0 grid-cols-10 gap-0.5" : "grid grid-cols-10 gap-0.5"}
             role="grid"
             aria-label="Super Bowl boxes"
           >
-        {numbersUp && (
-          <>
-            <div />
-            {colNumbers.map((digit, index) => (
-              <div
-                key={`col-${index}`}
-                className="text-center text-[10px] font-semibold leading-none text-default-500"
-              >
-                {digit}
-              </div>
-            ))}
-          </>
-        )}
         {Array.from({ length: GRID_SIZE * GRID_SIZE }, (_, index) => {
           const row = Math.floor(index / GRID_SIZE);
           const col = index % GRID_SIZE;
@@ -453,21 +431,32 @@ function BoxesPanel({ year }) {
           const square = squares[id];
           const mine = square?.uid === user?.uid;
           const draft = mine && square?.submitted === false;
+          const held = Boolean(square) && !mine && square.submitted === false;
           const rowLabel = numbersUp ? `${rowTeam ? `${rowTeam} ` : ""}${rowNumbers[row]}` : row + 1;
           const colLabel = numbersUp ? `${colTeam ? `${colTeam} ` : ""}${colNumbers[col]}` : col + 1;
-          const label = square
-            ? mine
-              ? `Your square, row ${rowLabel}, column ${colLabel}`
-              : `${square.name}, row ${rowLabel}, column ${colLabel}`
-            : `Open square, row ${rowLabel}, column ${colLabel}`;
+          const label = !square
+            ? `Open square, row ${rowLabel}, column ${colLabel}`
+            : draft
+              ? `Your square, not submitted yet, row ${rowLabel}, column ${colLabel}`
+              : held
+                ? `${square.name} is still selecting this square, row ${rowLabel}, column ${colLabel}`
+                : mine
+                  ? `Your square, row ${rowLabel}, column ${colLabel}`
+                  : `${square.name}, row ${rowLabel}, column ${colLabel}`;
+          const badges = winningBadges.get(id);
           const cell = (
             <button
               key={id}
               type="button"
               role="gridcell"
-              aria-label={label}
-              disabled={busy || (!square && (!claimsOpen || !inEntry || !displayName))}
+              aria-label={badges ? `${label}, winning ${badges.map((badge) => badge.name).join(" and ")}` : label}
+              disabled={busy || (!square && (!claimsOpen || !displayName))}
               onClick={() => {
+                if (!claimsOpen) {
+                  if (!square) return;
+                  setSelectedId((current) => (current === id ? null : id));
+                  return;
+                }
                 if (!square) {
                   onClaimCell(row, col);
                   return;
@@ -479,40 +468,153 @@ function BoxesPanel({ year }) {
                 setSelectedId(id);
               }}
               className={[
-                "flex aspect-square items-center justify-center rounded-[3px] text-[10px] font-semibold leading-none",
-                !square
-                  ? "bg-default-100 text-default-400"
+                "relative flex aspect-square items-center justify-center rounded-[3px] text-[10px] font-semibold leading-none",
+                !square || held
+                  ? "bg-default-100 text-default-500"
                   : mine
                     ? "bg-primary text-primary-foreground"
                     : "bg-default-400 text-white",
-                draft ? "opacity-70" : "",
+                draft ? "box-draft" : "",
+                held ? "box-held" : "",
                 selectedId === id ? "outline outline-2 outline-offset-1 outline-white" : "",
-                claimsOpen && inEntry && !square ? "hover:bg-default-200" : "",
+                claimsOpen && !square ? "hover:bg-default-200" : "",
                 "disabled:cursor-default disabled:opacity-100",
               ].join(" ")}
             >
-              {square ? initialsFor(square.name) : ""}
+              {badges && badges.map((badge) => (
+                <span
+                  key={badge.name}
+                  title={badge.name}
+                  className={`absolute bg-success px-0.5 text-[7px] font-bold leading-[10px] text-success-foreground ${
+                    badge.place === "q1"
+                      ? "-left-px -top-px rounded-br-[2px] rounded-tl-[3px]"
+                      : badge.place === "half"
+                        ? "-right-px -top-px rounded-bl-[2px] rounded-tr-[3px]"
+                        : badge.place === "q3"
+                          ? "-bottom-px -right-px rounded-br-[3px] rounded-tl-[2px]"
+                          : "-bottom-px -left-px rounded-bl-[3px] rounded-tr-[2px]"
+                  }`}
+                >
+                  {badge.badge}
+                </span>
+              ))}
+              {square ? (mine ? "You" : initialsFor(square.name)) : ""}
             </button>
           );
-          if (!numbersUp || col !== 0) return cell;
-          return (
-            <React.Fragment key={id}>
-              <div className="flex items-center justify-center text-[10px] font-semibold leading-none text-default-500">
-                {rowNumbers[row]}
-              </div>
-              {cell}
-            </React.Fragment>
-          );
+          return cell;
         })}
           </div>
-        </div>
       </div>
 
       {squares[selectedId] && (
         <p className="text-sm text-foreground">
-          {squares[selectedId].uid === user?.uid ? "You" : squares[selectedId].name}
+          {squares[selectedId].uid === user?.uid ? "You" : shortName(squares[selectedId].name)}
+          {squares[selectedId].submitted === false ? " (still selecting)" : ""}
         </p>
       )}
+
+      <section className="flex flex-col gap-3">
+        <div>
+          <h2 className="text-lg font-semibold text-foreground">Leaderboard</h2>
+          {/* <p className="mt-1 text-sm text-default-500">Winners display here as scores update.</p> */}
+        </div>
+        <div className="rounded-lg bg-default-100 p-3">
+          <div className={submitted.length > 0 ? "grid grid-cols-[minmax(0,3fr)_minmax(0,2fr)]" : ""}>
+            <div className={submitted.length > 0 ? "pr-3" : ""}>
+              <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                <IoTrophyOutline aria-hidden="true" />
+                Winners
+              </div>
+              <ol className="mt-3 flex flex-col">
+                {quarterResults.map((quarter, index) => (
+                  <li key={quarter.id} className="flex items-center gap-2">
+                    <div className="relative flex w-8 shrink-0 items-center justify-center self-stretch">
+                      {index < quarterResults.length - 1 && (
+                        <span className="absolute top-1/2 -bottom-1/2 w-px bg-default-300" aria-hidden="true" />
+                      )}
+                      <span className="relative z-10 flex h-8 w-8 items-center justify-center rounded-full border border-default-300 bg-default-100 text-[11px] font-semibold text-foreground">
+                        {quarter.id === "half" ? "H" : quarter.id === "final" ? "F" : quarter.label}
+                      </span>
+                    </div>
+                    <div className="min-w-0 flex-1 py-3">
+                      <div className="flex items-center gap-1">
+                        <p
+                          className={`min-w-0 flex-1 truncate text-sm font-semibold ${quarter.score ? "text-foreground" : "text-default-400"}`}
+                          title={quarter.score ? quarter.winner : undefined}
+                        >
+                          {quarter.score ? quarter.winner : "Upcoming"}
+                        </p>
+                        {quarter.score && (
+                          <>
+                            <span
+                              className="shrink-0 rounded-[3px] border px-1 py-0.5 text-[11px] font-semibold leading-none text-foreground"
+                              style={rowTeamColor ? { borderColor: rowTeamColor, backgroundColor: `${rowTeamColor}2e` } : undefined}
+                            >
+                              {quarter.score.row}
+                            </span>
+                            <span
+                              className="shrink-0 rounded-[3px] border px-1 py-0.5 text-[11px] font-semibold leading-none text-foreground"
+                              style={colTeamColor ? { borderColor: colTeamColor, backgroundColor: `${colTeamColor}2e` } : undefined}
+                            >
+                              {quarter.score.col}
+                            </span>
+                          </>
+                        )}
+                      </div>
+                      <p className="text-xs text-default-500">
+                        {Number(payouts[quarter.id]).toLocaleString("en-US", {
+                          style: "currency",
+                          currency: "USD",
+                          maximumFractionDigits: 0,
+                        })}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            </div>
+            {submitted.length > 0 && (
+              <div className="border-l border-default-300 pl-5">
+                <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                  Your boxes
+                </div>
+                {numbersUp ? (
+                  <>
+                    <div className="mt-3 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-foreground">
+                      <span className="min-w-6 flex-1 text-center">{rowTeam || "Left"}</span>
+                      <span className="invisible" aria-hidden="true">·</span>
+                      <span className="min-w-6 flex-1 text-center">{colTeam || "Top"}</span>
+                    </div>
+                    <ul className="mt-1.5 flex flex-col gap-2">
+                      {submitted.map((square) => (
+                        <li key={square.id} className="flex items-center gap-1.5">
+                          <span
+                            className="flex min-w-6 flex-1 items-center justify-center rounded-[3px] border px-1.5 py-1 text-sm font-semibold leading-none text-foreground"
+                            style={rowTeamColor ? { borderColor: rowTeamColor, backgroundColor: `${rowTeamColor}2e` } : undefined}
+                          >
+                            {rowNumbers[square.row]}
+                          </span>
+                          <span className="text-default-400">·</span>
+                          <span
+                            className="flex min-w-6 flex-1 items-center justify-center rounded-[3px] border px-1.5 py-1 text-sm font-semibold leading-none text-foreground"
+                            style={colTeamColor ? { borderColor: colTeamColor, backgroundColor: `${colTeamColor}2e` } : undefined}
+                          >
+                            {colNumbers[square.col]}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                ) : (
+                  <p className="mt-3 text-xs text-default-500">
+                    Your {submitted.length} {submitted.length === 1 ? "entry shows" : "entries show"} up here once the numbers are drawn.
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
 
       {notice && <p className="text-sm text-danger">{notice}</p>}
     </div>

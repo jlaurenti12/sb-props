@@ -20,6 +20,8 @@ import {
   Button,
   Chip,
   Switch,
+  Select,
+  SelectItem,
   Table,
   TableHeader,
   TableBody,
@@ -31,6 +33,8 @@ import QuestionDrawer from "./QuestionDrawer.js";
 import BoxesAdmin from "./BoxesAdmin.js";
 import { IoPencil, IoReorderThree } from "react-icons/io5";
 import { IoCheckmark, IoClose } from "react-icons/io5";
+import { NFL_TEAMS, TeamSwatch, canonicalTeamName, findTeam } from "../../data/nflTeams";
+import { BOX_QUARTERS } from "../../data/boxQuarters";
 
 function useMatchMedia(query) {
   const [matches, setMatches] = useState(
@@ -157,6 +161,13 @@ function Admin({ year }) {
   const [numbersDrawn, setNumbersDrawn] = useState(false);
   const [rowTeam, setRowTeam] = useState("");
   const [colTeam, setColTeam] = useState("");
+  const [quarterScores, setQuarterScores] = useState({
+    q1: ["", ""],
+    half: ["", ""],
+    q3: ["", ""],
+    final: ["", ""],
+  });
+  const [scoreNotice, setScoreNotice] = useState("");
   const [finalScore, setFinalScore] = useState(null);
   const [isEditingFinalScore, setIsEditingFinalScore] = useState(false);
   const [editFinalScoreValue, setEditFinalScoreValue] = useState("");
@@ -179,8 +190,19 @@ function Admin({ year }) {
         Array.isArray(data.boxColNumbers) &&
         data.boxColNumbers.length === 10
     );
-    setRowTeam(typeof data.boxRowTeam === "string" ? data.boxRowTeam : "");
-    setColTeam(typeof data.boxColTeam === "string" ? data.boxColTeam : "");
+    setRowTeam(canonicalTeamName(data.boxRowTeam));
+    setColTeam(canonicalTeamName(data.boxColTeam));
+    const savedScores = data.boxQuarterScores;
+    const nextScores = { q1: ["", ""], half: ["", ""], q3: ["", ""], final: ["", ""] };
+    if (savedScores && typeof savedScores === "object") {
+      BOX_QUARTERS.forEach((quarter) => {
+        const entry = savedScores[quarter.id];
+        if (entry && Number.isInteger(entry.row) && Number.isInteger(entry.col)) {
+          nextScores[quarter.id] = [String(entry.row), String(entry.col)];
+        }
+      });
+    }
+    setQuarterScores(nextScores);
     setFinalScore(data.finalScore != null ? data.finalScore : null);
   };
 
@@ -234,6 +256,32 @@ function Admin({ year }) {
     });
     setRowTeam(left);
     setColTeam(top);
+  };
+
+  const saveQuarterScores = async () => {
+    const next = {};
+    for (const quarter of BOX_QUARTERS) {
+      const [rowValue, colValue] = quarterScores[quarter.id];
+      const rowBlank = rowValue.trim() === "";
+      const colBlank = colValue.trim() === "";
+      if (rowBlank && colBlank) continue;
+      if (rowBlank || colBlank || !/^\d+$/.test(rowValue.trim()) || !/^\d+$/.test(colValue.trim())) {
+        setScoreNotice(`Enter both scores for ${quarter.label}, or clear both.`);
+        return;
+      }
+      next[quarter.id] = { row: Number(rowValue.trim()), col: Number(colValue.trim()) };
+    }
+    setScoreNotice("");
+    await updateDoc(statusDoc, {
+      boxQuarterScores: Object.keys(next).length > 0 ? next : deleteField(),
+    });
+  };
+
+  const clearQuarterScores = async () => {
+    if (!window.confirm("Clear the quarter scores? Winners go back to upcoming.")) return;
+    setScoreNotice("");
+    setQuarterScores({ q1: ["", ""], half: ["", ""], q3: ["", ""], final: ["", ""] });
+    await updateDoc(statusDoc, { boxQuarterScores: deleteField() });
   };
 
   const changeStatus = async () => {
@@ -387,22 +435,37 @@ function Admin({ year }) {
               {boxesEnabled && (
                 <div className="mt-4 flex flex-col items-start gap-2">
                   <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-end">
-                    <Input
-                      size="sm"
-                      label="Left team"
-                      labelPlacement="inside"
-                      value={rowTeam}
-                      onValueChange={setRowTeam}
-                      className="sm:max-w-[160px]"
-                    />
-                    <Input
-                      size="sm"
-                      label="Top team"
-                      labelPlacement="inside"
-                      value={colTeam}
-                      onValueChange={setColTeam}
-                      className="sm:max-w-[160px]"
-                    />
+                    {[
+                      ["Left team", rowTeam, setRowTeam],
+                      ["Top team", colTeam, setColTeam],
+                    ].map(([label, value, setValue]) => (
+                      <Select
+                        key={label}
+                        size="sm"
+                        label={label}
+                        placeholder="Select a team"
+                        selectedKeys={value ? [value] : []}
+                        onSelectionChange={(keys) => {
+                          const next = Array.from(keys)[0];
+                          setValue(!next || next === "none" ? "" : String(next));
+                        }}
+                        startContent={value ? <TeamSwatch name={value} /> : null}
+                        className="w-full sm:max-w-[220px]"
+                      >
+                        {[
+                          { name: "none", city: "", label: "None" },
+                          ...(value && !findTeam(value) ? [{ name: value, city: "", label: value }] : []),
+                          ...NFL_TEAMS.map((team) => ({ ...team, label: `${team.city} ${team.name}` })),
+                        ].map((team) => (
+                          <SelectItem key={team.name} textValue={team.label}>
+                            <span className="flex items-center gap-2">
+                              <TeamSwatch name={team.name} />
+                              {team.label}
+                            </span>
+                          </SelectItem>
+                        ))}
+                      </Select>
+                    ))}
                     <Button size="sm" variant="flat" onPress={saveBoxTeams}>
                       Save teams
                     </Button>
@@ -457,6 +520,58 @@ function Admin({ year }) {
                           : "Claims are closed. Draw numbers when you are ready."
                         : "Claims stay closed until you open them."}
                   </p>
+                  {numbersDrawn && (
+                    <div className="mt-4 flex flex-col gap-2">
+                      <p className="text-sm font-medium text-foreground">Quarter scores</p>
+                      {BOX_QUARTERS.map((quarter) => (
+                        <div key={quarter.id} className="flex flex-wrap items-center gap-2">
+                          <span className="w-10 text-xs text-default-500">{quarter.label}</span>
+                          <Input
+                            size="sm"
+                            type="number"
+                            min="0"
+                            label={rowTeam || "Left"}
+                            labelPlacement="inside"
+                            value={quarterScores[quarter.id][0]}
+                            onValueChange={(value) =>
+                              setQuarterScores((current) => ({
+                                ...current,
+                                [quarter.id]: [value, current[quarter.id][1]],
+                              }))
+                            }
+                            className="w-[110px]"
+                          />
+                          <Input
+                            size="sm"
+                            type="number"
+                            min="0"
+                            label={colTeam || "Top"}
+                            labelPlacement="inside"
+                            value={quarterScores[quarter.id][1]}
+                            onValueChange={(value) =>
+                              setQuarterScores((current) => ({
+                                ...current,
+                                [quarter.id]: [current[quarter.id][0], value],
+                              }))
+                            }
+                            className="w-[110px]"
+                          />
+                        </div>
+                      ))}
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="flat" onPress={saveQuarterScores}>
+                          Save scores
+                        </Button>
+                        <Button size="sm" variant="flat" onPress={clearQuarterScores}>
+                          Clear scores
+                        </Button>
+                      </div>
+                      {scoreNotice && <p className="text-xs text-danger">{scoreNotice}</p>}
+                      <p className="text-xs text-default-500">
+                        The last digit of each score picks the square. Clear both fields to remove a quarter.
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

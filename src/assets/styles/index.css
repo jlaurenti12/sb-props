@@ -105,6 +105,52 @@
   justify-self: center;
 }
 
+@keyframes box-draft-ants {
+  to {
+    background-position: 8px 0, -8px 100%, 0 -8px, 100% 8px;
+  }
+}
+
+.box-draft {
+  background-image:
+    linear-gradient(90deg, #fff 50%, transparent 50%),
+    linear-gradient(90deg, #fff 50%, transparent 50%),
+    linear-gradient(0deg, #fff 50%, transparent 50%),
+    linear-gradient(0deg, #fff 50%, transparent 50%);
+  background-repeat: repeat-x, repeat-x, repeat-y, repeat-y;
+  background-size: 8px 2px, 8px 2px, 2px 8px, 2px 8px;
+  background-position: 0 0, 0 100%, 0 0, 100% 0;
+  animation: box-draft-ants 0.45s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .box-draft {
+    animation: none;
+    background-image: none;
+    box-shadow: inset 0 0 0 2px #fff;
+  }
+}
+
+.box-held {
+  background-image:
+    linear-gradient(90deg, #a1a1aa 50%, transparent 50%),
+    linear-gradient(90deg, #a1a1aa 50%, transparent 50%),
+    linear-gradient(0deg, #a1a1aa 50%, transparent 50%),
+    linear-gradient(0deg, #a1a1aa 50%, transparent 50%);
+  background-repeat: repeat-x, repeat-x, repeat-y, repeat-y;
+  background-size: 8px 2px, 8px 2px, 2px 8px, 2px 8px;
+  background-position: 0 0, 0 100%, 0 0, 100% 0;
+  animation: box-draft-ants 0.45s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .box-held {
+    animation: none;
+    background-image: none;
+    box-shadow: inset 0 0 0 2px #a1a1aa;
+  }
+}
+
 /* Admin questions table: hide actions column on mobile (edit is in first column) */
 @media (max-width: 639px) {
   .admin-questions-table th:nth-child(6),
