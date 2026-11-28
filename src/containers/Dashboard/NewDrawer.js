@@ -14,6 +14,7 @@ import {
   DrawerHeader,
   DrawerBody,
 } from "@heroui/react";
+import { rightDrawerMotion } from "../../data/drawerMotion";
 
 function NewDrawer({
   isOpen,
@@ -50,20 +51,29 @@ function NewDrawer({
     }
   };
 
+  const quiz = quizData || {};
+  const entries = userEntries || [];
+
   return (
-    
-    <Drawer isOpen={isOpen} size="xl" onClose={isClosed} backdrop="blur" aria-label="Quiz responses drawer">
+    <Drawer
+      isOpen={isOpen}
+      size="xl"
+      onClose={isClosed}
+      backdrop="blur"
+      motionProps={rightDrawerMotion}
+      aria-label="Quiz responses drawer"
+    >
       <DrawerContent>
         {(onClose) => (
           <>
             <DrawerHeader className="flex flex-col gap-1">
-              {quizData.user === undefined ? name : quizData.user}
+              {quiz.user === undefined ? name : quiz.user}
             </DrawerHeader>
             <DrawerBody className="px-4">
               <div className="grid grid-cols-3 gap-3 mb-6">
                 <div className="rounded-lg bg-default-100 p-4 text-center">
                   <div className="text-small text-default-500 mb-1">Correct</div>
-                  <div className="text-xl font-semibold">{quizData.score}</div>
+                  <div className="text-xl font-semibold">{quiz.score}</div>
                 </div>
                 <div className="rounded-lg bg-default-100 p-4 text-center">
                   <div className="text-small text-default-500 mb-1">Max</div>
@@ -71,7 +81,7 @@ function NewDrawer({
                 </div>
                 <div className="rounded-lg bg-default-100 p-4 text-center">
                   <div className="text-small text-default-500 mb-1">Tiebreaker</div>
-                  <div className="text-xl font-semibold">{quizData.tiebreaker}</div>
+                  <div className="text-xl font-semibold">{quiz.tiebreaker}</div>
                 </div>
               </div>
 
@@ -85,7 +95,7 @@ function NewDrawer({
                   </TableHeader>
 
                   <TableBody>
-                    {userEntries.map((responses, index) => (
+                    {entries.map((responses, index) => (
                       <TableRow key={index}>
                         <TableCell width="46%">{responses[0]}</TableCell>
                         <TableCell width="28%">{responses[1]}</TableCell>

@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
+import { AnimatePresence, motion } from "framer-motion";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth, db } from "../../services/firebase";
 import {
@@ -359,14 +360,21 @@ function BoxesPanel({ year }) {
   }
 
   return (
-    <div className={`flex flex-col gap-4 ${selecting ? "pb-36" : ""}`}>
+    <div className={`flex flex-col gap-4 transition-[padding-bottom] duration-[220ms] ease-out ${selecting ? "pb-36" : ""}`}>
       <div>
         <h2 className="text-lg font-semibold text-foreground">Boxes</h2>
         <p className="mt-1 text-sm text-default-500">{statusLine}</p>
       </div>
 
-      {selecting && (
-        <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-default-200 bg-background/95 backdrop-blur">
+      <AnimatePresence>
+        {selecting && (
+        <motion.div
+          initial={{ y: "100%" }}
+          animate={{ y: 0 }}
+          exit={{ y: "100%" }}
+          transition={{ duration: 0.22, ease: "easeOut" }}
+          className="fixed bottom-0 left-0 right-0 z-20 border-t border-default-200 bg-background/95 backdrop-blur"
+        >
           <div className="mx-auto flex w-full max-w-[375px] flex-col gap-3 px-4 py-4">
             <p className="text-sm text-foreground">
               {drafts.length} {drafts.length === 1 ? "square" : "squares"}
@@ -396,8 +404,9 @@ function BoxesPanel({ year }) {
               </Button>
             </div>
           </div>
-        </div>
-      )}
+        </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className={numbersUp ? "grid grid-cols-[auto_minmax(0,1fr)] gap-0.5" : ""}>
           {numbersUp && (
@@ -484,7 +493,7 @@ function BoxesPanel({ year }) {
                   onReleaseDraft(square);
                   return;
                 }
-                setSelectedId(id);
+                setSelectedId((current) => (current === id ? null : id));
               }}
               className={[
                 "relative flex aspect-square items-center justify-center rounded-[3px] text-[10px] font-semibold leading-none",
@@ -551,7 +560,13 @@ function BoxesPanel({ year }) {
                       {index < quarterResults.length - 1 && (
                         <span className="absolute top-1/2 -bottom-1/2 w-px bg-default-300" aria-hidden="true" />
                       )}
-                      <span className="relative z-10 flex h-8 w-8 items-center justify-center rounded-full border border-default-300 bg-default-100 text-[11px] font-semibold text-foreground">
+                      <span
+                        className={`relative z-10 flex h-8 w-8 items-center justify-center rounded-full border text-[11px] font-semibold ${
+                          quarter.score
+                            ? "border-success bg-success text-success-foreground"
+                            : "border-default-300 bg-default-100 text-foreground"
+                        }`}
+                      >
                         {quarter.id === "half" ? "H" : quarter.id === "final" ? "F" : quarter.label}
                       </span>
                     </div>

@@ -451,17 +451,13 @@ function Leaderboard({ remaining, status, end, year, onStatsReady, onAnswerBreak
           </TableBody>
         </Table>
       </Skeleton>
-      { isDrawerOpen ? (
-          <NewDrawer
-          isOpen={isDrawerOpen}
-          quizData={selectedUser}
-          userEntries={selectedResponses}
-          maxScore={selectedMax}
-          isClosed={closeDrawer}
-        />
-        ) : ( 
-          <></>
-        )}
+      <NewDrawer
+        isOpen={isDrawerOpen}
+        quizData={selectedUser}
+        userEntries={selectedResponses}
+        maxScore={selectedMax}
+        isClosed={closeDrawer}
+      />
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useMediaQuery } from "react-responsive";
 import "../../assets/styles/Leaderboard.css";
 import { db } from "../../services/firebase";
@@ -13,6 +13,7 @@ import {
   DrawerBody,
   DrawerFooter,
 } from "@heroui/react";
+import { drawerMotion } from "../../data/drawerMotion";
 
 function QuestionDrawer({ isOpen, isClosed, year, questionObject }) {
   const isMobile = useMediaQuery({ maxWidth: 768 });
@@ -65,15 +66,17 @@ function QuestionDrawer({ isOpen, isClosed, year, questionObject }) {
     }
   };
 
-  if (!questionObject) return null;
+  const placement = isMobile ? "bottom" : "right";
+  const motionProps = useMemo(() => drawerMotion(placement), [placement]);
 
   return (
     <Drawer
       isOpen={isOpen}
       size={isMobile ? "2xl" : "md"}
-      placement={isMobile ? "bottom" : "right"}
+      placement={placement}
       onClose={isClosed}
       backdrop="blur"
+      motionProps={motionProps}
       classNames={isMobile ? { base: "!max-h-[85vh] rounded-t-2xl" } : undefined}
     >
       <DrawerContent>

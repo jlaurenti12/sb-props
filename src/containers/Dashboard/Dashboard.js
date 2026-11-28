@@ -292,8 +292,6 @@ function Dashboard({year}) {
   };
 
   const closeDrawer = () => {
-    setSelectedMax(null);
-    setSelectedResponses([]);
     setIsDrawerOpen(false);
   };
 
@@ -437,8 +435,7 @@ function Dashboard({year}) {
           onClose={() => setIsBreakdownOpen(false)}
           year={year}
         />
-        { isDrawerOpen ? (
-          <NewDrawer
+        <NewDrawer
           isOpen={isDrawerOpen}
           name={name}
           quizData={selectedUser}
@@ -446,9 +443,6 @@ function Dashboard({year}) {
           maxScore={selectedMax}
           isClosed={closeDrawer}
         />
-        ) : ( 
-          <></>
-        )}
 
         <Leaderboard
           remaining={remainingQuestions}

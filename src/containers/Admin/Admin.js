@@ -111,7 +111,6 @@ function Admin({ year }) {
   };
 
   const closeDrawer = () => {
-    setSelectedQuestion(null);
     setIsDrawerOpen(false);
     getQuestionList();
   };
@@ -853,16 +852,12 @@ function Admin({ year }) {
             </div>
           </section>
 
-          { isDrawerOpen ? (
-            <QuestionDrawer
+          <QuestionDrawer
             isOpen={isDrawerOpen}
             questionObject={selectedQuestion}
             year={currentYear}
             isClosed={closeDrawer}
           />
-          ) : ( 
-            <></>
-          )}
         </div>
       ) : (
         <div className="max-w-5xl w-full text-center">

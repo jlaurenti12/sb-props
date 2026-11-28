@@ -9,6 +9,7 @@ import {
   Skeleton,
   Chip,
 } from "@heroui/react";
+import { rightDrawerMotion } from "../../data/drawerMotion";
 import {
   PieChart,
   Pie,
@@ -96,7 +97,13 @@ function AnswerBreakdownDrawer({ isOpen, onClose, year }) {
   }, [questions, entries]);
 
   return (
-    <Drawer isOpen={isOpen} size="xl" onClose={onClose} backdrop="blur">
+    <Drawer
+      isOpen={isOpen}
+      size="xl"
+      onClose={onClose}
+      backdrop="blur"
+      motionProps={rightDrawerMotion}
+    >
       <DrawerContent>
         {() => (
           <>
